@@ -446,13 +446,20 @@ pub fn list_catalog(state: State<AppState>) -> AppResult<CatalogView> {
     })
 }
 
-/// Fetches a fresh catalog from the configured remote URL and caches it.
+/// Default remote catalog: the `freeport-catalog` repo, refreshed daily by CI.
+/// Users can override it with a custom URL in Ajustes.
+pub const DEFAULT_CATALOG_URL: &str =
+    "https://raw.githubusercontent.com/shadowlink/freeport-catalog/main/catalog.json";
+
+/// Fetches a fresh catalog from the configured remote URL (or the default
+/// `freeport-catalog` repo) and caches it.
 #[tauri::command]
 pub async fn refresh_catalog(state: State<'_, AppState>) -> AppResult<String> {
     let cfg = store::load_config(&state.paths)?;
     let url = cfg
         .catalog_url
-        .ok_or_else(|| AppError::msg("no hay URL de catálogo configurada en Ajustes"))?;
+        .filter(|s| !s.trim().is_empty())
+        .unwrap_or_else(|| DEFAULT_CATALOG_URL.to_string());
     let text = state
         .client
         .get(&url)

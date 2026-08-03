@@ -47,6 +47,10 @@ export default function App() {
 
   useEffect(() => {
     load();
+    // Best-effort: pull the latest catalog from the freeport-catalog repo, then
+    // reload. Shows the cached/embedded catalog instantly; updates when the
+    // remote fetch lands. Silently ignored when offline.
+    api.refreshCatalog().then(() => load()).catch(() => {});
     const un = onInstallProgress((p) => {
       setProgress((prev) => ({ ...prev, [p.id]: p }));
       if (p.phase === "done") {

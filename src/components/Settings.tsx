@@ -136,6 +136,10 @@ export default function Settings({
             placeholder="https://raw.githubusercontent.com/…/catalog.json"
             className="mt-1 w-full rounded-md bg-panel-2 border border-edge px-3 py-2 text-sm outline-none focus:border-neon/50"
           />
+          <span className="block text-[11px] text-white/40 mt-1">
+            Vacío = repo oficial <code className="text-white/60">freeport-catalog</code>
+            {" "}(se actualiza a diario). La app cae al catálogo embebido si no hay red.
+          </span>
         </label>
 
         {/* Sunshine / Moonlight */}

@@ -36,6 +36,7 @@ jobs:
             libgtk-3-dev \
             librsvg2-dev \
             libayatana-appindicator3-dev \
+            libudev-dev \
             patchelf file build-essential libssl-dev
 
       - uses: actions/setup-node@v4

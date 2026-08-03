@@ -15,7 +15,6 @@ import type {
 
 export const api = {
   getPlatform: () => invoke<string>("get_platform"),
-  systemLogo: (id: string) => invoke<string | null>("system_logo", { id }),
   fetchWiki: (title: string) => invoke<WikiInfo | null>("fetch_wiki", { title }),
   listMods: (id: string) => invoke<ModInfo[]>("list_mods", { id }),
   installMod: (id: string, fullName: string) =>

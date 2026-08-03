@@ -160,60 +160,6 @@ pub async fn fetch_wiki(state: State<'_, AppState>, title: String) -> AppResult<
     Ok(info)
 }
 
-/// Locates a console logo for `id` by reusing the user's existing ES-DE theme
-/// art (their own files — nothing is bundled or downloaded). Returns an absolute
-/// path the frontend loads through Tauri's asset protocol, preferring colored
-/// "system logo" art over plain controller outlines.
-#[tauri::command]
-pub fn system_logo(id: String) -> Option<String> {
-    let mut theme_roots: Vec<std::path::PathBuf> = Vec::new();
-    if let Some(home) = dirs::home_dir() {
-        theme_roots.push(home.join("ES-DE/themes"));
-    }
-    theme_roots.push(std::path::PathBuf::from("/usr/share/es-de/themes"));
-
-    // Our catalog system ids don't always match ES-DE's logo filenames; map to
-    // the ES-DE id(s) to try, in preference order.
-    let candidates: Vec<&str> = match id.as_str() {
-        "x360" => vec!["xbox360", "x360"],
-        "pc" => vec!["windows", "pc"], // the Windows wordmark reads better than ES-DE's IBM "pc"
-        other => vec![other],
-    };
-
-    // Sub-paths within a theme, most-preferred first (colored wordmark logos).
-    let subs = [
-        "system/logos/system-logo-color",
-        "_inc/systems/logos",
-        "system/logos",
-        "system/controller-outline",
-    ];
-
-    // Prefer a colored logo for the aliased id across ALL themes before falling
-    // back to a lesser sub-path.
-    for cand in &candidates {
-        for sub in subs {
-            for root in &theme_roots {
-                let Ok(themes) = std::fs::read_dir(root) else {
-                    continue;
-                };
-                for theme in themes.flatten() {
-                    let tdir = theme.path();
-                    if !tdir.is_dir() {
-                        continue;
-                    }
-                    for ext in ["svg", "png"] {
-                        let p = tdir.join(sub).join(format!("{cand}.{ext}"));
-                        if p.is_file() {
-                            return Some(p.display().to_string());
-                        }
-                    }
-                }
-            }
-        }
-    }
-    None
-}
-
 #[derive(Serialize)]
 pub struct PathsInfo {
     pub data_dir: String,

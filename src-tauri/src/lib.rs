@@ -51,7 +51,6 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_platform,
-            commands::system_logo,
             commands::fetch_wiki,
             commands::get_paths_info,
             commands::get_config,

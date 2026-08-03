@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { api, onInstallProgress } from "./api";
 import { checkForUpdate, type Update } from "./lib/updater";
+import { SYSTEM_LOGOS } from "./lib/logos";
 import type { CatalogView, InstallProgress, ProjectView, SystemInfo } from "./types";
 import GameCard from "./components/GameCard";
 import GamePage from "./components/GamePage";
@@ -19,7 +19,7 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
-  const [logos, setLogos] = useState<Record<string, string>>({});
+  const logos = SYSTEM_LOGOS; // logos empaquetados en la app
 
   const [tab, setTab] = useState<"catalog" | "library">("catalog");
   const [activeSystem, setActiveSystem] = useState<string | null>(null); // null = todos
@@ -46,13 +46,6 @@ export default function App() {
       const view = await api.listCatalog();
       setCatalog(view);
       setError(null);
-      const entries = await Promise.all(
-        view.systems.map(async (s) => {
-          const path = await api.systemLogo(s.id).catch(() => null);
-          return [s.id, path ? convertFileSrc(path) : ""] as const;
-        }),
-      );
-      setLogos(Object.fromEntries(entries.filter(([, v]) => v)));
     } catch (e) {
       setError(String(e));
     }

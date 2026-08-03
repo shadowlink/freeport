@@ -443,6 +443,7 @@ export default function App() {
           onClose={() => setShowSettings(false)}
           onChanged={load}
           version={version}
+          platform={catalog?.platform ?? ""}
           onCheckUpdate={checkAppUpdate}
         />
       )}

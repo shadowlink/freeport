@@ -91,7 +91,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque, en el menú del juego pulsa «Find ROM» y selecciona tu ROM de Majora's Mask (US) volcada legalmente. Este port gestiona la ROM por sí mismo; DecompDeck no la copia."
+        "notes": "El juego te pedirá tu ROM de Majora's Mask (US) al arrancar (menú «Find ROM»)."
       },
       "launch": {
         "linux": "Zelda64Recompiled",
@@ -141,7 +141,7 @@
         "mode": "copy",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Selecciona tu ROM de Ocarina of Time (US) volcada legalmente: DecompDeck la copia a la carpeta del juego y el port genera sus assets (oot.o2r) automáticamente al lanzarlo, sin diálogos."
+        "notes": "Selecciona tu ROM de Ocarina of Time (US); se copia a la carpeta del juego."
       },
       "launch": {
         "linux": null,
@@ -189,7 +189,7 @@
         "mode": "copy",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Selecciona tu ROM de Majora's Mask (US) volcada legalmente: se copia a la carpeta del juego y el port genera mm.o2r automáticamente al lanzarlo."
+        "notes": "Selecciona tu ROM de Majora's Mask (US); se copia a la carpeta del juego."
       },
       "launch": {
         "linux": null,
@@ -238,7 +238,7 @@
         "mode": "copy",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Selecciona tu ROM de Mario Kart 64 (US) volcada legalmente: se copia a la carpeta del juego y el port genera mk64.o2r automáticamente al lanzarlo."
+        "notes": "Selecciona tu ROM de Mario Kart 64 (US); se copia a la carpeta del juego."
       },
       "launch": {
         "linux": null,
@@ -289,7 +289,7 @@
         "mode": "copy",
         "expected_filename": "pd.ntsc-final.z64",
         "subdir": "data",
-        "notes": "Selecciona tu ROM de Perfect Dark (NTSC-U) volcada legalmente: DecompDeck la copia como data/pd.ntsc-final.z64 junto al ejecutable (el port no tiene selector propio)."
+        "notes": "Selecciona tu ROM de Perfect Dark (NTSC-U); se copia a la carpeta del juego."
       },
       "launch": {
         "linux": "pd.x86_64",
@@ -334,7 +334,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "sm64coopdx te pedirá tu ROM de Super Mario 64 (US) volcada legalmente al arrancar por primera vez, para extraer los assets."
+        "notes": "El juego te pedirá tu ROM de Super Mario 64 (US) al arrancar."
       },
       "launch": {
         "linux": null,
@@ -377,7 +377,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos del disco de Driver 2 (NTSC) volcado legalmente. Sigue las instrucciones del proyecto para colocar los datos del juego junto al ejecutable."
+        "notes": "Necesita los datos de tu disco de Driver 2 (NTSC)."
       },
       "launch": {
         "linux": null,
@@ -420,7 +420,7 @@
         "mode": "copy",
         "expected_filename": "Data.rsdk",
         "subdir": null,
-        "notes": "Necesitas el archivo Data.rsdk de una copia legal de Sonic CD (Retro Engine / versión móvil o de Origins). DecompDeck lo copia junto al ejecutable."
+        "notes": "Necesita el Data.rsdk de Sonic CD (Retro Engine); se copia junto al ejecutable."
       },
       "launch": {
         "linux": null,
@@ -464,7 +464,7 @@
         "mode": "copy",
         "expected_filename": "Data.rsdk",
         "subdir": null,
-        "notes": "Necesitas el archivo Data.rsdk de una copia legal de Sonic 1 o Sonic 2 (2013, Retro Engine / móvil). DecompDeck lo copia junto al ejecutable."
+        "notes": "Necesita el Data.rsdk de Sonic 1 o 2 (2013); se copia junto al ejecutable."
       },
       "launch": {
         "linux": null,
@@ -507,7 +507,7 @@
         "mode": "none",
         "expected_filename": null,
         "subdir": null,
-        "notes": "No requiere ROM: es una recreación nativa (LÖVE2D) de Pokémon Gen 1. Arranca y juega."
+        "notes": "No necesita ROM."
       },
       "launch": {
         "linux": null,
@@ -552,7 +552,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Banjo-Kazooie (US) volcada legalmente."
+        "notes": "El juego te pedirá tu ROM de Banjo-Kazooie (US) al arrancar."
       },
       "launch": {
         "linux": "BanjoRecompiled",
@@ -601,7 +601,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM del prototipo de Dinosaur Planet (N64)."
+        "notes": "El juego te pedirá tu ROM del prototipo de Dinosaur Planet al arrancar."
       },
       "launch": {
         "linux": "DinosaurPlanetRecompiled",
@@ -649,7 +649,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Mystical Ninja Starring Goemon (US)."
+        "notes": "El juego te pedirá tu ROM de Mystical Ninja Starring Goemon (US) al arrancar."
       },
       "launch": {
         "linux": "Goemon64Recompiled",
@@ -695,7 +695,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Mega Man 64 (US)."
+        "notes": "El juego te pedirá tu ROM de Mega Man 64 (US) al arrancar."
       },
       "launch": {
         "linux": "MegaMan64Recompiled",
@@ -744,7 +744,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos de tu copia de Skate 3 (Xbox 360). Sigue el asistente del juego para localizarlos en el primer arranque."
+        "notes": "Necesita los archivos de tu copia de Skate 3 (Xbox 360)."
       },
       "launch": {
         "linux": null,
@@ -788,7 +788,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos de la versión XBLA (Xbox 360) de Castlevania: Symphony of the Night. Sigue el asistente del juego en el primer arranque."
+        "notes": "Necesita los archivos de la versión XBLA (Xbox 360) de Symphony of the Night."
       },
       "launch": {
         "linux": null,
@@ -833,7 +833,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Desde la propia app importa los archivos de tu disco de The Legend of Dragoon (US) volcado legalmente."
+        "notes": "Importa los archivos de tu disco de The Legend of Dragoon (US) desde la app."
       },
       "launch": {
         "linux": null,
@@ -877,7 +877,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los datos originales de Tomb Raider I o II. Sigue el asistente del proyecto para colocarlos junto al ejecutable."
+        "notes": "Necesita los datos de Tomb Raider I o II."
       },
       "launch": {
         "linux": null,
@@ -920,7 +920,7 @@
         "mode": "copy",
         "expected_filename": "Data.rsdk",
         "subdir": null,
-        "notes": "Necesitas el archivo Data.rsdk de una copia legal de Sonic Mania (versión compatible con Retro Engine). DecompDeck lo copia junto al ejecutable."
+        "notes": "Necesita el Data.rsdk de Sonic Mania (Retro Engine); se copia junto al ejecutable."
       },
       "launch": {
         "linux": null,
@@ -962,7 +962,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos de datos de tu copia original de Carmageddon. Sigue las instrucciones del proyecto para colocarlos junto al ejecutable."
+        "notes": "Necesita los archivos de tu copia de Carmageddon."
       },
       "launch": {
         "linux": "dethrace",
@@ -1004,7 +1004,7 @@
         "mode": "none",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Cliente en C de RuneScape Classic (2003). Se conecta a un servidor; no requiere ROM ni datos del juego."
+        "notes": "No necesita ROM: se conecta a un servidor."
       },
       "launch": {
         "linux": null,
@@ -1046,7 +1046,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Requiere una instalación de Test Drive Unlimited. Proyecto en fase muy temprana; sigue las instrucciones del repo."
+        "notes": "Necesita una instalación de Test Drive Unlimited. Proyecto en fase temprana."
       },
       "launch": {
         "linux": null,
@@ -1088,7 +1088,7 @@
         "mode": "none",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Los datos de Ambermoon fueron liberados por sus autores; Ambermoon.net los gestiona. Normalmente no requiere aportar nada."
+        "notes": "No necesita aportar datos."
       },
       "launch": {
         "linux": null,
@@ -1130,7 +1130,7 @@
         "mode": "copy",
         "expected_filename": "diabdat.mpq",
         "subdir": null,
-        "notes": "Necesitas el archivo diabdat.mpq de tu copia legal de Diablo. DecompDeck lo copia junto al ejecutable."
+        "notes": "Necesita el diabdat.mpq de Diablo; se copia junto al ejecutable."
       },
       "launch": {
         "linux": null,
@@ -1172,7 +1172,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos de tu copia de Oddworld: Abe's Oddysee / Exoddus. Sigue las instrucciones del proyecto. Nota: la build de Linux es de depuración."
+        "notes": "Necesita los archivos de Oddworld: Abe's Oddysee/Exoddus. La build de Linux es de depuración."
       },
       "launch": {
         "linux": null,
@@ -1215,7 +1215,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque PsyDoom te pedirá la imagen (.cue/.bin) de tu disco de Doom o Final Doom de PlayStation volcado legalmente."
+        "notes": "El juego te pedirá la imagen (.cue/.bin) de tu Doom o Final Doom de PlayStation al arrancar."
       },
       "launch": {
         "linux": null,
@@ -1258,7 +1258,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas tu ISO de The Legend of Zelda: Twilight Princess (GameCube, US) volcada legalmente. Sigue el asistente del juego en el primer arranque."
+        "notes": "Necesita tu ISO de Twilight Princess (GameCube, US)."
       },
       "launch": {
         "linux": null,
@@ -1301,7 +1301,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Bomberman 64 (US)."
+        "notes": "El juego te pedirá tu ROM de Bomberman 64 (US) al arrancar."
       },
       "launch": {
         "linux": "BM64Recompiled",
@@ -1349,7 +1349,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Bomberman Hero (US)."
+        "notes": "El juego te pedirá tu ROM de Bomberman Hero (US) al arrancar."
       },
       "launch": {
         "linux": "BMHeroRecompiled",
@@ -1393,7 +1393,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Harvest Moon 64 (US)."
+        "notes": "El juego te pedirá tu ROM de Harvest Moon 64 (US) al arrancar."
       },
       "launch": {
         "linux": "HarvestMoon64Recompiled",
@@ -1440,7 +1440,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "En el primer arranque el juego te pedirá tu ROM de Snowboard Kids 2 (US)."
+        "notes": "El juego te pedirá tu ROM de Snowboard Kids 2 (US) al arrancar."
       },
       "launch": {
         "linux": "SnowboardKids2Recompiled",
@@ -1482,7 +1482,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos de tu copia de Kameo: Elements of Power (Xbox 360). Sigue el asistente del proyecto en el primer arranque."
+        "notes": "Necesita los archivos de tu copia de Kameo (Xbox 360)."
       },
       "launch": {
         "linux": null,
@@ -1525,7 +1525,7 @@
         "mode": "copy",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Selecciona tu ROM de Super Mario 64 (US) volcada legalmente: se copia a la carpeta del juego y el port genera sus assets automáticamente al lanzarlo."
+        "notes": "Selecciona tu ROM de Super Mario 64 (US); se copia a la carpeta del juego."
       },
       "launch": {
         "linux": null,
@@ -1571,7 +1571,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+        "notes": "Necesita los archivos de tu copia de Sonic Unleashed (Xbox 360)."
       },
       "launch": {
         "linux": null,
@@ -1611,7 +1611,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+        "notes": "El juego te pedirá tu ROM de Dr. Mario 64 (US) al arrancar."
       },
       "launch": {
         "linux": null,
@@ -1651,7 +1651,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+        "notes": "Necesita los archivos de tu copia de Viva Piñata: Trouble in Paradise (Xbox 360)."
       },
       "launch": {
         "linux": null,
@@ -1691,7 +1691,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+        "notes": "Necesita los archivos de tu copia de Lollipop Chainsaw."
       },
       "launch": {
         "linux": null,
@@ -1731,7 +1731,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+        "notes": "Necesita los archivos de tu copia de Banjo-Kazooie: Nuts & Bolts (Xbox 360)."
       },
       "launch": {
         "linux": null,
@@ -1771,7 +1771,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+        "notes": "Necesita los archivos de tu copia de Naughty Bear."
       },
       "launch": {
         "linux": null,
@@ -1811,7 +1811,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los archivos de tu copia de Crash Team Racing (PS1). Sigue las instrucciones del proyecto. Build de Windows (32-bit) que se ejecuta con Proton; también existe una build nativa Linux de 32 bits en el repo."
+        "notes": "Necesita los archivos de tu copia de Crash Team Racing (PS1)."
       },
       "launch": {
         "linux": null,
@@ -1853,7 +1853,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Necesitas los datos de tu copia de Castlevania: Symphony of the Night. Sigue las instrucciones del proyecto en el primer arranque."
+        "notes": "El juego te pedirá los datos de tu copia de Symphony of the Night al arrancar."
       },
       "launch": {
         "linux": null,
@@ -1897,7 +1897,7 @@
         "mode": "in-app",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Trae tu propia ROM de Diddy Kong Racing (.z64/.v64/.n64). Golden Balloon la lee en tiempo de ejecución; sigue las instrucciones del proyecto en el primer arranque."
+        "notes": "El juego te pedirá tu ROM de Diddy Kong Racing al arrancar."
       },
       "launch": {
         "linux": null,
@@ -1941,7 +1941,7 @@
         "mode": "copy",
         "expected_filename": null,
         "subdir": null,
-        "notes": "Selecciona tu ROM de Banjo-Kazooie (US) volcada legalmente (.z64): Freeport la copia a la carpeta del juego y el port genera sus assets (bk.o2r) automáticamente al lanzarlo."
+        "notes": "Selecciona tu ROM de Banjo-Kazooie (US); se copia a la carpeta del juego."
       },
       "launch": {
         "linux": null,

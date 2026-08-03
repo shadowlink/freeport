@@ -218,7 +218,9 @@ pub fn find_launch_binary(dir: &Path, hint: Option<&str>, windows: bool) -> AppR
 
     let is_exe = |p: &PathBuf| p.extension().and_then(|e| e.to_str()).map(|e| e.eq_ignore_ascii_case("exe")) == Some(true);
 
-    if windows {
+    // On a Windows host (or when running a Windows build via Wine/Proton) the
+    // launch target is always a `.exe` — never a Linux ELF/AppImage.
+    if windows || cfg!(target_os = "windows") {
         // Pick the largest .exe (skip tiny uninstaller/helper stubs).
         let mut exes: Vec<(PathBuf, u64)> = candidates
             .iter()
@@ -263,13 +265,6 @@ pub fn find_launch_binary(dir: &Path, hint: Option<&str>, windows: bool) -> AppR
         execs.sort_by_key(|(_, sz)| std::cmp::Reverse(*sz));
         if let Some((p, _)) = execs.first() {
             return Ok(p.clone());
-        }
-    }
-
-    #[cfg(windows)]
-    {
-        if let Some(exe) = candidates.iter().find(|p| is_exe(p)) {
-            return Ok(exe.clone());
         }
     }
 

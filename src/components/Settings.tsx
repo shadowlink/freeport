@@ -7,13 +7,16 @@ export default function Settings({
   onClose,
   onChanged,
   version,
+  platform,
   onCheckUpdate,
 }: {
   onClose: () => void;
   onChanged: () => void;
   version: string;
+  platform: string;
   onCheckUpdate: () => Promise<Update | null>;
 }) {
+  const isWindows = platform.startsWith("windows");
   const [showWindows, setShowWindows] = useState(false);
   const [runners, setRunners] = useState<Runner[]>([]);
   const [runner, setRunner] = useState<string>("");
@@ -91,7 +94,8 @@ export default function Settings({
           <span className="text-xs text-white/40">Freeport v{version || "…"}</span>
         </div>
 
-        {/* Juegos de Windows */}
+        {/* Juegos de Windows (Wine/Proton) — no aplica en Windows nativo */}
+        {!isWindows && (
         <div className="rounded-lg border border-edge bg-panel-2 p-3">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
@@ -127,8 +131,10 @@ export default function Settings({
             </label>
           )}
         </div>
+        )}
 
-        {/* Sunshine / Moonlight */}
+        {/* Sunshine / Moonlight — integración solo Linux */}
+        {!isWindows && (
         <div className="rounded-lg border border-edge bg-panel-2 p-3">
           <div className="flex items-center justify-between gap-3">
             <span className="font-semibold text-sm">Sunshine / Moonlight</span>
@@ -152,6 +158,7 @@ export default function Settings({
             )}
           {sunMsg && <div className="mt-2 text-[12px] text-gold">{sunMsg}</div>}
         </div>
+        )}
 
         {/* Actualizaciones */}
         <div className="rounded-lg border border-edge bg-panel-2 p-3">

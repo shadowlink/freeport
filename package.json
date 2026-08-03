@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node tools/sync-seed.mjs",
+    "sync-seed": "node tools/sync-seed.mjs",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri"

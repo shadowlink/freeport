@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "updated_at": "2026-08-02",
-  "source": "seed",
+  "source": "probed",
   "systems": [
     {
       "id": "n64",
@@ -99,12 +99,14 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
-          "windows-x86_64",
+          "linux-x86_64",
+          "macos-aarch64",
           "macos-x86_64",
-          "macos-aarch64"
-        ]
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.2.2",
+        "published_at": "2025-08-27T00:58:35Z"
       },
       "year": 2000,
       "developer": "Nintendo",
@@ -148,9 +150,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "9.2.3",
+        "published_at": "2026-04-14T13:07:27Z"
       },
       "year": 1998,
       "developer": "Nintendo",
@@ -194,9 +198,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "4.0.2",
+        "published_at": "2026-03-02T03:00:53Z"
       },
       "year": 2000,
       "developer": "Nintendo",
@@ -241,10 +247,12 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
+          "macos-aarch64",
           "macos-x86_64",
-          "macos-aarch64"
-        ]
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.0.0",
+        "published_at": "2026-02-25T02:26:04Z"
       },
       "year": 1996,
       "developer": "Nintendo",
@@ -290,10 +298,12 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
+          "macos-aarch64",
           "macos-x86_64",
-          "macos-aarch64"
-        ]
+          "windows-x86_64"
+        ],
+        "latest_tag": "ci-dev-build",
+        "published_at": "2024-05-14T09:41:23Z"
       },
       "year": 2000,
       "developer": "Rare",
@@ -333,8 +343,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
+          "macos-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.5.1",
+        "published_at": "2026-06-01T02:00:11Z"
       },
       "year": 1996,
       "developer": "Nintendo",
@@ -374,7 +387,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "7.4-rc2",
+        "published_at": "2022-02-04T19:01:30Z"
       },
       "year": 2000,
       "developer": "Reflections",
@@ -414,8 +429,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
+          "macos-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "1.3.3",
+        "published_at": "2025-11-02T00:12:09Z"
       },
       "year": 1993,
       "developer": "Sega",
@@ -456,7 +474,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "1.3.3",
+        "published_at": "2025-11-02T00:48:00Z"
       },
       "year": 1991,
       "developer": "Sega",
@@ -496,9 +516,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.60",
+        "published_at": "2026-08-02T23:15:42Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -538,11 +560,13 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "linux-x86_64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.2",
+        "published_at": "2026-07-31T19:43:17Z"
       },
       "year": 1998,
       "developer": "Rare",
@@ -586,9 +610,10 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.0",
+        "published_at": "2026-05-31T00:23:46Z"
       },
       "year": 2000,
       "developer": "Rare",
@@ -632,10 +657,13 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
+          "macos-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v0.2.0-dev",
+        "published_at": "2026-01-31T15:40:34Z"
       },
       "year": 1997,
       "developer": "Konami",
@@ -675,10 +703,13 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
+          "macos-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v0.9.1",
+        "published_at": "2026-04-30T20:35:04Z"
       },
       "year": 2000,
       "developer": "Capcom",
@@ -722,8 +753,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
+          "macos-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v2.0.2",
+        "published_at": "2026-07-24T21:21:06Z"
       },
       "year": 2010,
       "developer": "EA Black Box",
@@ -762,10 +796,12 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.4.0",
+        "published_at": "2026-07-31T18:52:20Z"
       },
       "year": 1997,
       "developer": "Konami",
@@ -805,10 +841,12 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "devbuild",
+        "published_at": "2025-06-22T15:37:49Z"
       },
       "year": 1999,
       "developer": "SCEI",
@@ -849,7 +887,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "latest",
+        "published_at": "2024-03-26T21:10:06Z"
       },
       "year": 1996,
       "developer": "Core Design",
@@ -890,7 +930,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.1.1",
+        "published_at": "2025-11-01T23:53:19Z"
       },
       "year": 2017,
       "developer": "Christian Whitehead",
@@ -930,7 +972,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v0.10.1",
+        "published_at": "2026-02-22T21:40:00Z"
       },
       "year": 1997,
       "developer": "Stainless Games",
@@ -970,7 +1014,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "mudclient177-rev1",
+        "published_at": "2022-04-01T04:16:20Z"
       },
       "year": 2001,
       "developer": "Jagex",
@@ -1010,7 +1056,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "nightly_ebc3018",
+        "published_at": "2026-08-01T02:07:26Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -1050,7 +1098,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.13.6",
+        "published_at": "2026-06-23T06:46:51Z"
       },
       "year": 1993,
       "developer": "Thalion Software",
@@ -1090,7 +1140,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "1.5.5",
+        "published_at": "2025-10-30T17:00:17Z"
       },
       "year": 1996,
       "developer": "Blizzard North",
@@ -1130,7 +1182,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "github-v1.0.9",
+        "published_at": "2025-03-21T21:05:57Z"
       },
       "year": 1997,
       "developer": "Oddworld Inhabitants",
@@ -1170,9 +1224,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "releases/1.1.1",
+        "published_at": "2023-06-13T06:50:01Z"
       },
       "year": 1995,
       "developer": "id Software",
@@ -1210,9 +1266,11 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
-          "linux-aarch64"
-        ]
+          "linux-aarch64",
+          "linux-x86_64"
+        ],
+        "latest_tag": "v1.4.1",
+        "published_at": "2026-06-16T22:33:28Z"
       },
       "year": 2006,
       "developer": "Nintendo",
@@ -1251,10 +1309,12 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-03-22T22:47:19Z"
       },
       "year": 1997,
       "developer": "Hudson Soft",
@@ -1297,10 +1357,12 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v0.7.1",
+        "published_at": "2026-05-03T20:48:20Z"
       },
       "year": 1998,
       "developer": "Hudson Soft",
@@ -1339,10 +1401,12 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "linux-aarch64",
+          "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.2.1",
+        "published_at": "2026-07-07T00:15:42Z"
       },
       "year": 1999,
       "developer": "Victor Interactive",
@@ -1384,9 +1448,11 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
-          "linux-aarch64"
-        ]
+          "linux-aarch64",
+          "linux-x86_64"
+        ],
+        "latest_tag": "v1.0.5",
+        "published_at": "2026-06-21T18:50:51Z"
       },
       "year": 1999,
       "developer": "Racdym",
@@ -1426,7 +1492,9 @@
         "platforms": [
           "linux-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v0.2.1",
+        "published_at": "2026-06-23T20:53:54Z"
       },
       "year": 2005,
       "developer": "Rare",
@@ -1466,8 +1534,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
+          "macos-x86_64",
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "2.0.0",
+        "published_at": "2026-05-29T16:16:46Z"
       },
       "year": 1996,
       "developer": "Nintendo",
@@ -1509,7 +1580,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "v1.0.3",
+        "published_at": "2025-04-03T22:04:45Z"
       },
       "year": 2008,
       "developer": "Sega",
@@ -1547,7 +1620,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "1.0.0",
+        "published_at": "2025-12-18T04:36:00Z"
       },
       "year": 2001,
       "developer": "Nintendo",
@@ -1585,7 +1660,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "1.11.2",
+        "published_at": "2026-07-17T20:50:25Z"
       },
       "year": 2008,
       "developer": "Rare",
@@ -1623,7 +1700,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "release",
+        "published_at": "2026-04-05T00:49:45Z"
       },
       "year": 2012,
       "developer": "Grasshopper Manufacture",
@@ -1661,7 +1740,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "better_options",
+        "published_at": "2026-07-16T20:36:16Z"
       },
       "year": 2008,
       "developer": "Rare",
@@ -1699,7 +1780,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "release_v1.3",
+        "published_at": "2026-06-30T06:35:23Z"
       },
       "year": 2010,
       "developer": "Behaviour Interactive",
@@ -1737,7 +1820,9 @@
       "cached": {
         "platforms": [
           "windows-x86_64"
-        ]
+        ],
+        "latest_tag": "beta-7.1",
+        "published_at": "2026-07-07T08:11:52Z"
       },
       "year": 1999,
       "developer": "Naughty Dog",
@@ -1777,9 +1862,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v-0.2b",
+        "published_at": "2026-08-03T09:35:06Z"
       },
       "year": 1997,
       "developer": "Konami",
@@ -1819,9 +1906,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-aarch64"
-        ]
+          "macos-aarch64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.3",
+        "published_at": "2026-08-02T08:49:34Z"
       },
       "year": 1997,
       "developer": "Rare",
@@ -1861,9 +1950,11 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "windows-x86_64",
-          "macos-x86_64"
-        ]
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.0.1",
+        "published_at": "2026-08-01T03:00:09Z"
       },
       "year": 1998,
       "developer": "Rare",

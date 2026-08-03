@@ -9,7 +9,7 @@ export interface SystemInfo {
 
 export interface RomInfo {
   required: boolean;
-  mode: string; // "runtime" | "build"
+  mode: "in-app" | "copy" | "none";
   expected_filename: string | null;
   notes: string;
 }

@@ -55,12 +55,12 @@ export default function BigPictureDetail({
   const actions = useMemo<Action[]>(() => {
     const a: Action[] = [];
     if (project.installed) {
-      a.push({ label: "▶ Jugar", run: onPlay, kind: "primary" });
+      a.push({ label: "Jugar", run: onPlay, kind: "primary" });
       a.push({ label: "Eliminar", run: uninstall, kind: "danger" });
     } else {
-      a.push({ label: "⭳ Instalar", run: onInstall, kind: "primary" });
+      a.push({ label: "Instalar", run: onInstall, kind: "primary" });
     }
-    a.push({ label: "← Volver", run: onBack, kind: "normal" });
+    a.push({ label: "Volver", run: onBack, kind: "normal" });
     return a;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.installed]);

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ProjectView, SystemInfo, InstallProgress } from "../types";
 import { gradientFor, initials } from "../lib/art";
+import Icon from "../lib/icons";
 
 interface Props {
   project: ProjectView;
@@ -70,10 +71,10 @@ export default function GameCard({
           </span>
           {project.is_windows && (
             <span
-              className="text-[9px] font-bold tracking-widest px-1.5 py-0.5 rounded bg-[#2b6fb3] text-white"
+              className="text-[9px] font-bold tracking-widest px-1.5 py-0.5 rounded bg-[#2b6fb3] text-white inline-flex items-center gap-1"
               title="Ejecutable de Windows — se ejecuta con Wine/Proton"
             >
-              ⊞ WIN
+              <Icon.Windows className="w-2.5 h-2.5" /> WIN
             </span>
           )}
         </span>
@@ -126,17 +127,17 @@ export default function GameCard({
             <button
               onClick={onLaunch}
               disabled={busy}
-              className="w-full h-8 rounded-md bg-neon text-void font-bold text-sm hover:brightness-110 disabled:opacity-50"
+              className="w-full h-8 rounded-md bg-neon text-void font-bold text-sm hover:brightness-110 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
             >
-              ▶ Jugar
+              <Icon.Play className="w-3.5 h-3.5" /> Jugar
             </button>
           ) : (
             <button
               onClick={onInstall}
               disabled={busy}
-              className="w-full h-8 rounded-md border border-neon/40 text-neon font-semibold text-sm hover:bg-neon/10 disabled:opacity-50"
+              className="w-full h-8 rounded-md border border-neon/40 text-neon font-semibold text-sm hover:bg-neon/10 disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
             >
-              ⭳ Instalar
+              <Icon.Download className="w-3.5 h-3.5" /> Instalar
             </button>
           )}
         </div>

@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getVersion } from "@tauri-apps/api/app";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { api, onInstallProgress } from "./api";
 import { checkForUpdate, type Update } from "./lib/updater";
 import { SYSTEM_LOGOS } from "./lib/logos";
+import Icon from "./lib/icons";
 import type { CatalogView, InstallProgress, ProjectView, SystemInfo } from "./types";
 import GameCard from "./components/GameCard";
 import GamePage from "./components/GamePage";
 import Settings from "./components/Settings";
 import BigPicture from "./components/BigPicture";
 import UpdateBanner from "./components/UpdateBanner";
+import TitleBar, { ResizeHandles } from "./components/TitleBar";
+import CrtOverlay from "./components/CrtOverlay";
 
 export default function App() {
   const [catalog, setCatalog] = useState<CatalogView | null>(null);
@@ -27,12 +31,24 @@ export default function App() {
   const [tvMode, setTvMode] = useState(false);
   const [version, setVersion] = useState("");
   const [update, setUpdate] = useState<Update | null>(null);
+  const [maximized, setMaximized] = useState(false);
 
   // Launched with `--tv` (e.g. by Sunshine) → open straight into Big Picture.
   useEffect(() => {
     api.isTvMode().then((tv) => tv && setTvMode(true)).catch(() => {});
     getVersion().then(setVersion).catch(() => {});
     checkForUpdate().then((u) => u && setUpdate(u));
+  }, []);
+
+  // Track window maximize state for the titlebar control icon.
+  useEffect(() => {
+    const w = getCurrentWindow();
+    const sync = () => w.isMaximized().then(setMaximized).catch(() => {});
+    sync();
+    const un = w.onResized(sync);
+    return () => {
+      un.then((f) => f()).catch(() => {});
+    };
   }, []);
 
   const checkAppUpdate = useCallback(async () => {
@@ -234,27 +250,19 @@ export default function App() {
     </button>
   );
 
+  const sectionLabel = activeSystem
+    ? systemsById.get(activeSystem)?.name ?? activeSystem.toUpperCase()
+    : tab === "library"
+      ? "Mi biblioteca"
+      : "Catálogo";
+
   return (
-    <div className="h-full flex text-white">
-      <UpdateBanner update={update} onDismiss={() => setUpdate(null)} />
+    <div className="app-shell flex flex-col text-white">
+      {!tvMode && <TitleBar section={sectionLabel} maximized={maximized} />}
+      <div className="flex-1 flex min-h-0">
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside className="w-60 shrink-0 border-r border-edge bg-panel/60 flex flex-col">
-        <div className="flex items-center gap-2 px-4 py-4">
-          <div className="w-8 h-8 rounded-lg grid place-items-center bg-neon text-void font-black">
-            ⚓
-          </div>
-          <div className="leading-none">
-            <div className="font-black tracking-wide">
-              FREE<span className="text-neon">PORT</span>
-            </div>
-            <div className="text-[10px] text-white/35 mt-0.5">
-              {version ? `v${version}` : ""}
-              {catalog ? ` · ${catalog.platform}` : ""}
-            </div>
-          </div>
-        </div>
-
-        <div className="px-3 grid grid-cols-2 gap-1.5">
+        <div className="px-3 pt-3 grid grid-cols-2 gap-1.5">
           {(["catalog", "library"] as const).map((t) => (
             <button
               key={t}
@@ -303,25 +311,30 @@ export default function App() {
         <div className="p-3 border-t border-edge space-y-2">
           <button
             onClick={() => setTvMode(true)}
-            className="w-full rounded-lg bg-neon/15 border border-neon/40 text-neon px-2 py-2 text-sm font-bold hover:bg-neon/25"
+            className="w-full rounded-lg bg-neon/15 border border-neon/40 text-neon px-2 py-2 text-sm font-bold hover:bg-neon/25 flex items-center justify-center gap-2"
           >
-            📺 Modo TV
+            <Icon.Tv className="w-4 h-4" /> Modo TV
           </button>
           <div className="flex gap-2">
             <button
               onClick={checkUpdates}
               disabled={checking}
-              className="flex-1 rounded-lg border border-edge px-2 py-2 text-xs font-semibold hover:border-neon/50 disabled:opacity-50"
+              className="flex-1 rounded-lg border border-edge px-2 py-2 text-xs font-semibold hover:border-neon/50 disabled:opacity-50 flex items-center justify-center gap-1.5"
             >
-              {checking ? "Buscando…" : "Buscar updates"}
+              <Icon.Refresh className={`w-3.5 h-3.5 ${checking ? "spin" : ""}`} />
+              {checking ? "Buscando…" : "Updates de juegos"}
             </button>
             <button
               onClick={() => setShowSettings(true)}
-              className="rounded-lg border border-edge px-3 py-2 text-xs font-semibold hover:border-neon/50"
+              className="rounded-lg border border-edge px-3 py-2 hover:border-neon/50"
               title="Ajustes"
             >
-              ⚙
+              <Icon.Settings className="w-4 h-4" />
             </button>
+          </div>
+          <div className="text-center text-[10px] text-white/30 pt-0.5">
+            Freeport {version ? `v${version}` : ""}
+            {catalog ? ` · ${catalog.platform}` : ""}
           </div>
         </div>
       </aside>
@@ -329,13 +342,7 @@ export default function App() {
       {/* ── Main ────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col min-w-0">
         <header className="flex items-baseline gap-3 px-6 py-4 border-b border-edge">
-          <h1 className="text-2xl font-black tracking-wide">
-            {activeSystem
-              ? systemsById.get(activeSystem)?.name ?? activeSystem.toUpperCase()
-              : tab === "library"
-                ? "Mi biblioteca"
-                : "Catálogo"}
-          </h1>
+          <h1 className="text-2xl font-black tracking-wide uppercase">{sectionLabel}</h1>
           <span className="text-sm text-white/40">
             {total} {total === 1 ? "juego" : "juegos"}
             {tab === "catalog" && ` · ${installedCount} instalados`}
@@ -381,6 +388,10 @@ export default function App() {
               {/* Console header only when showing "Todos" (grouped view). */}
               {activeSystem === null && (
                 <div className="flex items-center gap-3 mb-3">
+                  <span
+                    className="w-1 h-7 rounded-full shrink-0"
+                    style={{ background: system?.color ?? "var(--color-neon)" }}
+                  />
                   {logos[id] ? (
                     <img
                       src={logos[id]}
@@ -392,7 +403,11 @@ export default function App() {
                       {system?.name ?? id.toUpperCase()}
                     </h2>
                   )}
-                  <span className="text-xs text-white/35">{projects.length}</span>
+                  <span
+                    className="text-[11px] font-bold px-1.5 py-0.5 rounded-full bg-panel-2 border border-edge text-white/45"
+                  >
+                    {projects.length}
+                  </span>
                 </div>
               )}
               <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(168px,1fr))]">
@@ -413,6 +428,11 @@ export default function App() {
           ))}
         </div>
       </main>
+      </div>
+
+      {!tvMode && <UpdateBanner update={update} onDismiss={() => setUpdate(null)} />}
+      {!tvMode && !maximized && <ResizeHandles />}
+      <CrtOverlay />
 
       {toast && (
         <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] rounded-lg border border-neon/40 bg-panel px-4 py-2.5 text-sm">
@@ -425,6 +445,8 @@ export default function App() {
           project={catalog?.projects.find((p) => p.id === selected.id) ?? selected}
           system={systemsById.get(selected.system)}
           logoUrl={logos[selected.system]}
+          allProjects={catalog?.projects ?? []}
+          onSelect={(p) => setSelected(p)}
           onClose={() => setSelected(null)}
           onChanged={load}
           onLaunch={() => launch(selected)}

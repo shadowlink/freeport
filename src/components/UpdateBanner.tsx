@@ -28,7 +28,7 @@ export default function UpdateBanner({
   };
 
   return (
-    <div className="fixed top-0 inset-x-0 z-[60] flex justify-center px-4 pt-3 pointer-events-none">
+    <div className="fixed top-10 inset-x-0 z-[60] flex justify-center px-4 pt-2 pointer-events-none">
       <div className="pointer-events-auto w-full max-w-xl rounded-xl border border-neon/50 bg-panel shadow-2xl px-4 py-3 flex items-center gap-3">
         <span className="text-xl">⬆️</span>
         <div className="min-w-0 flex-1">

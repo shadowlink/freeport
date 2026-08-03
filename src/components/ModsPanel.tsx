@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, onModProgress } from "../api";
 import type { ModInfo } from "../types";
+import Icon from "../lib/icons";
 
 interface Prog {
   pkg: string;
@@ -163,15 +164,13 @@ export default function ModsPanel({ projectId }: { projectId: string }) {
                 <div className="font-bold text-[13px] leading-tight truncate flex items-center gap-1.5" title={m.name}>
                   {m.name.replace(/_/g, " ")}
                   {hasUpdate ? (
-                    <span className="text-[9px] text-gold font-bold" title="Actualización disponible">
-                      ↑
-                    </span>
+                    <Icon.ArrowUp className="w-3 h-3 text-gold" />
                   ) : (
-                    isInstalled && <span className="text-[9px] text-neon-2 font-bold">✓</span>
+                    isInstalled && <Icon.Check className="w-3 h-3 text-neon-2" />
                   )}
                 </div>
-                <div className="text-[10px] text-white/40 truncate">
-                  {m.owner} · ⭳ {m.downloads.toLocaleString()}
+                <div className="text-[10px] text-white/40 truncate inline-flex items-center gap-1">
+                  {m.owner} · <Icon.Download className="w-3 h-3" /> {m.downloads.toLocaleString()}
                 </div>
                 <p className="text-[11px] text-white/55 line-clamp-2 mt-0.5">{m.description}</p>
               </div>

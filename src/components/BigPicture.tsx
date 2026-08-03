@@ -264,7 +264,7 @@ export default function BigPicture({
                 )}
                 {focused.is_windows && (
                   <span className="px-2 py-0.5 rounded bg-[#2b6fb3]/30 text-[#7fb2e0] border border-[#2b6fb3]/50">
-                    ⊞ Windows
+                    Windows
                   </span>
                 )}
               </div>

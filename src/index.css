@@ -1,5 +1,35 @@
 @import "tailwindcss";
 
+/* ── Display font (Rajdhani, OFL) — self-hosted, no CDN ─────────────────── */
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./assets/fonts/Rajdhani-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("./assets/fonts/Rajdhani-500.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("./assets/fonts/Rajdhani-600.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Rajdhani";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./assets/fonts/Rajdhani-700.woff2") format("woff2");
+}
+
 /* ── Palette ───────────────────────────────────────────────────────────
    Warm "arcade" identity: deep charcoal + amber primary, teal as a rare
    secondary. Existing utility names (neon/neon-2/…) are kept but remapped so
@@ -18,6 +48,8 @@
 
 :root {
   color-scheme: dark;
+  /* CRT overlay intensity (0 = off). Tune globally from here. */
+  --crt: 1;
 }
 
 html,
@@ -34,40 +66,106 @@ body {
     var(--color-void);
   color: #e7e9f0;
   font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
 }
 
+/* ── Window shell (custom titlebar / borderless) ──────────────────────────
+   The OS window is opaque + square (WebKitGTK transparency is unreliable), so
+   we keep it square and just own the chrome. A 1px inner hairline reads as the
+   window outline. */
+.app-shell {
+  height: 100%;
+  position: relative;
+  isolation: isolate;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Thin invisible resize handles around the borderless window. */
+.resize-edge {
+  position: fixed;
+  z-index: 90;
+}
+
+/* ── Arcade / CRT texture (subtle, cheap, non-interactive) ────────────────
+   One fixed layer: fine scanlines + edge vignette. Grain is a second layer. */
+.crt {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  pointer-events: none;
+  opacity: var(--crt);
+  background:
+    /* scanlines */
+    repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.16) 0px,
+      rgba(0, 0, 0, 0.16) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    /* vignette */
+    radial-gradient(120% 120% at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.38) 100%);
+  mix-blend-mode: multiply;
+}
+.crt::after {
+  /* faint film grain via SVG turbulence, tiled */
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 120px 120px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .crt {
+    opacity: calc(var(--crt) * 0.6);
+  }
+}
+
 /* ── Performance helpers ──────────────────────────────────────────────── */
-/* Skip layout/paint for off-screen console sections while keeping scroll
-   height stable — this is what kills the scroll jank with many covers. */
 .cv-section {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
 }
 
+/* ── Scrollbars (slim, overlay-ish) ───────────────────────────────────── */
 .thin-scroll {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-edge) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
   overflow-anchor: none;
 }
 .thin-scroll::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
+  height: 8px;
 }
 .thin-scroll::-webkit-scrollbar-thumb {
-  background: var(--color-edge);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.thin-scroll:hover::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  background-clip: content-box;
 }
 
 /* ── Cards ────────────────────────────────────────────────────────────── */
 .card {
   contain: content;
-  transition: transform 0.14s ease, border-color 0.14s ease;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
   will-change: transform;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 .card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
   border-color: rgba(255, 178, 62, 0.6);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.06) inset,
+    0 10px 26px rgba(0, 0, 0, 0.5),
+    0 0 22px rgba(255, 178, 62, 0.28);
 }
 
 .poster {
@@ -75,9 +173,21 @@ body {
   background-position: center;
 }
 
+/* ── Focus (gamepad/keyboard) — large, glowy, app-wide ─────────────────── */
+.focus-glow {
+  outline: none;
+  border-color: var(--color-neon) !important;
+  box-shadow: 0 0 0 2px rgba(255, 178, 62, 0.5), 0 0 26px rgba(255, 178, 62, 0.45);
+  transform: scale(1.04);
+}
+:focus-visible {
+  outline: 2px solid rgba(255, 178, 62, 0.7);
+  outline-offset: 2px;
+}
+
 /* ── Sidebar nav ──────────────────────────────────────────────────────── */
 .nav-item {
-  transition: background-color 0.12s ease, color 0.12s ease;
+  transition: background-color 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
 @keyframes spin {
@@ -100,4 +210,24 @@ body {
 }
 .badge-pulse {
   animation: pulse-badge 1.6s ease-in-out infinite;
+}
+
+/* Smooth entrance for the detail overlay. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.page-in {
+  animation: page-in 0.18s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-in {
+    animation: none;
+  }
 }

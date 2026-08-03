@@ -1,0 +1,1874 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-08-02",
+  "source": "seed",
+  "systems": [
+    {
+      "id": "n64",
+      "name": "Nintendo 64",
+      "short": "N64",
+      "color": "#00a9a2"
+    },
+    {
+      "id": "psx",
+      "name": "PlayStation",
+      "short": "PS1",
+      "color": "#7f8cc9"
+    },
+    {
+      "id": "genesis",
+      "name": "Sega Genesis",
+      "short": "GEN",
+      "color": "#d05a5a"
+    },
+    {
+      "id": "segacd",
+      "name": "Sega CD",
+      "short": "S-CD",
+      "color": "#b06ad0"
+    },
+    {
+      "id": "gb",
+      "name": "Game Boy",
+      "short": "GB",
+      "color": "#7bb661"
+    },
+    {
+      "id": "x360",
+      "name": "Xbox 360",
+      "short": "X360",
+      "color": "#5ac05a"
+    },
+    {
+      "id": "pc",
+      "name": "PC",
+      "short": "PC",
+      "color": "#e0a13a"
+    },
+    {
+      "id": "amiga",
+      "name": "Amiga",
+      "short": "AMIGA",
+      "color": "#d0567a"
+    },
+    {
+      "id": "gc",
+      "name": "GameCube",
+      "short": "GCN",
+      "color": "#6a5acd"
+    },
+    {
+      "id": "snes",
+      "name": "Super Nintendo",
+      "short": "SNES",
+      "color": "#8f8fd8"
+    }
+  ],
+  "projects": [
+    {
+      "id": "zelda64-recomp-mm",
+      "name": "Majora's Mask (Recompiled)",
+      "original_game": "The Legend of Zelda: Majora's Mask",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Zelda64Recomp",
+        "repo": "Zelda64Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20Majora%27s%20Mask%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "linux-aarch64": "(?i)linux-arm64",
+        "windows-x86_64": "(?i)windows",
+        "macos-x86_64": "(?i)macos",
+        "macos-aarch64": "(?i)macos"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque, en el menú del juego pulsa «Find ROM» y selecciona tu ROM de Majora's Mask (US) volcada legalmente. Este port gestiona la ROM por sí mismo; DecompDeck no la copia."
+      },
+      "launch": {
+        "linux": "Zelda64Recompiled",
+        "windows": "Zelda64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64",
+          "macos-x86_64",
+          "macos-aarch64"
+        ]
+      },
+      "year": 2000,
+      "developer": "Nintendo",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: Majora's Mask",
+      "mods": {
+        "source": "thunderstore",
+        "community": "zelda-64-recompiled"
+      }
+    },
+    {
+      "id": "ship-of-harkinian",
+      "name": "Ship of Harkinian",
+      "original_game": "The Legend of Zelda: Ocarina of Time",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HarbourMasters",
+        "repo": "Shipwright"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20Ocarina%20of%20Time%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Ocarina of Time (US) volcada legalmente: DecompDeck la copia a la carpeta del juego y el port genera sus assets (oot.o2r) automáticamente al lanzarlo, sin diálogos."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "soh.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 1998,
+      "developer": "Nintendo",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: Ocarina of Time",
+      "mods": {
+        "source": "gamebanana",
+        "community": "16121"
+      }
+    },
+    {
+      "id": "2ship2harkinian",
+      "name": "2 Ship 2 Harkinian",
+      "original_game": "The Legend of Zelda: Majora's Mask",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HarbourMasters",
+        "repo": "2ship2harkinian"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20Majora%27s%20Mask%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Majora's Mask (US) volcada legalmente: se copia a la carpeta del juego y el port genera mm.o2r automáticamente al lanzarlo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "2s2h.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 2000,
+      "developer": "Nintendo",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: Majora's Mask",
+      "mods": {
+        "source": "gamebanana",
+        "community": "20371"
+      }
+    },
+    {
+      "id": "spaghettikart-mk64",
+      "name": "Spaghetti Kart",
+      "original_game": "Mario Kart 64",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HarbourMasters",
+        "repo": "spaghettikart"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Mario%20Kart%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)-linux",
+        "windows-x86_64": "(?i)-windows",
+        "macos-x86_64": "(?i)mac-intel",
+        "macos-aarch64": "(?i)mac-arm"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Mario Kart 64 (US) volcada legalmente: se copia a la carpeta del juego y el port genera mk64.o2r automáticamente al lanzarlo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64",
+          "macos-aarch64"
+        ]
+      },
+      "year": 1996,
+      "developer": "Nintendo",
+      "genre": "Carreras",
+      "wiki": "Mario Kart 64",
+      "mods": {
+        "source": "gamebanana",
+        "community": "22970"
+      }
+    },
+    {
+      "id": "perfect-dark-pc",
+      "name": "Perfect Dark (PC Port)",
+      "original_game": "Perfect Dark",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "perfect-dark-pc-port",
+        "repo": "perfect_dark"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "ci-dev-build",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Perfect%20Dark%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)x86_64-linux",
+        "windows-x86_64": "(?i)x86_64-windows",
+        "macos-x86_64": "(?i)x86_64-osx",
+        "macos-aarch64": "(?i)arm64-osx"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "pd.ntsc-final.z64",
+        "subdir": "data",
+        "notes": "Selecciona tu ROM de Perfect Dark (NTSC-U) volcada legalmente: DecompDeck la copia como data/pd.ntsc-final.z64 junto al ejecutable (el port no tiene selector propio)."
+      },
+      "launch": {
+        "linux": "pd.x86_64",
+        "windows": "pd.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64",
+          "macos-aarch64"
+        ]
+      },
+      "year": 2000,
+      "developer": "Rare",
+      "genre": "Disparos en primera persona",
+      "wiki": "Perfect Dark"
+    },
+    {
+      "id": "sm64coopdx",
+      "name": "Super Mario 64: Co-op Deluxe",
+      "original_game": "Super Mario 64",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "coop-deluxe",
+        "repo": "sm64coopdx"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Super%20Mario%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "sm64coopdx te pedirá tu ROM de Super Mario 64 (US) volcada legalmente al arrancar por primera vez, para extraer los assets."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "sm64coopdx.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1996,
+      "developer": "Nintendo",
+      "genre": "Plataformas",
+      "wiki": "Super Mario 64"
+    },
+    {
+      "id": "redriver2",
+      "name": "REDRIVER2",
+      "original_game": "Driver 2",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "OpenDriver2",
+        "repo": "REDRIVER2"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Driver%202%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux_release\\.tar\\.gz$",
+        "windows-x86_64": "(?i)win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos del disco de Driver 2 (NTSC) volcado legalmente. Sigue las instrucciones del proyecto para colocar los datos del juego junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "REDRIVER2.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2000,
+      "developer": "Reflections",
+      "genre": "Conducción",
+      "wiki": "Driver 2"
+    },
+    {
+      "id": "sonic-cd-decomp",
+      "name": "Sonic CD (Decompilation)",
+      "original_game": "Sonic CD",
+      "system": "segacd",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Rubberduckycooly",
+        "repo": "Sonic-CD-11-Decompilation"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%20Mega-CD%20-%20Sega%20CD/Named_Boxarts/Sonic%20CD%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "Data.rsdk",
+        "subdir": null,
+        "notes": "Necesitas el archivo Data.rsdk de una copia legal de Sonic CD (Retro Engine / versión móvil o de Origins). DecompDeck lo copia junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1993,
+      "developer": "Sega",
+      "genre": "Plataformas",
+      "wiki": "Sonic CD"
+    },
+    {
+      "id": "sonic-1-2-decomp",
+      "name": "Sonic 1 & 2 (2013) — Decompilation",
+      "original_game": "Sonic the Hedgehog",
+      "system": "genesis",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Rubberduckycooly",
+        "repo": "Sonic-1-2-2013-Decompilation"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%20Mega%20Drive%20-%20Genesis/Named_Boxarts/Sonic%20The%20Hedgehog%20%28USA%2C%20Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "Data.rsdk",
+        "subdir": null,
+        "notes": "Necesitas el archivo Data.rsdk de una copia legal de Sonic 1 o Sonic 2 (2013, Retro Engine / móvil). DecompDeck lo copia junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1991,
+      "developer": "Sega",
+      "genre": "Plataformas",
+      "wiki": "Sonic the Hedgehog (videojuego de 1991)"
+    },
+    {
+      "id": "gen1recomp",
+      "name": "Gen1Recomp",
+      "original_game": "Pokémon Red / Blue",
+      "system": "gb",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "bryanthaboi",
+        "repo": "gen1recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy/Named_Boxarts/Pokemon%20-%20Red%20Version%20%28USA%2C%20Europe%29%20%28SGB%20Enhanced%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)-linux\\.zip$",
+        "windows-x86_64": "(?i)-windows\\.zip$",
+        "macos-x86_64": "(?i)-macos\\.zip$"
+      },
+      "rom": {
+        "required": false,
+        "mode": "none",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "No requiere ROM: es una recreación nativa (LÖVE2D) de Pokémon Gen 1. Arranca y juega."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 1996,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon Rojo y Azul"
+    },
+    {
+      "id": "banjo-recomp",
+      "name": "Banjo-Kazooie (Recompiled)",
+      "original_game": "Banjo-Kazooie",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "BanjoRecomp",
+        "repo": "BanjoRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Banjo-Kazooie%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.tar",
+        "linux-aarch64": "(?i)linux-arm64",
+        "windows-x86_64": "(?i)windows",
+        "macos-x86_64": "(?i)macos"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Banjo-Kazooie (US) volcada legalmente."
+      },
+      "launch": {
+        "linux": "BanjoRecompiled",
+        "windows": "BanjoRecompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 1998,
+      "developer": "Rare",
+      "genre": "Plataformas",
+      "wiki": "Banjo-Kazooie",
+      "mods": {
+        "source": "thunderstore",
+        "community": "banjo-recompiled"
+      }
+    },
+    {
+      "id": "dino-recomp",
+      "name": "Dinosaur Planet (Recompiled)",
+      "original_game": "Dinosaur Planet",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "DinosaurPlanetRecomp",
+        "repo": "dino-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/11738c383581f80d010ca13ac005d763.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)windows",
+        "macos-x86_64": "(?i)macos"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM del prototipo de Dinosaur Planet (N64)."
+      },
+      "launch": {
+        "linux": "DinosaurPlanetRecompiled",
+        "windows": "DinosaurPlanetRecompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 2000,
+      "developer": "Rare",
+      "genre": "Acción-aventura",
+      "wiki": "Dinosaur Planet",
+      "mods": {
+        "source": "thunderstore",
+        "community": "dinosaur-planet-recompiled"
+      }
+    },
+    {
+      "id": "goemon64-recomp",
+      "name": "Mystical Ninja Goemon (Recompiled)",
+      "original_game": "Mystical Ninja Starring Goemon",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "klorfmorf",
+        "repo": "Goemon64Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Mystical%20Ninja%20Starring%20Goemon%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "linux-aarch64": "(?i)linux-arm64",
+        "windows-x86_64": "(?i)windows",
+        "macos-x86_64": "(?i)macos"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Mystical Ninja Starring Goemon (US)."
+      },
+      "launch": {
+        "linux": "Goemon64Recompiled",
+        "windows": "Goemon64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Konami",
+      "genre": "Acción-aventura",
+      "wiki": "Ganbare Goemon: Neo Momoyama Bakufu no Odori"
+    },
+    {
+      "id": "megaman64-recomp",
+      "name": "Mega Man 64 (Recompiled)",
+      "original_game": "Mega Man 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "MegaMan64Recomp",
+        "repo": "MegaMan64Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Mega%20Man%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "linux-aarch64": "(?i)linux-arm64",
+        "windows-x86_64": "(?i)windows",
+        "macos-x86_64": "(?i)macos"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Mega Man 64 (US)."
+      },
+      "launch": {
+        "linux": "MegaMan64Recompiled",
+        "windows": "MegaMan64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2000,
+      "developer": "Capcom",
+      "genre": "Acción-aventura",
+      "wiki": "Mega Man Legends",
+      "mods": {
+        "source": "thunderstore",
+        "community": "mega-man-64-recompiled"
+      }
+    },
+    {
+      "id": "skate3-recomp",
+      "name": "Skate 3 (Recompiled)",
+      "original_game": "Skate 3",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mchughalex",
+        "repo": "skate3recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/84/Skate-3-Boxart.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos de tu copia de Skate 3 (Xbox 360). Sigue el asistente del juego para localizarlos en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2010,
+      "developer": "EA Black Box",
+      "genre": "Deportes",
+      "wiki": "Skate 3"
+    },
+    {
+      "id": "nocturne-recomp",
+      "name": "Castlevania: SOTN (Recompiled)",
+      "original_game": "Castlevania: Symphony of the Night",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "birabittoh",
+        "repo": "NocturneRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Castlevania%20-%20Symphony%20of%20the%20Night%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)nocturnerecomp-v.*linux-x64\\.tar\\.gz",
+        "linux-aarch64": "(?i)nocturnerecomp-v.*linux-arm64\\.tar\\.gz",
+        "windows-x86_64": "(?i)nocturnerecomp-v.*win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos de la versión XBLA (Xbox 360) de Castlevania: Symphony of the Night. Sigue el asistente del juego en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Konami",
+      "genre": "Metroidvania",
+      "wiki": "Castlevania: Symphony of the Night"
+    },
+    {
+      "id": "severed-chains-lod",
+      "name": "Severed Chains",
+      "original_game": "The Legend of Dragoon",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Legend-of-Dragoon-Modding",
+        "repo": "Severed-Chains"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "devbuild",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Legend%20of%20Dragoon%2C%20The%20%28USA%29%20%28Disc%201%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)Severed_Chains_Linux\\.tar\\.gz$",
+        "linux-aarch64": "(?i)Severed_Chains_Linux_ARM64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Desde la propia app importa los archivos de tu disco de The Legend of Dragoon (US) volcado legalmente."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1999,
+      "developer": "SCEI",
+      "genre": "RPG",
+      "wiki": "The Legend of Dragoon"
+    },
+    {
+      "id": "trx-tombraider",
+      "name": "TRX (Tomb Raider I & II)",
+      "original_game": "Tomb Raider",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "LostArtefacts",
+        "repo": "TRX"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "latest",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Tomb%20Raider%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux\\.zip$",
+        "windows-x86_64": "(?i)windows"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los datos originales de Tomb Raider I o II. Sigue el asistente del proyecto para colocarlos junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1996,
+      "developer": "Core Design",
+      "genre": "Acción-aventura",
+      "wiki": "Tomb Raider (videojuego de 1996)"
+    },
+    {
+      "id": "sonic-mania-decomp",
+      "name": "Sonic Mania (Decompilation)",
+      "original_game": "Sonic Mania",
+      "system": "pc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Rubberduckycooly",
+        "repo": "Sonic-Mania-Decompilation"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/d/d2/Sonic_Mania_%28artwork%29.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "Data.rsdk",
+        "subdir": null,
+        "notes": "Necesitas el archivo Data.rsdk de una copia legal de Sonic Mania (versión compatible con Retro Engine). DecompDeck lo copia junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2017,
+      "developer": "Christian Whitehead",
+      "genre": "Plataformas",
+      "wiki": "Sonic Mania"
+    },
+    {
+      "id": "dethrace-carmageddon",
+      "name": "Dethrace",
+      "original_game": "Carmageddon",
+      "system": "pc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "dethrace-labs",
+        "repo": "dethrace"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/0b10574b8240b424056808b793bef04f.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos de datos de tu copia original de Carmageddon. Sigue las instrucciones del proyecto para colocarlos junto al ejecutable."
+      },
+      "launch": {
+        "linux": "dethrace",
+        "windows": "dethrace.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Stainless Games",
+      "genre": "Carreras",
+      "wiki": "Carmageddon"
+    },
+    {
+      "id": "runescape-classic",
+      "name": "rsc-c (RuneScape Classic)",
+      "original_game": "RuneScape Classic (2003)",
+      "system": "pc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "2003scape",
+        "repo": "rsc-c"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/0a544b368c0e804e1d704353be3ee0d9.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64",
+        "windows-x86_64": "(?i)win"
+      },
+      "rom": {
+        "required": false,
+        "mode": "none",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Cliente en C de RuneScape Classic (2003). Se conecta a un servidor; no requiere ROM ni datos del juego."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2001,
+      "developer": "Jagex",
+      "genre": "MMORPG",
+      "wiki": "RuneScape"
+    },
+    {
+      "id": "opentdu",
+      "name": "OpenTestDriveUnlimited",
+      "original_game": "Test Drive Unlimited",
+      "system": "x360",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "opentestdriveunlimited",
+        "repo": "OpenTestDriveUnlimited"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/6/63/Test_Drive_Unlimited_boxart.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Requiere una instalación de Test Drive Unlimited. Proyecto en fase muy temprana; sigue las instrucciones del repo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2006,
+      "developer": "Eden Games",
+      "genre": "Carreras",
+      "wiki": "Test Drive Unlimited"
+    },
+    {
+      "id": "ambermoon-net",
+      "name": "Ambermoon.net",
+      "original_game": "Ambermoon",
+      "system": "amiga",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Pyrdacor",
+        "repo": "Ambermoon.net"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/fa540b3545829bc68d6922545dd0e2ff.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)Linux\\.tar\\.gz$",
+        "windows-x86_64": "(?i)Windows"
+      },
+      "rom": {
+        "required": false,
+        "mode": "none",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Los datos de Ambermoon fueron liberados por sus autores; Ambermoon.net los gestiona. Normalmente no requiere aportar nada."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1993,
+      "developer": "Thalion Software",
+      "genre": "RPG",
+      "wiki": "Ambermoon"
+    },
+    {
+      "id": "devilutionx-diablo",
+      "name": "DevilutionX",
+      "original_game": "Diablo",
+      "system": "pc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "diasurgical",
+        "repo": "devilutionX"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/cced2922f69c1c789ba9d1c9c4210b1c.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.appimage$",
+        "windows-x86_64": "(?i)windows-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "diabdat.mpq",
+        "subdir": null,
+        "notes": "Necesitas el archivo diabdat.mpq de tu copia legal de Diablo. DecompDeck lo copia junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1996,
+      "developer": "Blizzard North",
+      "genre": "Action RPG",
+      "wiki": "Diablo (videojuego)"
+    },
+    {
+      "id": "alive-oddworld",
+      "name": "A.L.I.V.E. (Oddworld)",
+      "original_game": "Oddworld: Abe's Oddysee",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "AliveTeam",
+        "repo": "alive_reversing"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Oddworld%20-%20Abe%27s%20Oddysee%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)\\.deb\\.zip$",
+        "windows-x86_64": "(?i)win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos de tu copia de Oddworld: Abe's Oddysee / Exoddus. Sigue las instrucciones del proyecto. Nota: la build de Linux es de depuración."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Oddworld Inhabitants",
+      "genre": "Plataformas",
+      "wiki": "Oddworld: Abe's Oddysee"
+    },
+    {
+      "id": "psydoom",
+      "name": "PsyDoom",
+      "original_game": "Doom (PlayStation)",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "BodbDearg",
+        "repo": "PsyDoom"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Doom%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)Linux_x86_64\\.appimage$",
+        "windows-x86_64": "(?i)Windows_x86_64\\.zip$",
+        "macos-x86_64": "(?i)MacOS"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque PsyDoom te pedirá la imagen (.cue/.bin) de tu disco de Doom o Final Doom de PlayStation volcado legalmente."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 1995,
+      "developer": "id Software",
+      "genre": "Disparos en primera persona",
+      "wiki": "Doom (videojuego de 1993)"
+    },
+    {
+      "id": "dusklight-tp",
+      "name": "Dusklight",
+      "original_game": "The Legend of Zelda: Twilight Princess",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "TwilitRealm",
+        "repo": "dusklight"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20Twilight%20Princess%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.appimage$",
+        "linux-aarch64": "(?i)linux-arm64\\.appimage$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas tu ISO de The Legend of Zelda: Twilight Princess (GameCube, US) volcada legalmente. Sigue el asistente del juego en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64"
+        ]
+      },
+      "year": 2006,
+      "developer": "Nintendo",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: Twilight Princess"
+    },
+    {
+      "id": "bomberman64-recomp",
+      "name": "Bomberman 64 (Recompiled)",
+      "original_game": "Bomberman 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "RevoSucks",
+        "repo": "BM64Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Bomberman%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "linux-aarch64": "(?i)linux-arm64",
+        "windows-x86_64": "(?i)windows"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Bomberman 64 (US)."
+      },
+      "launch": {
+        "linux": "BM64Recompiled",
+        "windows": "BM64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Hudson Soft",
+      "genre": "Acción",
+      "wiki": "Bomberman 64",
+      "mods": {
+        "source": "thunderstore",
+        "community": "bomberman-64-recompiled"
+      }
+    },
+    {
+      "id": "bombermanhero-recomp",
+      "name": "Bomberman Hero (Recompiled)",
+      "original_game": "Bomberman Hero",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "RevoSucks",
+        "repo": "BMHeroRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Bomberman%20Hero%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "linux-aarch64": "(?i)linux-arm64",
+        "windows-x86_64": "(?i)windows"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Bomberman Hero (US)."
+      },
+      "launch": {
+        "linux": "BMHeroRecompiled",
+        "windows": "BMHeroRecompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1998,
+      "developer": "Hudson Soft",
+      "genre": "Plataformas",
+      "wiki": "Bomberman Hero"
+    },
+    {
+      "id": "harvestmoon64-recomp",
+      "name": "Harvest Moon 64 (Recompiled)",
+      "original_game": "Harvest Moon 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "HarvestMoon64Recomp",
+        "repo": "HarvestMoon64Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Harvest%20Moon%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "linux-aarch64": "(?i)linux-arm64\\.zip$",
+        "windows-x86_64": "(?i)windows"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Harvest Moon 64 (US)."
+      },
+      "launch": {
+        "linux": "HarvestMoon64Recompiled",
+        "windows": "HarvestMoon64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1999,
+      "developer": "Victor Interactive",
+      "genre": "Simulación",
+      "wiki": "Harvest Moon 64",
+      "mods": {
+        "source": "thunderstore",
+        "community": "harvest-moon-64-recompiled"
+      }
+    },
+    {
+      "id": "snowboardkids2-recomp",
+      "name": "Snowboard Kids 2 (Recompiled)",
+      "original_game": "Snowboard Kids 2",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "cdlewis",
+        "repo": "snowboardkids2-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Snowboard%20Kids%202%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64-release\\.tar\\.gz$",
+        "linux-aarch64": "(?i)linux-arm64-release\\.tar\\.gz$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque el juego te pedirá tu ROM de Snowboard Kids 2 (US)."
+      },
+      "launch": {
+        "linux": "SnowboardKids2Recompiled",
+        "windows": "SnowboardKids2Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "linux-aarch64"
+        ]
+      },
+      "year": 1999,
+      "developer": "Racdym",
+      "genre": "Deportes",
+      "wiki": "Snowboard Kids 2"
+    },
+    {
+      "id": "kameo-recomp",
+      "name": "Kameo RePowered",
+      "original_game": "Kameo: Elements of Power",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "birabittoh",
+        "repo": "KameoRePowered"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/0/0f/Kameocover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)kameorepowered-v.*linux-x64\\.tar\\.gz",
+        "windows-x86_64": "(?i)kameorepowered-v.*win"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos de tu copia de Kameo: Elements of Power (Xbox 360). Sigue el asistente del proyecto en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 2005,
+      "developer": "Rare",
+      "genre": "Acción-aventura",
+      "wiki": "Kameo: Elements of Power"
+    },
+    {
+      "id": "ghostship-sm64",
+      "name": "Super Mario 64 (Ghostship)",
+      "original_game": "Super Mario 64",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HarbourMasters",
+        "repo": "Ghostship"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Super%20Mario%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Super Mario 64 (US) volcada legalmente: se copia a la carpeta del juego y el port genera sus assets automáticamente al lanzarlo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ]
+      },
+      "year": 1996,
+      "developer": "Nintendo",
+      "genre": "Plataformas",
+      "wiki": "Super Mario 64",
+      "mods": {
+        "source": "gamebanana",
+        "community": "24131"
+      }
+    },
+    {
+      "id": "unleashed-recomp",
+      "name": "Unleashed Recompiled",
+      "original_game": "Sonic Unleashed",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "hedge-dev",
+        "repo": "UnleashedRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/b80c0932cb6f7be27c8d37b4c847a8bd.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)UnleashedRecomp-Windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 2008,
+      "developer": "Sega",
+      "genre": "Plataformas",
+      "wiki": "Sonic Unleashed"
+    },
+    {
+      "id": "drmario64-recomp",
+      "name": "Dr. Mario 64 (Recompiled)",
+      "original_game": "Dr. Mario 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "theboy181",
+        "repo": "drmario64_recomp_plus"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/c3884b938f2ccc63708d922671c5ea23.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 2001,
+      "developer": "Nintendo",
+      "genre": "Puzle",
+      "wiki": "Dr. Mario 64"
+    },
+    {
+      "id": "tip-recomp",
+      "name": "Viva Piñata: TiP (Recompiled)",
+      "original_game": "Viva Piñata: Trouble in Paradise",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "SolarCookies",
+        "repo": "TiP-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/e9437348054c27c0951c7d9d59bac04f.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 2008,
+      "developer": "Rare",
+      "genre": "Simulación",
+      "wiki": "Viva Piñata: Trouble in Paradise"
+    },
+    {
+      "id": "recherry-lollipop",
+      "name": "Re-Cherry (Lollipop Chainsaw)",
+      "original_game": "Lollipop Chainsaw",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "MaxDeadBear",
+        "repo": "Re-Cherry"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/7e601e63a48cb33f754d5bd684631118.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64\\.exe$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 2012,
+      "developer": "Grasshopper Manufacture",
+      "genre": "Hack and slash",
+      "wiki": "Lollipop Chainsaw"
+    },
+    {
+      "id": "renut-banjo-nb",
+      "name": "reNut (Nuts & Bolts)",
+      "original_game": "Banjo-Kazooie: Nuts & Bolts",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "masterspike52",
+        "repo": "reNut"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/17faa600670ae46a32ff83f76e83806a.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 2008,
+      "developer": "Rare",
+      "genre": "Plataformas",
+      "wiki": "Banjo-Kazooie: Nuts & Bolts"
+    },
+    {
+      "id": "restuff-naughtybear",
+      "name": "ReStuff (Naughty Bear)",
+      "original_game": "Naughty Bear",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "MaxDeadBear",
+        "repo": "NaughtyBear_ReStuff"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/cb9078c5cafe2934e4eceadc54d585c5.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Solo build de Windows (se ejecuta con Wine/Proton). Necesitas los archivos de tu copia original del juego; sigue el asistente/instrucciones del proyecto."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 2010,
+      "developer": "Behaviour Interactive",
+      "genre": "Acción",
+      "wiki": "Naughty Bear"
+    },
+    {
+      "id": "ctr-native",
+      "name": "CTR Native",
+      "original_game": "Crash Team Racing",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "CTR-tools",
+        "repo": "ctr-native"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/CTR%20-%20Crash%20Team%20Racing%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x86\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los archivos de tu copia de Crash Team Racing (PS1). Sigue las instrucciones del proyecto. Build de Windows (32-bit) que se ejecuta con Proton; también existe una build nativa Linux de 32 bits en el repo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ]
+      },
+      "year": 1999,
+      "developer": "Naughty Dog",
+      "genre": "Carreras",
+      "wiki": "Crash Team Racing"
+    },
+    {
+      "id": "symphony-recomp",
+      "name": "SymphonyRecomp",
+      "original_game": "Castlevania: Symphony of the Night",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "BlackLabelHQ",
+        "repo": "SymphonyRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Castlevania%20-%20Symphony%20of%20the%20Night%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "windows-x86_64": "(?i)windows",
+        "macos-x86_64": "(?i)macos"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesitas los datos de tu copia de Castlevania: Symphony of the Night. Sigue las instrucciones del proyecto en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Konami",
+      "genre": "Metroidvania",
+      "wiki": "Castlevania: Symphony of the Night"
+    },
+    {
+      "id": "golden-balloon",
+      "name": "Golden Balloon",
+      "original_game": "Diddy Kong Racing",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "akratch",
+        "repo": "goldenballoon"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Diddy%20Kong%20Racing%20(USA)%20(En,Fr).png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$",
+        "macos-aarch64": "(?i)macos-arm64.*\\.dmg$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Trae tu propia ROM de Diddy Kong Racing (.z64/.v64/.n64). Golden Balloon la lee en tiempo de ejecución; sigue las instrucciones del proyecto en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-aarch64"
+        ]
+      },
+      "year": 1997,
+      "developer": "Rare",
+      "genre": "Carreras",
+      "wiki": "Diddy Kong Racing"
+    },
+    {
+      "id": "lighthouse-banjo",
+      "name": "Lighthouse",
+      "original_game": "Banjo-Kazooie",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HarbourMasters",
+        "repo": "Lighthouse"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Banjo-Kazooie%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux",
+        "windows-x86_64": "(?i)win",
+        "macos-x86_64": "(?i)mac"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Banjo-Kazooie (US) volcada legalmente (.z64): Freeport la copia a la carpeta del juego y el port genera sus assets (bk.o2r) automáticamente al lanzarlo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64",
+          "macos-x86_64"
+        ]
+      },
+      "year": 1998,
+      "developer": "Rare",
+      "genre": "Plataformas",
+      "wiki": "Banjo-Kazooie"
+    }
+  ]
+}

@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/* ── Palette ───────────────────────────────────────────────────────────
+   Warm "arcade" identity: deep charcoal + amber primary, teal as a rare
+   secondary. Existing utility names (neon/neon-2/…) are kept but remapped so
+   the whole UI recolours from here. */
+@theme {
+  --color-void: #0b0c10;
+  --color-panel: #14161d;
+  --color-panel-2: #1c1f28;
+  --color-edge: #2b2f3a;
+  --color-neon: #ffb23e; /* primary accent (amber) */
+  --color-neon-2: #4de1c1; /* secondary (teal) */
+  --color-hot: #ff5d73;
+  --color-gold: #ffd166;
+  --font-display: "Rajdhani", "Segoe UI", system-ui, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1100px 520px at 15% -8%, rgba(255, 178, 62, 0.1), transparent 60%),
+    radial-gradient(900px 500px at 100% 110%, rgba(77, 225, 193, 0.06), transparent 55%),
+    var(--color-void);
+  color: #e7e9f0;
+  font-family: var(--font-display);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ── Performance helpers ──────────────────────────────────────────────── */
+/* Skip layout/paint for off-screen console sections while keeping scroll
+   height stable — this is what kills the scroll jank with many covers. */
+.cv-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 320px;
+}
+
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-edge) transparent;
+  overflow-anchor: none;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-edge);
+  border-radius: 8px;
+}
+
+/* ── Cards ────────────────────────────────────────────────────────────── */
+.card {
+  contain: content;
+  transition: transform 0.14s ease, border-color 0.14s ease;
+  will-change: transform;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 178, 62, 0.6);
+}
+
+.poster {
+  background-size: cover;
+  background-position: center;
+}
+
+/* ── Sidebar nav ──────────────────────────────────────────────────────── */
+.nav-item {
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes pulse-badge {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+.badge-pulse {
+  animation: pulse-badge 1.6s ease-in-out infinite;
+}

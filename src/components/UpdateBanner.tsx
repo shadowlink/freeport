@@ -1,26 +1,26 @@
-import { useEffect, useState } from "react";
-import { checkForUpdate, installUpdate, type Update } from "../lib/updater";
+import { useState } from "react";
+import { installUpdate, type Update } from "../lib/updater";
 
-// Shows a banner when a newer Freeport release is available, and handles the
-// download + install + relaunch flow. Auto-checks once on startup.
-export default function UpdateBanner() {
-  const [update, setUpdate] = useState<Update | null>(null);
-  const [dismissed, setDismissed] = useState(false);
+// Banner que aparece cuando hay una versión nueva. App decide cuándo mostrarlo
+// (pasando `update`); aquí se maneja la descarga + instalación con feedback.
+export default function UpdateBanner({
+  update,
+  onDismiss,
+}: {
+  update: Update | null;
+  onDismiss: () => void;
+}) {
   const [busy, setBusy] = useState(false);
   const [pct, setPct] = useState<number | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
-  useEffect(() => {
-    checkForUpdate().then((u) => u && setUpdate(u));
-  }, []);
-
-  if (!update || dismissed) return null;
+  if (!update) return null;
 
   const run = async () => {
     setBusy(true);
     setErr(null);
     try {
-      await installUpdate(update, setPct); // relaunches on success
+      await installUpdate(update, setPct); // reinicia la app al terminar
     } catch (e) {
       setErr(String(e));
       setBusy(false);
@@ -33,14 +33,13 @@ export default function UpdateBanner() {
         <span className="text-xl">⬆️</span>
         <div className="min-w-0 flex-1">
           <div className="text-sm font-bold">
-            Nueva versión de Freeport disponible:{" "}
-            <span className="text-neon">v{update.version}</span>
+            Versión nueva disponible: <span className="text-neon">v{update.version}</span>
           </div>
           {busy ? (
-            <div className="mt-1">
+            <div className="mt-1.5">
               <div className="h-1.5 rounded bg-panel-2 overflow-hidden">
                 <div
-                  className="h-full bg-neon transition-[width]"
+                  className="h-full bg-neon transition-[width] duration-200"
                   style={{ width: pct == null ? "40%" : `${pct}%` }}
                 />
               </div>
@@ -48,18 +47,14 @@ export default function UpdateBanner() {
                 {pct == null ? "Descargando…" : `Descargando ${pct}%`} · se reiniciará al terminar
               </div>
             </div>
-          ) : err ? (
-            <div className="text-[12px] text-hot mt-0.5">{err}</div>
           ) : (
-            update.body && (
-              <div className="text-[12px] text-white/50 mt-0.5 line-clamp-2">{update.body}</div>
-            )
+            err && <div className="text-[12px] text-hot mt-0.5">{err}</div>
           )}
         </div>
         {!busy && (
           <div className="flex items-center gap-2 shrink-0">
             <button
-              onClick={() => setDismissed(true)}
+              onClick={onDismiss}
               className="text-xs rounded-lg border border-edge px-3 py-1.5 text-white/60 hover:text-white"
             >
               Después

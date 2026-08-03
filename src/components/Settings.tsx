@@ -1,22 +1,20 @@
 import { useEffect, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { api } from "../api";
-import { checkForUpdate, installUpdate } from "../lib/updater";
-import type { PathsInfo, Runner, SunshineStatus } from "../types";
+import type { Update } from "../lib/updater";
+import type { Runner, SunshineStatus } from "../types";
 
 export default function Settings({
   onClose,
   onChanged,
+  version,
+  onCheckUpdate,
 }: {
   onClose: () => void;
   onChanged: () => void;
+  version: string;
+  onCheckUpdate: () => Promise<Update | null>;
 }) {
-  const [token, setToken] = useState("");
-  const [catalogUrl, setCatalogUrl] = useState("");
-  const [discordId, setDiscordId] = useState("");
   const [showWindows, setShowWindows] = useState(false);
-  const [paths, setPaths] = useState<PathsInfo | null>(null);
-  const [saved, setSaved] = useState(false);
   const [runners, setRunners] = useState<Runner[]>([]);
   const [runner, setRunner] = useState<string>("");
   const [sunshine, setSunshine] = useState<SunshineStatus | null>(null);
@@ -25,44 +23,11 @@ export default function Settings({
   const [updBusy, setUpdBusy] = useState(false);
   const [catMsg, setCatMsg] = useState<string | null>(null);
 
-  async function checkAppUpdate() {
-    setUpdBusy(true);
-    setUpdMsg("Buscando…");
-    try {
-      const u = await checkForUpdate();
-      if (!u) {
-        setUpdMsg("Estás en la última versión ✓");
-      } else {
-        setUpdMsg(`Instalando v${u.version}… la app se reiniciará al terminar.`);
-        await installUpdate(u); // relaunches on success
-      }
-    } catch (e) {
-      setUpdMsg(String(e));
-    } finally {
-      setUpdBusy(false);
-    }
-  }
-
-  async function refreshCatalogNow() {
-    setCatMsg("Actualizando catálogo…");
-    try {
-      await api.refreshCatalog();
-      onChanged();
-      setCatMsg("Catálogo actualizado ✓");
-    } catch (e) {
-      setCatMsg(`No se pudo actualizar: ${e}`);
-    }
-  }
-
   useEffect(() => {
     api.getConfig().then((c) => {
-      setToken(c.github_token ?? "");
-      setCatalogUrl(c.catalog_url ?? "");
       setShowWindows(c.show_windows ?? false);
       setRunner(c.wine_runner ?? "");
-      setDiscordId(c.discord_app_id ?? "");
     });
-    api.getPathsInfo().then(setPaths);
     api.listRunners().then(setRunners).catch(() => {});
     api.sunshineStatus().then(setSunshine).catch(() => {});
   }, []);
@@ -70,6 +35,12 @@ export default function Settings({
   async function changeRunner(v: string) {
     setRunner(v);
     await api.setRunner(v || null);
+  }
+
+  async function toggleWindows(v: boolean) {
+    setShowWindows(v);
+    await api.setShowWindows(v);
+    onChanged();
   }
 
   async function addSunshine() {
@@ -81,17 +52,29 @@ export default function Settings({
     }
   }
 
-  async function toggleWindows(v: boolean) {
-    setShowWindows(v);
-    await api.setShowWindows(v);
-    onChanged(); // reload the catalog so the change is visible immediately
+  async function checkApp() {
+    setUpdBusy(true);
+    setUpdMsg(null);
+    try {
+      const u = await onCheckUpdate();
+      if (u) onClose(); // el banner se encarga de preguntar e instalar
+      else setUpdMsg("Ya tienes la última versión.");
+    } catch (e) {
+      setUpdMsg(String(e));
+    } finally {
+      setUpdBusy(false);
+    }
   }
 
-  async function save() {
-    await api.setConfig(token || null, catalogUrl || null);
-    await api.setDiscordAppId(discordId || null);
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
+  async function refreshCatalog() {
+    setCatMsg("Actualizando…");
+    try {
+      await api.refreshCatalog();
+      onChanged();
+      setCatMsg("Catálogo actualizado.");
+    } catch (e) {
+      setCatMsg(String(e));
+    }
   }
 
   return (
@@ -103,32 +86,27 @@ export default function Settings({
         className="w-full max-w-md rounded-2xl border border-edge bg-panel p-5 space-y-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-xl font-black">Ajustes</h2>
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-xl font-black">Ajustes</h2>
+          <span className="text-xs text-white/40">Freeport v{version || "…"}</span>
+        </div>
 
-        {/* Windows builds via Wine/Proton */}
+        {/* Juegos de Windows */}
         <div className="rounded-lg border border-edge bg-panel-2 p-3">
-          <label className="flex items-start gap-3 cursor-pointer">
+          <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
               checked={showWindows}
               onChange={(e) => toggleWindows(e.target.checked)}
-              className="mt-0.5 w-4 h-4 accent-[color:var(--color-neon)]"
+              className="w-4 h-4 accent-[color:var(--color-neon)]"
             />
-            <span>
-              <span className="font-semibold text-sm">
-                Mostrar versiones de Windows
-              </span>
-              <span className="block text-[12px] text-white/55 leading-relaxed mt-0.5">
-                Incluye juegos que <b>solo tienen ejecutable de Windows</b>. Se
-                descargan y se ejecutan mediante <b>Wine/Proton</b> (debes tenerlo
-                instalado). Aparecen marcados con la etiqueta <b>WIN</b>.
-              </span>
+            <span className="font-semibold text-sm">
+              Mostrar juegos de Windows (Wine/Proton)
             </span>
           </label>
-
           {showWindows && (
             <label className="block mt-3 text-sm">
-              <span className="text-white/70">Runner por defecto</span>
+              <span className="text-white/70">Runner</span>
               <select
                 value={runner}
                 onChange={(e) => changeRunner(e.target.value)}
@@ -141,139 +119,68 @@ export default function Settings({
                   </option>
                 ))}
               </select>
-              <span className="block text-[11px] text-white/40 mt-1">
-                {runners.length
-                  ? `Detectados: ${runners.map((r) => r.label).join(", ")}`
-                  : "No se detectó Wine ni Proton (umu). Instala uno."}
-              </span>
+              {runners.length === 0 && (
+                <span className="block text-[11px] text-hot mt-1">
+                  No se detectó Wine ni Proton.
+                </span>
+              )}
             </label>
           )}
         </div>
 
-        <label className="block text-sm">
-          <span className="text-white/70">Token de GitHub (opcional)</span>
-          <input
-            type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="ghp_… — sube el límite de 60 a 5000 peticiones/hora"
-            className="mt-1 w-full rounded-md bg-panel-2 border border-edge px-3 py-2 text-sm outline-none focus:border-neon/50"
-          />
-        </label>
-
-        <label className="block text-sm">
-          <span className="text-white/70">URL del catálogo remoto (opcional)</span>
-          <input
-            value={catalogUrl}
-            onChange={(e) => setCatalogUrl(e.target.value)}
-            placeholder="https://raw.githubusercontent.com/…/catalog.json"
-            className="mt-1 w-full rounded-md bg-panel-2 border border-edge px-3 py-2 text-sm outline-none focus:border-neon/50"
-          />
-          <span className="block text-[11px] text-white/40 mt-1">
-            Vacío = repo oficial <code className="text-white/60">freeport-catalog</code>
-            {" "}(se actualiza a diario). La app cae al catálogo embebido si no hay red.
-          </span>
-        </label>
-
         {/* Sunshine / Moonlight */}
         <div className="rounded-lg border border-edge bg-panel-2 p-3">
-          <div className="font-semibold text-sm mb-1">Sunshine / Moonlight</div>
-          {sunshine?.found ? (
-            <>
-              <p className="text-[12px] text-white/55 leading-relaxed">
-                {sunshine.added
-                  ? "Freeport ya está registrado en Sunshine. Ábrelo desde Moonlight y se lanzará en Modo TV."
-                  : "Añade Freeport a Sunshine para lanzarlo por streaming (Moonlight) en Modo TV a pantalla completa."}
-              </p>
-              {!sunshine.added && (
-                <button
-                  onClick={addSunshine}
-                  className="mt-2 text-sm rounded-md border border-neon/40 text-neon px-3 py-1.5 hover:bg-neon/10"
-                >
-                  Añadir a Sunshine
-                </button>
-              )}
-            </>
-          ) : (
-            <p className="text-[12px] text-white/45">
-              No se detectó Sunshine (apps.json). Instálalo para poder jugar en la TV vía Moonlight.
-            </p>
-          )}
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-semibold text-sm">Sunshine / Moonlight</span>
+            {sunshine?.found && !sunshine.added && (
+              <button
+                onClick={addSunshine}
+                className="text-sm rounded-md border border-neon/40 text-neon px-3 py-1.5 hover:bg-neon/10"
+              >
+                Añadir a Sunshine
+              </button>
+            )}
+          </div>
+          {sunshine?.found
+            ? sunshine.added && (
+                <p className="text-[12px] text-white/45 mt-1">
+                  Añadido. Ábrelo desde Moonlight en Modo TV.
+                </p>
+              )
+            : (
+              <p className="text-[12px] text-white/45 mt-1">No detectado.</p>
+            )}
           {sunMsg && <div className="mt-2 text-[12px] text-gold">{sunMsg}</div>}
-        </div>
-
-        {/* Discord Rich Presence */}
-        <div className="rounded-lg border border-edge bg-panel-2 p-3">
-          <div className="font-semibold text-sm mb-1">Discord Rich Presence</div>
-          <p className="text-[12px] text-white/55 leading-relaxed mb-2">
-            Muestra <b>«Jugando &lt;juego&gt;»</b> en tu estado de Discord mientras
-            juegas. Necesitas crear una app gratis en el{" "}
-            <button
-              onClick={() =>
-                openUrl("https://discord.com/developers/applications")
-              }
-              className="underline text-neon hover:text-white/80"
-            >
-              Discord Developer Portal
-            </button>
-            , copiar su <b>Application ID</b> y (en <b>Rich Presence → Art Assets</b>)
-            subir el logo con la clave <code className="text-white/70">freeport</code>.
-          </p>
-          <input
-            value={discordId}
-            onChange={(e) => setDiscordId(e.target.value)}
-            placeholder="Application ID (solo dígitos) — vacío = desactivado"
-            className="w-full rounded-md bg-panel border border-edge px-3 py-2 text-sm outline-none focus:border-neon/50"
-          />
         </div>
 
         {/* Actualizaciones */}
         <div className="rounded-lg border border-edge bg-panel-2 p-3">
-          <div className="font-semibold text-sm mb-1">Actualizaciones</div>
-          <p className="text-[12px] text-white/55 leading-relaxed mb-2">
-            La app se actualiza sola (te avisa al arrancar cuando hay versión nueva).
-            El catálogo de juegos se actualiza aparte, sin reinstalar la app.
-          </p>
+          <div className="font-semibold text-sm mb-2">Actualizaciones</div>
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={checkAppUpdate}
+              onClick={checkApp}
               disabled={updBusy}
               className="text-sm rounded-md border border-neon/40 text-neon px-3 py-1.5 hover:bg-neon/10 disabled:opacity-50"
             >
-              {updBusy ? "Comprobando…" : "Buscar actualizaciones de la app"}
+              {updBusy ? "Comprobando…" : "Buscar actualización"}
             </button>
             <button
-              onClick={refreshCatalogNow}
+              onClick={refreshCatalog}
               className="text-sm rounded-md border border-edge px-3 py-1.5 hover:border-neon/50"
             >
-              Actualizar catálogo ahora
+              Actualizar catálogo
             </button>
           </div>
           {updMsg && <div className="mt-2 text-[12px] text-gold">{updMsg}</div>}
           {catMsg && <div className="mt-1 text-[12px] text-gold">{catMsg}</div>}
         </div>
 
-        {paths && (
-          <div className="text-xs text-white/50 rounded-md border border-edge bg-panel-2 p-2">
-            <div>
-              Datos: <code className="text-white/70">{paths.data_dir}</code>
-            </div>
-            <div>Modo portable: {paths.portable ? "sí" : "no"}</div>
-          </div>
-        )}
-
-        <div className="flex justify-end gap-2 pt-1">
+        <div className="flex justify-end pt-1">
           <button
             onClick={onClose}
-            className="rounded-lg border border-edge text-white/70 px-4 py-2 hover:border-neon/40"
-          >
-            Cerrar
-          </button>
-          <button
-            onClick={save}
             className="rounded-lg bg-neon text-void font-bold px-4 py-2 hover:brightness-110"
           >
-            {saved ? "Guardado ✓" : "Guardar"}
+            Cerrar
           </button>
         </div>
       </div>

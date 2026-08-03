@@ -149,9 +149,7 @@ export default function GamePage({
             <div className="rounded-lg border border-[#2b6fb3]/60 bg-[#2b6fb3]/15 px-4 py-3 text-sm flex items-start gap-2">
               <span className="text-[#7fb2e0] font-bold shrink-0">⊞ WINDOWS</span>
               <span className="text-white/80">
-                Este juego solo tiene <b>ejecutable de Windows</b>. Freeport lo
-                lanzará con <b>Wine/Proton</b> (necesitas tenerlo instalado). La
-                compatibilidad no está garantizada.
+                Solo hay versión de Windows: se ejecuta con Wine/Proton.
               </span>
             </div>
           )}
@@ -171,38 +169,37 @@ export default function GamePage({
             </div>
           )}
 
-          <section>
-            <h2 className="text-lg font-black mb-2">Acerca del juego</h2>
-            {wikiLoading && <div className="text-white/40 text-sm">Cargando…</div>}
-            {wiki ? (
-              <>
-                <p className="text-[15px] leading-relaxed text-white/80 whitespace-pre-line">
-                  {wiki.extract}
-                </p>
-                <div className="mt-2 text-[11px] text-white/35">
-                  Texto de{" "}
-                  <button
-                    onClick={() => wiki.url && openUrl(wiki.url)}
-                    className="underline hover:text-white/60"
-                  >
-                    Wikipedia
-                  </button>{" "}
-                  (CC BY-SA).
-                </div>
-              </>
-            ) : (
-              !wikiLoading && (
-                <p className="text-[15px] leading-relaxed text-white/60">
-                  {project.rom.notes || "Sin descripción disponible."}
-                </p>
-              )
-            )}
-          </section>
+          {(wikiLoading || wiki?.extract) && (
+            <section>
+              <h2 className="text-lg font-black mb-2">Acerca del juego</h2>
+              {wikiLoading && !wiki?.extract ? (
+                <div className="text-white/40 text-sm">Cargando…</div>
+              ) : (
+                <>
+                  <p className="text-[15px] leading-relaxed text-white/80 whitespace-pre-line">
+                    {wiki!.extract}
+                  </p>
+                  <div className="mt-2 text-[11px] text-white/35">
+                    Texto de{" "}
+                    <button
+                      onClick={() => wiki?.url && openUrl(wiki.url)}
+                      className="underline hover:text-white/60"
+                    >
+                      Wikipedia
+                    </button>{" "}
+                    (CC BY-SA).
+                  </div>
+                </>
+              )}
+            </section>
+          )}
 
-          <section>
-            <h2 className="text-lg font-black mb-2">Sobre este port</h2>
-            <p className="text-[14px] leading-relaxed text-white/70">{project.rom.notes}</p>
-          </section>
+          {project.rom.notes && (
+            <section>
+              <h2 className="text-lg font-black mb-2">Sobre este port</h2>
+              <p className="text-[14px] leading-relaxed text-white/70">{project.rom.notes}</p>
+            </section>
+          )}
 
           {project.mods && <ModsPanel projectId={project.id} />}
         </div>

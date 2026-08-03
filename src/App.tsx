@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { convertFileSrc } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app";
 import { api, onInstallProgress } from "./api";
+import { checkForUpdate, type Update } from "./lib/updater";
 import type { CatalogView, InstallProgress, ProjectView, SystemInfo } from "./types";
 import GameCard from "./components/GameCard";
 import GamePage from "./components/GamePage";
@@ -23,10 +25,20 @@ export default function App() {
   const [activeSystem, setActiveSystem] = useState<string | null>(null); // null = todos
   const [query, setQuery] = useState("");
   const [tvMode, setTvMode] = useState(false);
+  const [version, setVersion] = useState("");
+  const [update, setUpdate] = useState<Update | null>(null);
 
   // Launched with `--tv` (e.g. by Sunshine) → open straight into Big Picture.
   useEffect(() => {
     api.isTvMode().then((tv) => tv && setTvMode(true)).catch(() => {});
+    getVersion().then(setVersion).catch(() => {});
+    checkForUpdate().then((u) => u && setUpdate(u));
+  }, []);
+
+  const checkAppUpdate = useCallback(async () => {
+    const u = await checkForUpdate();
+    if (u) setUpdate(u);
+    return u;
   }, []);
 
   const load = useCallback(async () => {
@@ -231,7 +243,7 @@ export default function App() {
 
   return (
     <div className="h-full flex text-white">
-      <UpdateBanner />
+      <UpdateBanner update={update} onDismiss={() => setUpdate(null)} />
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside className="w-60 shrink-0 border-r border-edge bg-panel/60 flex flex-col">
         <div className="flex items-center gap-2 px-4 py-4">
@@ -243,7 +255,8 @@ export default function App() {
               FREE<span className="text-neon">PORT</span>
             </div>
             <div className="text-[10px] text-white/35 mt-0.5">
-              {catalog ? catalog.platform : "…"}
+              {version ? `v${version}` : ""}
+              {catalog ? ` · ${catalog.platform}` : ""}
             </div>
           </div>
         </div>
@@ -426,7 +439,12 @@ export default function App() {
         />
       )}
       {showSettings && (
-        <Settings onClose={() => setShowSettings(false)} onChanged={load} />
+        <Settings
+          onClose={() => setShowSettings(false)}
+          onChanged={load}
+          version={version}
+          onCheckUpdate={checkAppUpdate}
+        />
       )}
 
       {tvMode && catalog && (

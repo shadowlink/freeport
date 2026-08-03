@@ -41,15 +41,18 @@ src-tauri/
     lib.rs              # wiring + fix WebKit/Wayland
 src/                    # frontend React (App, GameCard, DetailModal, Settings)
 tools/
-  probe.py             # rellena cached.{platforms,latest_tag,…} (lo corre la CI del catálogo)
-  discover.py          # cruza las listas de la comunidad con repos que publican binarios
+  sync-seed.mjs        # prebuild: refresca catalog.seed.json desde freeport-catalog
 ```
+
+El catálogo vive en su propio repo, **[freeport-catalog](https://github.com/shadowlink/freeport-catalog)**
+(fuente de la verdad + CI diaria con `probe.py`). La app lo descarga en runtime y
+embebe una copia como fallback offline (ver más abajo).
 
 Puntos clave de diseño:
 
 - **Filtrado por plataforma:** se ocultan los proyectos sin binario para tu
-  `os-arch`, usando `cached.platforms` (rellenado por `probe.py`) o, si falta,
-  la presencia de una `asset_rules[triple]`.
+  `os-arch`, usando `cached.platforms` (rellenado por la CI de freeport-catalog)
+  o, si falta, la presencia de una `asset_rules[triple]`.
 - **Rate limit de GitHub:** la CI del catálogo sondea (60/h sin token, 5000 con
   token) y cachea versión + plataformas; la app solo llama a GitHub al
   instalar/actualizar. Se puede configurar un token en Ajustes. Endpoint
@@ -128,21 +131,29 @@ cargo test                 # unit + integración (extracción, selección de ass
 cargo test -- --ignored    # e2e real: descarga un release real y localiza el binario
 ```
 
-## Mantener el catálogo
+## Catálogo (repo aparte)
 
-```bash
-GITHUB_TOKEN=ghp_xxx python3 tools/probe.py src-tauri/catalog.seed.json     # actualiza cached
-GITHUB_TOKEN=ghp_xxx python3 tools/discover.py --check --limit 200 > candidates.json
-```
+El manifiesto es la fuente de la verdad en
+**[freeport-catalog](https://github.com/shadowlink/freeport-catalog)**; ahí viven
+`catalog.json`, las herramientas (`probe.py`, `discover.py`) y una CI diaria que
+refresca los campos `cached`.
 
-Lo natural es mover el catálogo a su propio repo (`freeport-catalog`) con un
-workflow diario que ejecute `probe.py` y publique `catalog.json`; la app lo
-descargaría vía la "URL del catálogo remoto" de Ajustes.
+La app lo consume así:
+
+- **Runtime:** al arrancar descarga `catalog.json` desde
+  `raw.githubusercontent.com/…/freeport-catalog/main/catalog.json`
+  (`commands.rs::DEFAULT_CATALOG_URL`) y lo cachea. Se puede sobreescribir con una
+  URL propia en Ajustes.
+- **Offline:** si no hay red usa `src-tauri/catalog.seed.json`, una copia embebida
+  en el binario.
+- **Sync del seed:** `tools/sync-seed.mjs` (hook `prebuild`) reescribe ese seed
+  desde el repo de catálogo antes de cada `npm run build`, para que la copia
+  embebida no diverja.
 
 ## Estado
 
 MVP funcional en Linux: navegación filtrada por plataforma, instalación
 (descarga+extracción), lanzamiento, asistente de ROM, detección de
-actualizaciones (botón + `probe.py`), token opcional y modo portable.
+actualizaciones (botón + CI del catálogo), token opcional y modo portable.
 Pendiente/roadmap: peticiones condicionales con ETag, empaquetado Windows,
 navegación con mando, integración con ES-DE, y build de Android.

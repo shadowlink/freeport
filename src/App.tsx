@@ -6,6 +6,7 @@ import GameCard from "./components/GameCard";
 import GamePage from "./components/GamePage";
 import Settings from "./components/Settings";
 import BigPicture from "./components/BigPicture";
+import UpdateBanner from "./components/UpdateBanner";
 
 export default function App() {
   const [catalog, setCatalog] = useState<CatalogView | null>(null);
@@ -230,6 +231,7 @@ export default function App() {
 
   return (
     <div className="h-full flex text-white">
+      <UpdateBanner />
       {/* ── Sidebar ─────────────────────────────────────────── */}
       <aside className="w-60 shrink-0 border-r border-edge bg-panel/60 flex flex-col">
         <div className="flex items-center gap-2 px-4 py-4">

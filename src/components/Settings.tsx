@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { api } from "../api";
+import { checkForUpdate, installUpdate } from "../lib/updater";
 import type { PathsInfo, Runner, SunshineStatus } from "../types";
 
 export default function Settings({
@@ -20,6 +21,38 @@ export default function Settings({
   const [runner, setRunner] = useState<string>("");
   const [sunshine, setSunshine] = useState<SunshineStatus | null>(null);
   const [sunMsg, setSunMsg] = useState<string | null>(null);
+  const [updMsg, setUpdMsg] = useState<string | null>(null);
+  const [updBusy, setUpdBusy] = useState(false);
+  const [catMsg, setCatMsg] = useState<string | null>(null);
+
+  async function checkAppUpdate() {
+    setUpdBusy(true);
+    setUpdMsg("Buscando…");
+    try {
+      const u = await checkForUpdate();
+      if (!u) {
+        setUpdMsg("Estás en la última versión ✓");
+      } else {
+        setUpdMsg(`Instalando v${u.version}… la app se reiniciará al terminar.`);
+        await installUpdate(u); // relaunches on success
+      }
+    } catch (e) {
+      setUpdMsg(String(e));
+    } finally {
+      setUpdBusy(false);
+    }
+  }
+
+  async function refreshCatalogNow() {
+    setCatMsg("Actualizando catálogo…");
+    try {
+      await api.refreshCatalog();
+      onChanged();
+      setCatMsg("Catálogo actualizado ✓");
+    } catch (e) {
+      setCatMsg(`No se pudo actualizar: ${e}`);
+    }
+  }
 
   useEffect(() => {
     api.getConfig().then((c) => {
@@ -192,6 +225,32 @@ export default function Settings({
             placeholder="Application ID (solo dígitos) — vacío = desactivado"
             className="w-full rounded-md bg-panel border border-edge px-3 py-2 text-sm outline-none focus:border-neon/50"
           />
+        </div>
+
+        {/* Actualizaciones */}
+        <div className="rounded-lg border border-edge bg-panel-2 p-3">
+          <div className="font-semibold text-sm mb-1">Actualizaciones</div>
+          <p className="text-[12px] text-white/55 leading-relaxed mb-2">
+            La app se actualiza sola (te avisa al arrancar cuando hay versión nueva).
+            El catálogo de juegos se actualiza aparte, sin reinstalar la app.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={checkAppUpdate}
+              disabled={updBusy}
+              className="text-sm rounded-md border border-neon/40 text-neon px-3 py-1.5 hover:bg-neon/10 disabled:opacity-50"
+            >
+              {updBusy ? "Comprobando…" : "Buscar actualizaciones de la app"}
+            </button>
+            <button
+              onClick={refreshCatalogNow}
+              className="text-sm rounded-md border border-edge px-3 py-1.5 hover:border-neon/50"
+            >
+              Actualizar catálogo ahora
+            </button>
+          </div>
+          {updMsg && <div className="mt-2 text-[12px] text-gold">{updMsg}</div>}
+          {catMsg && <div className="mt-1 text-[12px] text-gold">{catMsg}</div>}
         </div>
 
         {paths && (

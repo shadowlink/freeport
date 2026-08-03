@@ -57,6 +57,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Evita el fallo de strip de linuxdeploy con la sección ELF .relr.dyn.
           NO_STRIP: "true"
+          # Firma de los artefactos de auto-actualización (updater de Tauri).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.event.inputs.tag || github.ref_name }}
           releaseName: "Freeport ${{ github.event.inputs.tag || github.ref_name }}"
@@ -67,8 +70,10 @@ jobs:
             - Linux: `.AppImage` (portable) o `.deb`
             - Windows: instalador `.exe` (NSIS)
 
-            El catálogo se descarga y actualiza automáticamente desde
+            La app se auto-actualiza a partir de esta versión, y el catálogo se
+            actualiza solo desde
             [freeport-catalog](https://github.com/shadowlink/freeport-catalog).
           releaseDraft: false
           prerelease: false
+          includeUpdaterJson: true
           args: ${{ matrix.args }}

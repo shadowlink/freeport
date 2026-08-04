@@ -32,6 +32,21 @@ export default function App() {
   const [version, setVersion] = useState("");
   const [update, setUpdate] = useState<Update | null>(null);
   const [maximized, setMaximized] = useState(false);
+  const [crt, setCrt] = useState(() => {
+    try {
+      return localStorage.getItem("freeport.crt") === "1";
+    } catch {
+      return false;
+    }
+  });
+  const toggleCrt = (v: boolean) => {
+    setCrt(v);
+    try {
+      localStorage.setItem("freeport.crt", v ? "1" : "0");
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Launched with `--tv` (e.g. by Sunshine) → open straight into Big Picture.
   useEffect(() => {
@@ -432,7 +447,7 @@ export default function App() {
 
       {!tvMode && <UpdateBanner update={update} onDismiss={() => setUpdate(null)} />}
       {!tvMode && !maximized && <ResizeHandles />}
-      <CrtOverlay />
+      {crt && <CrtOverlay />}
 
       {toast && (
         <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 max-w-[90vw] rounded-lg border border-neon/40 bg-panel px-4 py-2.5 text-sm">
@@ -459,6 +474,8 @@ export default function App() {
           onChanged={load}
           version={version}
           platform={catalog?.platform ?? ""}
+          crt={crt}
+          onCrtChange={toggleCrt}
           onCheckUpdate={checkAppUpdate}
         />
       )}

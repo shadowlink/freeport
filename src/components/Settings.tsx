@@ -8,12 +8,16 @@ export default function Settings({
   onChanged,
   version,
   platform,
+  crt,
+  onCrtChange,
   onCheckUpdate,
 }: {
   onClose: () => void;
   onChanged: () => void;
   version: string;
   platform: string;
+  crt: boolean;
+  onCrtChange: (v: boolean) => void;
   onCheckUpdate: () => Promise<Update | null>;
 }) {
   const isWindows = platform.startsWith("windows");
@@ -159,6 +163,24 @@ export default function Settings({
           {sunMsg && <div className="mt-2 text-[12px] text-gold">{sunMsg}</div>}
         </div>
         )}
+
+        {/* Apariencia */}
+        <div className="rounded-lg border border-edge bg-panel-2 p-3">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={crt}
+              onChange={(e) => onCrtChange(e.target.checked)}
+              className="w-4 h-4 accent-[color:var(--color-neon)]"
+            />
+            <span>
+              <span className="font-semibold text-sm">Efecto CRT (scanlines)</span>
+              <span className="block text-[11px] text-white/45">
+                Estética retro. Desactívalo si notas el scroll menos fluido.
+              </span>
+            </span>
+          </label>
+        </div>
 
         {/* Actualizaciones */}
         <div className="rounded-lg border border-edge bg-panel-2 p-3">

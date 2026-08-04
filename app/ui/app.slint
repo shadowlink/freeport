@@ -218,13 +218,23 @@ export component MainWindow inherits Window {
         height: 40px;
         background: #101219;
         // Drag region (behind the buttons; brand/spacer let events fall through).
-        TouchArea {
+        // Drag starts on the first move after a press so a plain double-click can
+        // still reach `double-clicked` (maximize) instead of grabbing a move.
+        drag-ta := TouchArea {
             mouse-cursor: default;
+            property <bool> drag-started;
             pointer-event(e) => {
                 if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                    self.drag-started = false;
+                }
+            }
+            moved => {
+                if (self.pressed && !self.drag-started) {
+                    self.drag-started = true;
                     root.title-press();
                 }
             }
+            double-clicked => { root.win-maximize(); }
         }
         HorizontalLayout {
             padding-left: 14px;
@@ -249,8 +259,6 @@ export component MainWindow inherits Window {
             VerticalLayout {
                 padding: 12px;
                 spacing: 10px;
-
-                Text { text: "⚓ FREEPORT"; color: #ffb23e; font-weight: 900; font-size: 18px; }
 
                 HorizontalLayout {
                     spacing: 6px;

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Freeport
+GenericName=Game Launcher
+Comment=Instala y lanza decompilaciones y ports de consola a PC
+Exec=freeport
+Icon=freeport
+Categories=Game;
+Terminal=false

@@ -23,7 +23,17 @@ pub fn run() {
     // can still override by setting the variable themselves.
     #[cfg(target_os = "linux")]
     {
-        if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
+        if std::env::var_os("FREEPORT_GPU").is_some() {
+            // Experimento (WebKit >= 2.46): dejar que WebKitGTK use la GPU (DMABUF)
+            // y forzar el compositing acelerado, en vez del apaño software. En
+            // WebKit viejo esto podía crashear ("Error 71") en Nvidia; en 2.52 debería
+            // ir. Se activa solo con FREEPORT_GPU=1 para no arriesgar el arranque normal.
+            std::env::set_var("WEBKIT_FORCE_COMPOSITING_MODE", "1");
+            if std::env::var_os("WEBKIT_SHOW_FPS").is_none() {
+                std::env::set_var("WEBKIT_SHOW_FPS", "1");
+            }
+            // (a propósito NO desactivamos DMABUF aquí)
+        } else if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
             std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
         }
     }

@@ -2,78 +2,71 @@ name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag a publicar (p. ej. v0.1.0)"
+        description: "Tag a publicar (p. ej. v0.2.0)"
         required: true
 
 permissions:
   contents: write
 
 jobs:
-  release:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: ubuntu-22.04
-            args: "--bundles appimage,deb"
-          - platform: windows-latest
-            args: "--bundles nsis"
-    runs-on: ${{ matrix.platform }}
+  linux:
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
 
-      - name: Dependencias de Linux
-        if: matrix.platform == 'ubuntu-22.04'
+      - name: Dependencias (Slint)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libgtk-3-dev \
-            librsvg2-dev \
-            libayatana-appindicator3-dev \
-            libudev-dev \
-            patchelf file build-essential libssl-dev
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
+            libfontconfig1-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
+            libxcb-xfixes0-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev
 
       - uses: dtolnay/rust-toolchain@stable
-
       - uses: swatinem/rust-cache@v2
         with:
-          workspaces: "./src-tauri -> target"
+          workspaces: "."
 
-      - name: Instalar dependencias del frontend
-        run: npm ci
+      - name: Build
+        run: cargo build --release -p freeport -p signer --locked
 
-      - uses: tauri-apps/tauri-action@v0
+      - name: Empaquetar AppImage
+        run: |
+          curl -sL -o linuxdeploy \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy
+          rm -rf AppDir && mkdir -p AppDir/usr/bin
+          cp target/release/freeport AppDir/usr/bin/freeport
+          export APPIMAGE_EXTRACT_AND_RUN=1 NO_STRIP=1
+          ./linuxdeploy --appdir AppDir \
+            -e AppDir/usr/bin/freeport \
+            -d packaging/freeport.desktop \
+            -i packaging/freeport.png \
+            --output appimage
+
+      - name: Firmar + manifest latest.json
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Evita el fallo de strip de linuxdeploy con la sección ELF .relr.dyn.
-          NO_STRIP: "true"
-          # Firma de los artefactos de auto-actualización (updater de Tauri).
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          FREEPORT_UPDATER_KEY: ${{ secrets.FREEPORT_UPDATER_KEY }}
+        run: |
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
+          VER="${TAG#v}"
+          SIG=$(target/release/signer Freeport-x86_64.AppImage)
+          URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Freeport-x86_64.AppImage"
+          printf '{"version":"%s","notes":"","platforms":{"linux":{"url":"%s","signature":"%s"}}}\n' \
+            "$VER" "$URL" "$SIG" > latest.json
+          cat latest.json
+
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
         with:
-          tagName: ${{ github.event.inputs.tag || github.ref_name }}
-          releaseName: "Freeport ${{ github.event.inputs.tag || github.ref_name }}"
-          releaseBody: |
-            Freeport — launcher de decompilaciones y ports de consola a PC.
-
-            **Descargas:**
-            - Linux: `.AppImage` (portable) o `.deb`
-            - Windows: instalador `.exe` (NSIS)
-
-            La app se auto-actualiza a partir de esta versión, y el catálogo se
-            actualiza solo desde
-            [freeport-catalog](https://github.com/shadowlink/freeport-catalog).
-          releaseDraft: false
-          prerelease: false
-          includeUpdaterJson: true
-          args: ${{ matrix.args }}
+          tag_name: ${{ github.event.inputs.tag || github.ref_name }}
+          name: Freeport ${{ github.event.inputs.tag || github.ref_name }}
+          body: |
+            Freeport — launcher nativo (Slint) de decompilaciones y ports de consola a PC.
+            Linux: `Freeport-x86_64.AppImage` (portable). Auto-actualización integrada.
+          files: |
+            Freeport-x86_64.AppImage
+            latest.json

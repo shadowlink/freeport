@@ -1,0 +1,7 @@
+# Workspace for the native (Slint) rewrite. The legacy Tauri app (src-tauri) and
+# the throwaway spike (native) are excluded so they keep building independently
+# during the transition.
+[workspace]
+resolver = "2"
+members = ["core", "app", "signer"]
+exclude = ["src-tauri"]

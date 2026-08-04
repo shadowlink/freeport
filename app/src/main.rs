@@ -408,6 +408,22 @@ fn ui_refresh() {
     });
 }
 
+/// Releases Slint's pointer grab after a window drag/resize hands the pointer to
+/// the compositor. Without this the TouchArea keeps the grab (it never receives a
+/// `Released`, only a `CursorLeft`→`Exit`), which freezes all further UI input.
+/// Deferred to the next loop iteration to avoid re-entrant input dispatch.
+fn release_pointer_grab(weak: &Weak<MainWindow>) {
+    let weak = weak.clone();
+    let _ = slint::invoke_from_event_loop(move || {
+        if let Some(w) = weak.upgrade() {
+            w.window().dispatch_event(slint::platform::WindowEvent::PointerReleased {
+                position: slint::LogicalPosition::new(0.0, 0.0),
+                button: slint::platform::PointerEventButton::Left,
+            });
+        }
+    });
+}
+
 /// Generate any not-yet-cached cover thumbnails in the background, then refresh.
 fn spawn_missing_thumbs(app: &Rc<App>, handle: &tokio::runtime::Handle) {
     let missing: Vec<String> = app
@@ -577,12 +593,10 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Frameless window: winit backend with system decorations disabled so we can
-    // draw our own titlebar. Must run before any window is created.
-    let backend = i_slint_backend_winit::Backend::builder()
-        .with_window_attributes_hook(|attrs| attrs.with_decorations(false))
-        .build()
-        .expect("winit backend");
+    // Force the winit backend so we can reach the underlying window (drag/resize/
+    // minimize/maximize) via WinitWindowAccessor. Decorations are turned off with
+    // the Slint `no-frame` property (the backend would otherwise re-enable them).
+    let backend = i_slint_backend_winit::Backend::new().expect("winit backend");
     slint::platform::set_platform(Box::new(backend)).expect("set winit platform");
 
     update::cleanup();
@@ -680,6 +694,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 w.window().with_winit_window(|ww| {
                     let _ = ww.drag_window();
                 });
+                release_pointer_grab(&weak);
             }
         }
     });
@@ -702,6 +717,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 w.window().with_winit_window(|ww| {
                     let _ = ww.drag_resize_window(d);
                 });
+                release_pointer_grab(&weak);
             }
         }
     });

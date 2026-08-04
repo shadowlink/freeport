@@ -507,6 +507,7 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    update::cleanup();
     let rt = tokio::runtime::Runtime::new()?;
     let handle = rt.handle().clone();
 

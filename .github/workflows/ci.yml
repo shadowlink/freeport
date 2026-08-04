@@ -18,7 +18,7 @@ jobs:
       - name: Dependencias (Slint)
         run: |
           sudo apt-get update
-          sudo apt-get install -y libfontconfig1-dev libxcb1-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev
+          sudo apt-get install -y libfontconfig1-dev libxcb1-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libudev-dev
       - uses: dtolnay/rust-toolchain@stable
       - uses: swatinem/rust-cache@v2
         with:

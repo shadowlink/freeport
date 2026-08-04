@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag a publicar (p. ej. v0.2.0)"
+        description: "Tag a publicar (p. ej. v0.2.1)"
         required: true
 
 permissions:
@@ -17,22 +17,18 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-
       - name: Dependencias (Slint)
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             libfontconfig1-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev \
-            libxcb-xfixes0-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev
-
+            libxcb-xfixes0-dev libxkbcommon-dev libwayland-dev libgl1-mesa-dev libudev-dev
       - uses: dtolnay/rust-toolchain@stable
       - uses: swatinem/rust-cache@v2
         with:
           workspaces: "."
-
       - name: Build
         run: cargo build --release -p freeport -p signer --locked
-
       - name: Empaquetar AppImage
         run: |
           curl -sL -o linuxdeploy \
@@ -46,27 +42,69 @@ jobs:
             -d packaging/freeport.desktop \
             -i packaging/freeport.png \
             --output appimage
-
-      - name: Firmar + manifest latest.json
+      - name: Firmar
         env:
           FREEPORT_UPDATER_KEY: ${{ secrets.FREEPORT_UPDATER_KEY }}
+        run: target/release/signer Freeport-x86_64.AppImage > Freeport-x86_64.AppImage.sig
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            Freeport-x86_64.AppImage
+            Freeport-x86_64.AppImage.sig
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "."
+      - name: Build
+        run: cargo build --release -p freeport -p signer --locked
+      - name: Firmar
+        env:
+          FREEPORT_UPDATER_KEY: ${{ secrets.FREEPORT_UPDATER_KEY }}
+        shell: pwsh
+        run: |
+          Copy-Item target/release/freeport.exe Freeport-windows-x64.exe
+          $sig = & target/release/signer.exe Freeport-windows-x64.exe
+          Set-Content -Path Freeport-windows-x64.exe.sig -Value $sig -NoNewline
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            Freeport-windows-x64.exe
+            Freeport-windows-x64.exe.sig
+
+  release:
+    needs: [linux, windows]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+      - name: Componer latest.json
         run: |
           TAG="${{ github.event.inputs.tag || github.ref_name }}"
           VER="${TAG#v}"
-          SIG=$(target/release/signer Freeport-x86_64.AppImage)
-          URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/Freeport-x86_64.AppImage"
-          printf '{"version":"%s","notes":"","platforms":{"linux":{"url":"%s","signature":"%s"}}}\n' \
-            "$VER" "$URL" "$SIG" > latest.json
+          BASE="https://github.com/${{ github.repository }}/releases/download/${TAG}"
+          LSIG=$(cat dist/linux/Freeport-x86_64.AppImage.sig)
+          WSIG=$(cat dist/windows/Freeport-windows-x64.exe.sig)
+          printf '{"version":"%s","notes":"","platforms":{"linux":{"url":"%s/Freeport-x86_64.AppImage","signature":"%s"},"windows":{"url":"%s/Freeport-windows-x64.exe","signature":"%s"}}}\n' \
+            "$VER" "$BASE" "$LSIG" "$BASE" "$WSIG" > latest.json
           cat latest.json
-
       - name: Publicar release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.tag || github.ref_name }}
           name: Freeport ${{ github.event.inputs.tag || github.ref_name }}
           body: |
-            Freeport — launcher nativo (Slint) de decompilaciones y ports de consola a PC.
-            Linux: `Freeport-x86_64.AppImage` (portable). Auto-actualización integrada.
+            Freeport — launcher nativo (Slint). Auto-actualización integrada.
+            - Linux: `Freeport-x86_64.AppImage` (portable)
+            - Windows: `Freeport-windows-x64.exe`
           files: |
-            Freeport-x86_64.AppImage
+            dist/linux/Freeport-x86_64.AppImage
+            dist/windows/Freeport-windows-x64.exe
             latest.json

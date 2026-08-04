@@ -91,14 +91,31 @@ pub async fn apply(client: &reqwest::Client, upd: &Update) -> Result<(), String>
     pk.verify(&bytes, &sig).map_err(|_| "firma inválida".to_string())?;
 
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
-    let newp = exe.with_extension("new");
-    std::fs::write(&newp, &bytes).map_err(|e| e.to_string())?;
+    #[cfg(windows)]
+    {
+        // Windows locks a running executable, so it can't be overwritten. Rename
+        // it aside (which IS allowed), write the new one in its place, relaunch.
+        // The stale ".old" is cleaned up on the next start (see `cleanup`).
+        let old = exe.with_extension("old");
+        let _ = std::fs::remove_file(&old);
+        std::fs::rename(&exe, &old).map_err(|e| e.to_string())?;
+        std::fs::write(&exe, &bytes).map_err(|e| e.to_string())?;
+    }
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
+        let newp = exe.with_extension("new");
+        std::fs::write(&newp, &bytes).map_err(|e| e.to_string())?;
         let _ = std::fs::set_permissions(&newp, std::fs::Permissions::from_mode(0o755));
+        std::fs::rename(&newp, &exe).map_err(|e| e.to_string())?;
     }
-    std::fs::rename(&newp, &exe).map_err(|e| e.to_string())?;
     std::process::Command::new(&exe).spawn().map_err(|e| e.to_string())?;
     std::process::exit(0);
+}
+
+/// Removes a leftover ".old" executable left by a previous Windows self-update.
+pub fn cleanup() {
+    if let Ok(exe) = std::env::current_exe() {
+        let _ = std::fs::remove_file(exe.with_extension("old"));
+    }
 }

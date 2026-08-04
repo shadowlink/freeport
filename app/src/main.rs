@@ -3,6 +3,9 @@
 
 slint::include_modules!();
 
+#[cfg(windows)]
+mod win_titlebar;
+
 use freeport_core::model::{Catalog, Project};
 use freeport_core::store::{self, Paths};
 use freeport_core::mods::ModInfo;
@@ -1167,6 +1170,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             }
                         }
                     });
+                });
+            }
+        });
+    }
+
+    // Windows-only fine polish: rounded corners, shadow and Snap Layouts.
+    // Deferred so the winit window exists before we reach for its HWND.
+    #[cfg(windows)]
+    {
+        let weak = win.as_weak();
+        slint::Timer::single_shot(std::time::Duration::from_millis(120), move || {
+            if let Some(w) = weak.upgrade() {
+                w.window().with_winit_window(|ww| {
+                    use i_slint_backend_winit::winit::raw_window_handle::{
+                        HasWindowHandle, RawWindowHandle,
+                    };
+                    if let Ok(handle) = ww.window_handle() {
+                        if let RawWindowHandle::Win32(h) = handle.as_raw() {
+                            win_titlebar::setup(h.hwnd.get());
+                        }
+                    }
                 });
             }
         });

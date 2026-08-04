@@ -364,7 +364,7 @@ export default function App() {
           </span>
         </header>
 
-        <div className="flex-1 overflow-y-auto thin-scroll px-6 py-5">
+        <div className="flex-1 overflow-y-auto thin-scroll scroll-area px-6 py-5">
           {error && (
             <div className="mb-4 rounded-lg border border-hot/50 bg-hot/10 text-hot px-4 py-3 text-sm">
               {error}
@@ -431,6 +431,7 @@ export default function App() {
                     key={p.id}
                     project={p}
                     system={system}
+                    platform={catalog?.platform ?? ""}
                     progress={progress[p.id]}
                     busy={busy.has(p.id)}
                     onInstall={() => install(p)}

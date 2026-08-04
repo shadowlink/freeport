@@ -153,20 +153,26 @@ body {
   background-clip: content-box;
 }
 
+/* Give the main scroller its own compositor layer + contain overscroll so
+   WebKitGTK scrolls it independently of the rest of the page. */
+.scroll-area {
+  transform: translateZ(0);
+  overscroll-behavior: contain;
+}
+
 /* ── Cards ────────────────────────────────────────────────────────────── */
 .card {
   content-visibility: auto;
   contain-intrinsic-size: auto 320px;
-  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 6px 16px rgba(0, 0, 0, 0.35);
+  /* Cheap to paint: a single static shadow, and hover only moves the card
+     (transform is GPU-composited) + recolours the border. No animated
+     box-shadow/glow/inset — those repaint every card and cost during scroll. */
+  transition: transform 0.14s ease, border-color 0.14s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 .card:hover {
   transform: translateY(-4px);
   border-color: rgba(255, 178, 62, 0.6);
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 10px 26px rgba(0, 0, 0, 0.5),
-    0 0 22px rgba(255, 178, 62, 0.28);
 }
 
 .poster {

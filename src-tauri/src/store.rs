@@ -22,6 +22,7 @@ impl Paths {
         };
         std::fs::create_dir_all(&data_dir)?;
         std::fs::create_dir_all(data_dir.join("apps"))?;
+        std::fs::create_dir_all(data_dir.join("cover_cache"))?;
         Ok(Self { data_dir })
     }
 
@@ -40,6 +41,10 @@ impl Paths {
     /// Install directory for a given project id.
     pub fn app_dir(&self, project_id: &str) -> PathBuf {
         self.data_dir.join("apps").join(project_id)
+    }
+    /// Cache directory for downscaled cover thumbnails (served via `cover://`).
+    pub fn cover_cache_dir(&self) -> PathBuf {
+        self.data_dir.join("cover_cache")
     }
 
     pub fn is_portable(&self) -> bool {

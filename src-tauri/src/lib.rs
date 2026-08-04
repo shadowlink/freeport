@@ -9,9 +9,11 @@ mod model;
 mod mods;
 mod platform;
 mod store;
+mod thumbs;
 
 use commands::AppState;
 use store::Paths;
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,6 +40,33 @@ pub fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        // `cover://` serves downscaled, cached cover thumbnails to <img>.
+        .register_asynchronous_uri_scheme_protocol("cover", |ctx, request, responder| {
+            let app = ctx.app_handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let (client, paths) = {
+                    let st = app.state::<AppState>();
+                    (st.client.clone(), st.paths.clone())
+                };
+                let result = match thumbs::src_of(request.uri()) {
+                    Some(url) => thumbs::get(&client, &paths, &url).await,
+                    None => Err("missing src".to_string()),
+                };
+                let response = match result {
+                    Ok(bytes) => tauri::http::Response::builder()
+                        .status(200)
+                        .header("Content-Type", "image/jpeg")
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(bytes),
+                    Err(_) => tauri::http::Response::builder()
+                        .status(404)
+                        .body(Vec::new()),
+                };
+                if let Ok(r) = response {
+                    responder.respond(r);
+                }
+            });
+        })
         .manage(AppState {
             client,
             paths,

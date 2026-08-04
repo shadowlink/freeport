@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { api, onGamepad, onGameExited } from "../api";
 import type { CatalogView, InstallProgress, ProjectView, SystemInfo } from "../types";
-import { gradientFor, initials, screenshotsFrom } from "../lib/art";
+import { gradientFor, initials, screenshotsFrom, thumbUrl } from "../lib/art";
 import BigPictureDetail from "./BigPictureDetail";
 
 interface Props {
@@ -308,7 +308,7 @@ export default function BigPicture({
                       className="aspect-[3/4] bg-cover bg-center bg-panel-2 grid place-items-center"
                       style={
                         p.cover_url
-                          ? { backgroundImage: `url(${p.cover_url})` }
+                          ? { backgroundImage: `url("${thumbUrl(p.cover_url, catalog.platform)}")` }
                           : { background: gradientFor(p.id) }
                       }
                     >

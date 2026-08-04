@@ -27,6 +27,16 @@ export function screenshotsFrom(coverUrl: string | null): string[] {
   ];
 }
 
+/// URL of the cached, downscaled thumbnail for a cover, served by the Rust
+/// `cover://` scheme (grid/shelf use this instead of the full-size PNG so the
+/// webview decodes far fewer pixels while scrolling). Windows/WebView2 maps
+/// custom schemes to `http://<scheme>.localhost`.
+export function thumbUrl(coverUrl: string | null, platform: string): string | null {
+  if (!coverUrl) return null;
+  const base = platform.startsWith("windows") ? "http://cover.localhost/" : "cover://localhost/";
+  return `${base}?src=${encodeURIComponent(coverUrl)}`;
+}
+
 export function initials(name: string): string {
   const words = name.replace(/[^\p{L}\p{N} ]/gu, "").split(/\s+/).filter(Boolean);
   if (words.length === 1) return words[0].slice(0, 2).toUpperCase();

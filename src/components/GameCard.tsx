@@ -1,11 +1,12 @@
 import { useState } from "react";
 import type { ProjectView, SystemInfo, InstallProgress } from "../types";
-import { gradientFor, initials } from "../lib/art";
+import { gradientFor, initials, thumbUrl } from "../lib/art";
 import Icon from "../lib/icons";
 
 interface Props {
   project: ProjectView;
   system?: SystemInfo;
+  platform: string;
   progress?: InstallProgress;
   busy: boolean;
   onInstall: () => void;
@@ -16,14 +17,20 @@ interface Props {
 export default function GameCard({
   project,
   system,
+  platform,
   progress,
   busy,
   onInstall,
   onLaunch,
   onDetails,
 }: Props) {
-  const [imgError, setImgError] = useState(false);
-  const showArt = project.cover_url && !imgError;
+  // Try the cached thumbnail first, then the full cover, then a gradient.
+  const sources = [thumbUrl(project.cover_url, platform), project.cover_url].filter(
+    Boolean,
+  ) as string[];
+  const [srcIdx, setSrcIdx] = useState(0);
+  const artSrc = sources[srcIdx] ?? null;
+  const showArt = artSrc != null;
 
   const pct =
     progress && progress.phase === "download" && progress.total > 0
@@ -40,8 +47,8 @@ export default function GameCard({
       >
         {showArt ? (
           <img
-            src={project.cover_url!}
-            onError={() => setImgError(true)}
+            src={artSrc!}
+            onError={() => setSrcIdx((i) => i + 1)}
             alt={project.original_game}
             loading="lazy"
             decoding="async"

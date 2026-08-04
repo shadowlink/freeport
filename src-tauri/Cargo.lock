@@ -773,7 +773,7 @@ dependencies = [
 
 [[package]]
 name = "decompdeck"
-version = "0.1.8"
+version = "0.1.9"
 dependencies = [
  "ar",
  "dirs 5.0.1",

@@ -62,6 +62,18 @@
       "name": "Super Nintendo",
       "short": "SNES",
       "color": "#8f8fd8"
+    },
+    {
+      "id": "gba",
+      "name": "Game Boy Advance",
+      "short": "GBA",
+      "color": "#6b4fd0"
+    },
+    {
+      "id": "wii",
+      "name": "Wii",
+      "short": "WII",
+      "color": "#4aa3d6"
     }
   ],
   "projects": [
@@ -1960,6 +1972,219 @@
       "developer": "Rare",
       "genre": "Plataformas",
       "wiki": "Banjo-Kazooie"
+    },
+    {
+      "id": "ape-escape-recomp",
+      "name": "Ape Escape Recomp",
+      "original_game": "Ape Escape",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "ApeEscapeRecomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Ape%20Escape%20(USA).png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá la imagen (.cue/.bin) de tu Ape Escape (PS1) al arrancar (BIOS de PS1 opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.1",
+        "published_at": "2026-07-28T21:40:54Z"
+      },
+      "year": 1999,
+      "developer": "Sony Computer Entertainment",
+      "genre": "Plataformas",
+      "wiki": "Ape Escape"
+    },
+    {
+      "id": "minish-cap-picori",
+      "name": "Project Picori",
+      "original_game": "The Legend of Zelda: The Minish Cap",
+      "system": "gba",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "999sian",
+        "repo": "tmc"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20The%20Minish%20Cap%20(USA).png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64.*\\.tar\\.gz$",
+        "windows-x86_64": "(?i)windows-x86_64.*\\.tar\\.gz$",
+        "macos-aarch64": "(?i)macos-arm64.*\\.tar\\.gz$",
+        "macos-x86_64": "(?i)macos-x86_64.*\\.tar\\.gz$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de The Minish Cap (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": "tmc_pc",
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-aarch64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.8.3",
+        "published_at": "2026-07-19T08:15:17Z"
+      },
+      "year": 2004,
+      "developer": "Nintendo / Capcom",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: The Minish Cap"
+    },
+    {
+      "id": "kirby-wii-recomp",
+      "name": "Kirby Wii Recomp",
+      "original_game": "Kirby's Return to Dream Land",
+      "system": "wii",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "ExpansionPak",
+        "repo": "ModernGekko"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "kirby",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Wii/Named_Boxarts/Kirby%27s%20Return%20to%20Dream%20Land%20(USA).png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)Linux-x86_64\\.zip$",
+        "windows-x86_64": "(?i)Windows-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá los datos de tu copia de Kirby's Return to Dream Land (Wii) al arrancar. Proyecto en fase temprana."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "kirby",
+        "published_at": "2026-07-22T13:03:43Z"
+      },
+      "year": 2011,
+      "developer": "HAL Laboratory",
+      "genre": "Plataformas",
+      "wiki": "Kirby's Return to Dream Land"
+    },
+    {
+      "id": "simpsons-game-recomp",
+      "name": "The Simpsons Game: Recompiled",
+      "original_game": "The Simpsons Game",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "YesterMester",
+        "repo": "TheSimpsonsGameRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Wii/Named_Boxarts/The%20Simpsons%20Game%20(USA).png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)Linux-x64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)Windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ISO de Xbox 360 de The Simpsons Game; el juego extrae los datos al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.5.4",
+        "published_at": "2026-08-04T03:05:24Z"
+      },
+      "year": 2007,
+      "developer": "Electronic Arts",
+      "genre": "Acción-plataformas",
+      "wiki": "The Simpsons Game"
+    },
+    {
+      "id": "automobili-lamborghini-recomp",
+      "name": "Automobili Lamborghini Recomp",
+      "original_game": "Automobili Lamborghini",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "alondero",
+        "repo": "automobililamborghini-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Automobili%20Lamborghini%20(USA).png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Automobili Lamborghini (N64) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.5.0",
+        "published_at": "2026-07-24T07:37:24Z"
+      },
+      "year": 1997,
+      "developer": "Titus",
+      "genre": "Carreras",
+      "wiki": "Automobili Lamborghini (video game)"
     }
   ]
 }

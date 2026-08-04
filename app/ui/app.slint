@@ -23,13 +23,14 @@ component Btn inherits Rectangle {
     callback clicked;
     height: 26px;
     border-radius: 6px;
-    background: touch.pressed ? bg.darker(20%) : bg;
+    background: touch.pressed ? bg.darker(20%) : (touch.has-hover ? bg.brighter(18%) : bg);
+    animate background { duration: 120ms; easing: ease-out; }
     HorizontalLayout {
         padding-left: 8px; padding-right: 8px;
         Text { text: root.label; color: root.fg; font-size: 12px; font-weight: 700;
                horizontal-alignment: center; vertical-alignment: center; }
     }
-    touch := TouchArea { clicked => { root.clicked(); } }
+    touch := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
 
 // Thin progress bar. `value` in 0.0..1.0; when < 0 shows an indeterminate sweep.
@@ -49,6 +50,7 @@ component Bar inherits Rectangle {
         height: parent.height;
         border-radius: 3px;
         background: root.fill;
+        animate width { duration: 180ms; easing: ease-out; }
     }
 }
 
@@ -70,9 +72,10 @@ component WinBtn inherits Rectangle {
     height: 28px;
     border-radius: 6px;
     background: ta.has-hover ? root.hover-bg : #00000000;
+    animate background { duration: 120ms; easing: ease-out; }
     Text { text: root.symbol; color: white; font-size: 14px;
            horizontal-alignment: center; vertical-alignment: center; }
-    ta := TouchArea { clicked => { root.clicked(); } }
+    ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
 
 struct ChipData {
@@ -266,17 +269,21 @@ export component MainWindow inherits Window {
                         height: 30px;
                         border-radius: 8px;
                         background: root.library-tab ? #1c1f28 : #ffb23e;
+                        animate background { duration: 160ms; easing: ease-out; }
                         Text { text: "Catálogo"; font-weight: 700; horizontal-alignment: center; vertical-alignment: center;
-                               color: root.library-tab ? white : #0b0c10; }
-                        TouchArea { clicked => { root.library-tab = false; root.active-system = ""; root.refresh(); } }
+                               color: root.library-tab ? white : #0b0c10;
+                               animate color { duration: 160ms; } }
+                        TouchArea { mouse-cursor: pointer; clicked => { root.library-tab = false; root.active-system = ""; root.refresh(); } }
                     }
                     Rectangle {
                         height: 30px;
                         border-radius: 8px;
                         background: root.library-tab ? #ffb23e : #1c1f28;
+                        animate background { duration: 160ms; easing: ease-out; }
                         Text { text: "Biblioteca"; font-weight: 700; horizontal-alignment: center; vertical-alignment: center;
-                               color: root.library-tab ? #0b0c10 : white; }
-                        TouchArea { clicked => { root.library-tab = true; root.active-system = ""; root.refresh(); } }
+                               color: root.library-tab ? #0b0c10 : white;
+                               animate color { duration: 160ms; } }
+                        TouchArea { mouse-cursor: pointer; clicked => { root.library-tab = true; root.active-system = ""; root.refresh(); } }
                     }
                 }
 
@@ -290,13 +297,15 @@ export component MainWindow inherits Window {
                     height: 42px;
                     border-radius: 8px;
                     background: root.active-system == "" ? #ffb23e26 : (all-touch.has-hover ? #ffffff0f : #00000000);
-                    all-touch := TouchArea { clicked => { root.active-system = ""; root.refresh(); } }
+                    animate background { duration: 130ms; easing: ease-out; }
+                    all-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = ""; root.refresh(); } }
                     HorizontalLayout {
                         padding-left: 8px;
                         padding-right: 10px;
                         spacing: 8px;
                         Rectangle { width: 4px; border-radius: 2px;
-                                    background: root.active-system == "" ? #ffb23e : #00000000; }
+                                    background: root.active-system == "" ? #ffb23e : #00000000;
+                                    animate background { duration: 160ms; } }
                         Text { text: "Todos los juegos"; color: white; font-weight: 600; vertical-alignment: center; horizontal-stretch: 1; }
                     }
                 }
@@ -305,7 +314,8 @@ export component MainWindow inherits Window {
                         height: 42px;
                         border-radius: 8px;
                         background: root.active-system == s.id ? #ffb23e26 : (row-touch.has-hover ? #ffffff0f : #00000000);
-                        row-touch := TouchArea { clicked => { root.active-system = s.id; root.refresh(); } }
+                        animate background { duration: 130ms; easing: ease-out; }
+                        row-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = s.id; root.refresh(); } }
                         HorizontalLayout {
                             padding-left: 8px;
                             padding-right: 10px;
@@ -313,7 +323,8 @@ export component MainWindow inherits Window {
                             padding-bottom: 8px;
                             spacing: 8px;
                             Rectangle { width: 4px; border-radius: 2px;
-                                        background: root.active-system == s.id ? s.color : #00000000; }
+                                        background: root.active-system == s.id ? s.color : #00000000;
+                                        animate background { duration: 160ms; } }
                             if s.has-logo: VerticalLayout {
                                 horizontal-stretch: 1;
                                 alignment: center;
@@ -343,6 +354,9 @@ export component MainWindow inherits Window {
             if root.update-available: Rectangle {
                 height: 44px;
                 background: #ffb23e;
+                opacity: 0;
+                init => { self.opacity = 1; }
+                animate opacity { duration: 260ms; easing: ease-out; }
                 HorizontalLayout {
                     padding-left: 16px;
                     padding-right: 8px;
@@ -384,8 +398,20 @@ export component MainWindow inherits Window {
                                 background: #1c1f28;
                                 clip: true;
                                 border-width: 2px;
-                                border-color: c.installed ? #4de1c1 : #2b2f3a;
-                                Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; }
+                                border-color: cover-ta.has-hover ? (c.installed ? #4de1c1 : #ffb23e)
+                                                                 : (c.installed ? #4de1c1 : #2b2f3a);
+                                drop-shadow-blur: cover-ta.has-hover ? 20px : 0px;
+                                drop-shadow-color: cover-ta.has-hover ? (c.installed ? #4de1c1aa : #ffb23e99) : #00000000;
+                                animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
+                                Image {
+                                    source: c.cover;
+                                    width: cover-ta.has-hover ? parent.width * 1.09 : parent.width;
+                                    height: cover-ta.has-hover ? parent.height * 1.09 : parent.height;
+                                    x: (parent.width - self.width) / 2;
+                                    y: (parent.height - self.height) / 2;
+                                    image-fit: cover;
+                                    animate width, height { duration: 220ms; easing: ease-out; }
+                                }
                                 Tag {
                                     x: 6px; y: 6px;
                                     label: c.kind;
@@ -399,7 +425,7 @@ export component MainWindow inherits Window {
                                     x: 6px; y: parent.height - 22px;
                                     label: "UPDATE"; fg: #ffd166; bg: #000000cc;
                                 }
-                                TouchArea { clicked => { root.open-game(c.id); } }
+                                cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
                             }
                             Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
                             Text { text: c.subtitle; color: #ffffff66; font-size: 10px; overflow: elide; }
@@ -439,6 +465,9 @@ export component MainWindow inherits Window {
         width: 100%;
         height: 100%;
         background: #0b0c10;
+        opacity: 0;
+        init => { self.opacity = 1; }
+        animate opacity { duration: 170ms; easing: ease-out; }
         VerticalLayout {
             Rectangle {
                 height: 46px;
@@ -584,16 +613,26 @@ export component MainWindow inherits Window {
         width: 100%;
         height: 100%;
         background: #000000cc;
-        TouchArea { }
-        Rectangle {
+        opacity: 0;
+        init => { self.opacity = 1; }
+        animate opacity { duration: 160ms; easing: ease-out; }
+        TouchArea { clicked => { root.settings-visible = false; } }
+        card := Rectangle {
+            property <length> enter: 14px;
+            init => { self.enter = 0px; }
             width: 470px;
             height: 400px;
             x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
+            y: (parent.height - self.height) / 2 + self.enter;
             border-radius: 14px;
             background: #14161d;
             border-width: 1px;
             border-color: #2b2f3a;
+            drop-shadow-blur: 40px;
+            drop-shadow-color: #00000099;
+            animate enter { duration: 220ms; easing: ease-out; }
+            // Absorb clicks so they don't fall through to the backdrop (close).
+            TouchArea { }
             VerticalLayout {
                 padding: 20px;
                 spacing: 14px;
@@ -639,7 +678,9 @@ export component MainWindow inherits Window {
     if root.tv-visible: FocusScope {
         width: 100%;
         height: 100%;
-        init => { self.focus(); }
+        opacity: 0;
+        init => { self.focus(); self.opacity = 1; }
+        animate opacity { duration: 220ms; easing: ease-out; }
         key-pressed(e) => {
             if (e.text == Key.UpArrow) { root.tv-input("up"); return EventResult.accept; }
             if (e.text == Key.DownArrow) { root.tv-input("down"); return EventResult.accept; }
@@ -670,28 +711,44 @@ export component MainWindow inherits Window {
                     interactive: false;
                     viewport-height: root.tv-shelf-count * 252px;
                     viewport-y: -root.tv-shelf * 252px;
+                    animate viewport-y { duration: 280ms; easing: ease-in-out; }
                     VerticalLayout {
                         for shelf[si] in root.tv-shelves: VerticalLayout {
                             height: 252px;
                             padding-left: 24px;
                             spacing: 6px;
-                            Text { text: shelf.name; color: white; font-weight: 800; font-size: 16px; }
+                            Text { text: shelf.name; color: white; font-weight: 800; font-size: 16px;
+                                   opacity: si == root.tv-shelf ? 1.0 : 0.55;
+                                   animate opacity { duration: 220ms; } }
                             Flickable {
                                 interactive: false;
                                 height: 214px;
                                 viewport-width: shelf.count * 170px;
                                 viewport-x: si == root.tv-shelf ? -root.tv-col * 170px : 0px;
+                                animate viewport-x { duration: 240ms; easing: ease-out; }
                                 HorizontalLayout {
                                     spacing: 12px;
                                     for game[col] in shelf.games: Rectangle {
+                                        property <bool> focused: si == root.tv-shelf && col == root.tv-col;
                                         width: 158px;
                                         height: 210px;
                                         border-radius: 10px;
                                         clip: true;
                                         background: #1c1f28;
                                         border-width: 3px;
-                                        border-color: (si == root.tv-shelf && col == root.tv-col) ? #ffb23e : #00000000;
-                                        Image { source: game.cover; width: 100%; height: 100%; image-fit: cover; }
+                                        border-color: focused ? #ffb23e : #00000000;
+                                        drop-shadow-blur: focused ? 26px : 0px;
+                                        drop-shadow-color: focused ? #ffb23eaa : #00000000;
+                                        animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
+                                        Image {
+                                            source: game.cover;
+                                            width: focused ? parent.width * 1.08 : parent.width;
+                                            height: focused ? parent.height * 1.08 : parent.height;
+                                            x: (parent.width - self.width) / 2;
+                                            y: (parent.height - self.height) / 2;
+                                            image-fit: cover;
+                                            animate width, height { duration: 200ms; easing: ease-out; }
+                                        }
                                     }
                                 }
                             }

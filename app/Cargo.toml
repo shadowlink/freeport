@@ -12,6 +12,7 @@ slint-build = "1"
 
 [dependencies]
 slint = "1"
+i-slint-backend-winit = "=1.17.1"
 freeport-core = { path = "../core" }
 tokio = { version = "1", features = ["rt-multi-thread"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }

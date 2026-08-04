@@ -122,6 +122,7 @@ pub async fn install_project(
     paths: &Paths,
     project: &Project,
     cfg: &Config,
+    mut on_progress: impl FnMut(u64, u64),
 ) -> AppResult<InstalledEntry> {
     let triple = platform::current_triple();
     let token = cfg.github_token.as_deref();
@@ -155,7 +156,10 @@ pub async fn install_project(
     std::fs::create_dir_all(&app_dir)?;
 
     let archive = app_dir.join(&asset.name);
-    install::download_to_file(client, &asset.browser_download_url, &archive, |_, _| {}).await?;
+    install::download_to_file(client, &asset.browser_download_url, &archive, |d, t| {
+        on_progress(d, t)
+    })
+    .await?;
 
     if install::is_archive(&asset.name) {
         install::extract_archive(archive.clone(), app_dir.clone()).await?;
@@ -304,6 +308,7 @@ pub async fn install_mod(
     project: &Project,
     all: &[ModInfo],
     full_name: &str,
+    on_progress: impl FnMut(&str, usize, usize, u64, u64, &str),
 ) -> AppResult<Vec<String>> {
     let src = project
         .mods
@@ -311,11 +316,10 @@ pub async fn install_mod(
         .ok_or_else(|| AppError::msg("sin fuente de mods"))?
         .clone();
     let dir = mods_dir_for(project, &src.source, installed_dir(paths, &project.id).as_deref())?;
-    let noop = |_: &str, _: usize, _: usize, _: u64, _: u64, _: &str| {};
     let files = if src.source == "gamebanana" {
-        mods::install_gb_mod(client, full_name, &dir, noop).await?
+        mods::install_gb_mod(client, full_name, &dir, on_progress).await?
     } else {
-        mods::install_mod(client, all, full_name, &dir, noop).await?
+        mods::install_mod(client, all, full_name, &dir, on_progress).await?
     };
     let version = all.iter().find(|m| m.full_name == full_name).map(|m| m.version.clone()).unwrap_or_default();
     let mut mstate = store::load_mod_state(paths)?;

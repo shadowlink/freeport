@@ -8,6 +8,7 @@ use freeport_core::store::{self, Paths};
 use freeport_core::mods::ModInfo;
 use freeport_core::wiki::WikiInfo;
 use freeport_core::{actions, gamepad, platform, thumbs, update, wiki};
+use i_slint_backend_winit::WinitWindowAccessor;
 use slint::{Color, Image, ModelRc, SharedString, VecModel, Weak};
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -42,12 +43,31 @@ struct App {
     logos: std::collections::HashMap<String, Image>,
     runners: Vec<actions::Runner>,
     busy: RefCell<HashSet<String>>,
+    install_progress: RefCell<std::collections::HashMap<String, f32>>,
     detail: RefCell<Option<DetailState>>,
     mods_cache: RefCell<std::collections::HashMap<String, Vec<ModInfo>>>,
     mod_busy: RefCell<HashSet<String>>,
+    mod_progress: RefCell<std::collections::HashMap<String, (f32, String)>>,
+    mod_icons: RefCell<std::collections::HashMap<String, Image>>,
     screens_cache: RefCell<std::collections::HashMap<String, Vec<String>>>,
+    cover_cache: RefCell<std::collections::HashMap<String, Image>>,
     tv_shelves: RefCell<Vec<(String, Vec<String>)>>,
     pending_update: RefCell<Option<update::Update>>,
+}
+
+/// Whether a newer release than the installed one exists, comparing by publish
+/// date (robust: a tag mismatch alone would flag downgrades and stale catalogs).
+fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<freeport_core::model::Cached>) -> bool {
+    let Some(c) = cached else { return false };
+    match (&entry.published_at, &c.published_at) {
+        // Both dates present → newer catalog date means a real update.
+        (Some(inst), Some(latest)) if !inst.is_empty() && !latest.is_empty() => latest.as_str() > inst.as_str(),
+        // Fall back to tag inequality only when we can't compare dates.
+        _ => match (entry.installed_tag.as_ref(), c.latest_tag.as_ref()) {
+            (Some(cur), Some(l)) => l != cur,
+            _ => false,
+        },
+    }
 }
 
 thread_local! {
@@ -148,10 +168,7 @@ fn rebuild(app: &App, win: &MainWindow) {
             continue;
         }
         let entry = installed.get(&p.id);
-        let update = match (entry.and_then(|e| e.installed_tag.as_ref()), &p.cached) {
-            (Some(cur), Some(c)) => c.latest_tag.as_ref().map(|l| l != cur).unwrap_or(false),
-            _ => false,
-        };
+        let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
         let sys_color = catalog
             .systems
             .iter()
@@ -171,14 +188,16 @@ fn rebuild(app: &App, win: &MainWindow) {
             needs_rom: p.rom.mode == "copy",
             rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
             busy: busy.contains(&p.id),
+            progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
             kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
             sys_color,
         });
     }
 
     let count = cards.len() as i32;
+    let cols = (win.get_cols().max(1)) as usize;
     let rows: Vec<ModelRc<CardItem>> = cards
-        .chunks(6)
+        .chunks(cols)
         .map(|c| ModelRc::new(VecModel::from(c.to_vec())))
         .collect();
 
@@ -198,12 +217,21 @@ fn rebuild(app: &App, win: &MainWindow) {
 
 impl App {
     fn cover(&self, p: &Project) -> Image {
-        p.cover_url
-            .as_ref()
-            .map(|u| thumbs::path_for(&self.paths, u))
-            .filter(|path| path.exists())
-            .and_then(|path| Image::load_from_path(&path).ok())
-            .unwrap_or_default()
+        let Some(url) = p.cover_url.as_ref() else { return Image::default() };
+        if let Some(img) = self.cover_cache.borrow().get(url) {
+            return img.clone();
+        }
+        let path = thumbs::path_for(&self.paths, url);
+        if !path.exists() {
+            return Image::default();
+        }
+        match Image::load_from_path(&path) {
+            Ok(img) => {
+                self.cover_cache.borrow_mut().insert(url.clone(), img.clone());
+                img
+            }
+            Err(_) => Image::default(),
+        }
     }
 }
 
@@ -222,10 +250,7 @@ fn build_detail(app: &App, win: &MainWindow) {
     let catalog = app.catalog.borrow();
     let entry = installed.get(&p.id);
     let (_, is_win) = app.visibility(&p, &installed, show_windows);
-    let update = match (entry.and_then(|e| e.installed_tag.as_ref()), &p.cached) {
-        (Some(cur), Some(c)) => c.latest_tag.as_ref().map(|l| l != cur).unwrap_or(false),
-        _ => false,
-    };
+    let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
     let sys = catalog.systems.iter().find(|s| s.id == p.system);
     let sys_color = sys.map(|s| parse_color(&s.color)).unwrap_or(Color::from_rgb_u8(0x88, 0x88, 0x88));
     let neutral = Color::from_rgb_u8(0x3a, 0x3f, 0x4d);
@@ -267,6 +292,7 @@ fn build_detail(app: &App, win: &MainWindow) {
             needs_rom: false,
             rom_ok: false,
             busy: false,
+            progress: 0.0,
             kind: "".into(),
             sys_color,
         })
@@ -274,22 +300,64 @@ fn build_detail(app: &App, win: &MainWindow) {
 
     let mut mod_rows: Vec<ModRow> = Vec::new();
     if p.mods.is_some() {
-        if let Some(list) = app.mods_cache.borrow().get(&p.id) {
-            let inst = actions::installed_mods(&app.paths, &p.id);
-            let mbusy = app.mod_busy.borrow();
-            for m in list.iter().take(80) {
-                let iv = inst.get(&m.full_name);
-                mod_rows.push(ModRow {
-                    full_name: m.full_name.clone().into(),
-                    name: m.name.replace('_', " ").into(),
-                    owner: m.owner.clone().into(),
-                    downloads: format!("{}", m.downloads).into(),
-                    description: m.description.clone().into(),
-                    installed: iv.is_some(),
-                    update: iv.map(|v| v != &m.version).unwrap_or(false),
-                    busy: mbusy.contains(&m.full_name),
-                });
+        let inst = actions::installed_mods(&app.paths, &p.id);
+        let mbusy = app.mod_busy.borrow();
+        let mprog = app.mod_progress.borrow();
+        let icons = app.mod_icons.borrow();
+        let make_row = |m: &ModInfo, installed: bool, update: bool| {
+            let icon = m.icon_url.as_ref().and_then(|u| icons.get(u).cloned());
+            let prog = mprog.get(&m.full_name);
+            ModRow {
+                full_name: m.full_name.clone().into(),
+                name: m.name.replace('_', " ").into(),
+                owner: m.owner.clone().into(),
+                downloads: format!("{}", m.downloads).into(),
+                description: m.description.clone().into(),
+                icon: icon.clone().unwrap_or_default(),
+                has_icon: icon.is_some(),
+                installed,
+                update,
+                busy: mbusy.contains(&m.full_name),
+                progress: prog.map(|(p, _)| *p).unwrap_or(0.0),
+                phase: prog.map(|(_, ph)| ph.clone()).unwrap_or_default().into(),
             }
+        };
+        let list = app.mods_cache.borrow();
+        let list = list.get(&p.id).cloned().unwrap_or_default();
+        let in_list: HashSet<String> = list.iter().map(|m| m.full_name.clone()).collect();
+        // Installed mods first (so previously-installed ones are always visible,
+        // even if they're not in the fetched catalog page).
+        for (full_name, ver) in &inst {
+            let catalog_mod = list.iter().find(|m| &m.full_name == full_name);
+            let update = catalog_mod.map(|m| &m.version != ver).unwrap_or(false);
+            match catalog_mod {
+                Some(m) => mod_rows.push(make_row(m, true, update)),
+                None => {
+                    // Installed but not in the fetched list — synthesize a minimal row.
+                    let name = full_name.rsplit('-').next().unwrap_or(full_name).replace('_', " ");
+                    mod_rows.push(ModRow {
+                        full_name: full_name.clone().into(),
+                        name: name.into(),
+                        owner: full_name.split('-').next().unwrap_or("").into(),
+                        downloads: "".into(),
+                        description: "Instalado".into(),
+                        icon: Default::default(),
+                        has_icon: false,
+                        installed: true,
+                        update: false,
+                        busy: mbusy.contains(full_name),
+                        progress: mprog.get(full_name).map(|(p, _)| *p).unwrap_or(0.0),
+                        phase: mprog.get(full_name).map(|(_, ph)| ph.clone()).unwrap_or_default().into(),
+                    });
+                }
+            }
+        }
+        // Then the rest of the catalog (not-installed), most popular first.
+        for m in list.iter().take(80) {
+            if in_list.contains(&m.full_name) && inst.contains_key(&m.full_name) {
+                continue; // already shown above
+            }
+            mod_rows.push(make_row(m, false, false));
         }
     }
 
@@ -313,6 +381,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         needs_rom: p.rom.mode == "copy",
         rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
         busy: app.busy.borrow().contains(&p.id),
+        progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
         about: state.wiki.as_ref().map(|w| w.extract.clone()).unwrap_or_default().into(),
         port_notes: p.rom.notes.clone().into(),
         has_related: !related.is_empty(),
@@ -412,6 +481,7 @@ fn build_tv(app: &App, win: &MainWindow) {
                 needs_rom: false,
                 rom_ok: false,
                 busy: false,
+                progress: 0.0,
                 kind: "".into(),
                 sys_color,
             })
@@ -507,6 +577,14 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // Frameless window: winit backend with system decorations disabled so we can
+    // draw our own titlebar. Must run before any window is created.
+    let backend = i_slint_backend_winit::Backend::builder()
+        .with_window_attributes_hook(|attrs| attrs.with_decorations(false))
+        .build()
+        .expect("winit backend");
+    slint::platform::set_platform(Box::new(backend)).expect("set winit platform");
+
     update::cleanup();
     let rt = tokio::runtime::Runtime::new()?;
     let handle = rt.handle().clone();
@@ -524,10 +602,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         logos,
         runners: actions::list_runners(),
         busy: RefCell::new(HashSet::new()),
+        install_progress: RefCell::new(std::collections::HashMap::new()),
         detail: RefCell::new(None),
         mods_cache: RefCell::new(std::collections::HashMap::new()),
         mod_busy: RefCell::new(HashSet::new()),
+        mod_progress: RefCell::new(std::collections::HashMap::new()),
+        mod_icons: RefCell::new(std::collections::HashMap::new()),
         screens_cache: RefCell::new(std::collections::HashMap::new()),
+        cover_cache: RefCell::new(std::collections::HashMap::new()),
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
     });
@@ -570,6 +652,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|| "Automático".to_string());
         win.set_current_runner_label(current.into());
     }
+
+    // ── Custom titlebar / frameless window controls ──────────────────────
+    win.on_win_minimize({
+        let weak = win.as_weak();
+        move || {
+            if let Some(w) = weak.upgrade() {
+                w.window().with_winit_window(|ww| ww.set_minimized(true));
+            }
+        }
+    });
+    win.on_win_maximize({
+        let weak = win.as_weak();
+        move || {
+            if let Some(w) = weak.upgrade() {
+                w.window().with_winit_window(|ww| ww.set_maximized(!ww.is_maximized()));
+            }
+        }
+    });
+    win.on_win_close(|| {
+        let _ = slint::quit_event_loop();
+    });
+    win.on_title_press({
+        let weak = win.as_weak();
+        move || {
+            if let Some(w) = weak.upgrade() {
+                w.window().with_winit_window(|ww| {
+                    let _ = ww.drag_window();
+                });
+            }
+        }
+    });
+    win.on_resize_press({
+        let weak = win.as_weak();
+        move |dir| {
+            use i_slint_backend_winit::winit::window::ResizeDirection as RD;
+            let d = match dir.as_str() {
+                "n" => RD::North,
+                "s" => RD::South,
+                "e" => RD::East,
+                "w" => RD::West,
+                "ne" => RD::NorthEast,
+                "nw" => RD::NorthWest,
+                "se" => RD::SouthEast,
+                "sw" => RD::SouthWest,
+                _ => return,
+            };
+            if let Some(w) = weak.upgrade() {
+                w.window().with_winit_window(|ww| {
+                    let _ = ww.drag_resize_window(d);
+                });
+            }
+        }
+    });
 
     win.on_toggle_windows({
         let app = app.clone();
@@ -691,18 +826,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Fetch the mod list for this game (once), then refresh the detail.
             if project.mods.is_some() && !app.mods_cache.borrow().contains_key(&id) {
                 let client = app.client.clone();
+                let paths = app.paths.clone();
                 let proj = project.clone();
                 let pid = id.clone();
                 handle.spawn(async move {
                     if let Ok(list) = actions::list_mods(&client, &proj).await {
+                        // Icons to fetch (top of the list keeps it cheap).
+                        let icon_urls: Vec<String> =
+                            list.iter().filter_map(|m| m.icon_url.clone()).take(48).collect();
+                        let listc = list.clone();
+                        let pid2 = pid.clone();
                         let _ = slint::invoke_from_event_loop(move || {
                             UI.with(|u| {
                                 if let Some((app, _)) = &*u.borrow() {
-                                    app.mods_cache.borrow_mut().insert(pid, list);
+                                    app.mods_cache.borrow_mut().insert(pid2, listc);
                                 }
                             });
                             ui_refresh();
                         });
+                        // Download mod icons in the background, then load + refresh.
+                        let mut fetched: Vec<(String, String)> = Vec::new();
+                        for u in icon_urls {
+                            if let Ok(p) = thumbs::get_full(&client, &paths, &u).await {
+                                fetched.push((u, p.display().to_string()));
+                            }
+                        }
+                        if !fetched.is_empty() {
+                            let _ = slint::invoke_from_event_loop(move || {
+                                UI.with(|u| {
+                                    if let Some((app, _)) = &*u.borrow() {
+                                        for (url, path) in &fetched {
+                                            if app.mod_icons.borrow().contains_key(url) {
+                                                continue;
+                                            }
+                                            if let Ok(img) = Image::load_from_path(Path::new(path)) {
+                                                app.mod_icons.borrow_mut().insert(url.clone(), img);
+                                            }
+                                        }
+                                    }
+                                });
+                                ui_refresh();
+                            });
+                        }
                     }
                 });
             }
@@ -751,17 +916,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let Some(project) = app.find(&id) else { return };
             let all = app.mods_cache.borrow().get(&id).cloned().unwrap_or_default();
             app.mod_busy.borrow_mut().insert(fname.clone());
+            app.mod_progress.borrow_mut().insert(fname.clone(), (0.0, "download".into()));
             ui_refresh();
             let client = app.client.clone();
             let paths = app.paths.clone();
+            let fname2 = fname.clone();
             handle.spawn(async move {
-                if let Err(e) = actions::install_mod(&client, &paths, &project, &all, &fname).await {
-                    eprintln!("[mod] {fname}: {e}");
+                let prog_key = fname2.clone();
+                let mut last = -1i32;
+                let on_prog = move |_pkg: &str, i: usize, total: usize, done: u64, bytes: u64, phase: &str| {
+                    let frac = if bytes > 0 { done as f64 / bytes as f64 } else { 0.0 };
+                    let overall = if total > 0 {
+                        (i.saturating_sub(1) as f64 + frac) / total as f64
+                    } else {
+                        0.0
+                    };
+                    let pct = (overall * 100.0) as i32;
+                    if pct == last && phase == "download" {
+                        return; // throttle only the noisy download phase
+                    }
+                    last = pct;
+                    let key = prog_key.clone();
+                    let ph = phase.to_string();
+                    let f = overall as f32;
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((app, _)) = &*u.borrow() {
+                                app.mod_progress.borrow_mut().insert(key, (f, ph));
+                            }
+                        });
+                        ui_refresh();
+                    });
+                };
+                if let Err(e) = actions::install_mod(&client, &paths, &project, &all, &fname2, on_prog).await {
+                    eprintln!("[mod] {fname2}: {e}");
                 }
                 let _ = slint::invoke_from_event_loop(move || {
                     UI.with(|u| {
                         if let Some((app, _)) = &*u.borrow() {
-                            app.mod_busy.borrow_mut().remove(&fname);
+                            app.mod_busy.borrow_mut().remove(&fname2);
+                            app.mod_progress.borrow_mut().remove(&fname2);
                         }
                     });
                     ui_refresh();
@@ -795,18 +989,43 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let id = id.to_string();
             let Some(project) = app.find(&id) else { return };
             app.busy.borrow_mut().insert(id.clone());
+            app.install_progress.borrow_mut().insert(id.clone(), 0.0);
             ui_refresh();
             let client = app.client.clone();
             let paths = app.paths.clone();
             let cfg = store::load_config(&paths).unwrap_or_default();
+            let pid = id.clone();
             handle.spawn(async move {
-                if let Err(e) = actions::install_project(&client, &paths, &project, &cfg).await {
-                    eprintln!("[install] {id}: {e}");
+                let prog_id = pid.clone();
+                let mut last = -1i32;
+                let on_prog = move |done: u64, total: u64| {
+                    if total == 0 {
+                        return;
+                    }
+                    let pct = ((done * 100) / total) as i32;
+                    if pct == last {
+                        return;
+                    }
+                    last = pct;
+                    let idc = prog_id.clone();
+                    let f = pct as f32 / 100.0;
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((app, _)) = &*u.borrow() {
+                                app.install_progress.borrow_mut().insert(idc, f);
+                            }
+                        });
+                        ui_refresh();
+                    });
+                };
+                if let Err(e) = actions::install_project(&client, &paths, &project, &cfg, on_prog).await {
+                    eprintln!("[install] {pid}: {e}");
                 }
                 let _ = slint::invoke_from_event_loop(move || {
                     UI.with(|u| {
                         if let Some((app, _)) = &*u.borrow() {
-                            app.busy.borrow_mut().remove(&id);
+                            app.busy.borrow_mut().remove(&pid);
+                            app.install_progress.borrow_mut().remove(&pid);
                         }
                     });
                     ui_refresh();

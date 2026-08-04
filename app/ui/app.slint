@@ -11,6 +11,7 @@ struct CardItem {
     needs-rom: bool,
     rom-ok: bool,
     busy: bool,
+    progress: float,
     kind: string,
     sys-color: color,
 }
@@ -31,6 +32,26 @@ component Btn inherits Rectangle {
     touch := TouchArea { clicked => { root.clicked(); } }
 }
 
+// Thin progress bar. `value` in 0.0..1.0; when < 0 shows an indeterminate sweep.
+component Bar inherits Rectangle {
+    in property <float> value;
+    in property <color> fill: #ffb23e;
+    height: 6px;
+    border-radius: 3px;
+    background: #00000066;
+    clip: true;
+    property <float> sweep;
+    animate sweep { duration: 1100ms; iteration-count: -1; easing: ease-in-out; }
+    init => { self.sweep = 1.0; }
+    Rectangle {
+        x: root.value >= 0 ? 0px : (parent.width * 0.6) * root.sweep;
+        width: root.value >= 0 ? parent.width * clamp(root.value, 0.0, 1.0) : parent.width * 0.4;
+        height: parent.height;
+        border-radius: 3px;
+        background: root.fill;
+    }
+}
+
 struct SysRow {
     id: string,
     name: string,
@@ -38,6 +59,20 @@ struct SysRow {
     color: color,
     logo: image,
     has-logo: bool,
+}
+
+// Window control button (minimize / maximize / close).
+component WinBtn inherits Rectangle {
+    in property <string> symbol;
+    in property <color> hover-bg: #ffffff26;
+    callback clicked;
+    width: 40px;
+    height: 28px;
+    border-radius: 6px;
+    background: ta.has-hover ? root.hover-bg : #00000000;
+    Text { text: root.symbol; color: white; font-size: 14px;
+           horizontal-alignment: center; vertical-alignment: center; }
+    ta := TouchArea { clicked => { root.clicked(); } }
 }
 
 struct ChipData {
@@ -62,9 +97,13 @@ struct ModRow {
     owner: string,
     downloads: string,
     description: string,
+    icon: image,
+    has-icon: bool,
     installed: bool,
     update: bool,
     busy: bool,
+    progress: float,
+    phase: string,
 }
 
 struct DetailData {
@@ -78,6 +117,7 @@ struct DetailData {
     needs-rom: bool,
     rom-ok: bool,
     busy: bool,
+    progress: float,
     about: string,
     port-notes: string,
     has-related: bool,
@@ -151,6 +191,12 @@ export component MainWindow inherits Window {
     in-out property <bool> update-busy;
     callback do-update();
     callback dismiss-update();
+    // Frameless window controls
+    callback win-minimize();
+    callback win-maximize();
+    callback win-close();
+    callback title-press();
+    callback resize-press(string);
 
     preferred-width: 1180px;
     preferred-height: 760px;
@@ -160,6 +206,40 @@ export component MainWindow inherits Window {
     background: #0b0c10;
     default-font-size: 14px;
 
+    // Responsive column count for the cover grid. Card slot ≈ 158px + 14px gap;
+    // main area = window width minus the 244px sidebar and grid padding.
+    out property <int> cols: max(1, floor((root.width - 244px - 24px) / 172px));
+    changed cols => { root.refresh(); }
+
+    VerticalLayout {
+    // ── Custom titlebar (frameless) ─────────────
+    Rectangle {
+        height: 40px;
+        background: #101219;
+        // Drag region (behind the buttons; brand/spacer let events fall through).
+        TouchArea {
+            mouse-cursor: default;
+            pointer-event(e) => {
+                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
+                    root.title-press();
+                }
+            }
+        }
+        HorizontalLayout {
+            padding-left: 14px;
+            padding-right: 6px;
+            spacing: 6px;
+            Text { text: "⚓ FREEPORT"; color: #ffb23e; font-weight: 900; font-size: 15px;
+                   vertical-alignment: center; }
+            Rectangle { horizontal-stretch: 1; }
+            WinBtn { symbol: "–"; clicked => { root.win-minimize(); } }
+            WinBtn { symbol: "▢"; clicked => { root.win-maximize(); } }
+            WinBtn { symbol: "✕"; hover-bg: #e04b5a; clicked => { root.win-close(); } }
+        }
+    }
+    // ── Content area (holds base view + modal overlays) ─────────────
+    Rectangle {
+        vertical-stretch: 1;
     HorizontalLayout {
         // ── Sidebar ─────────────────────────────
         Rectangle {
@@ -198,29 +278,36 @@ export component MainWindow inherits Window {
                 }
 
                 Rectangle {
-                    height: 40px;
+                    height: 42px;
                     border-radius: 8px;
-                    background: root.active-system == "" ? #ffb23e26 : #00000000;
-                    Text { text: "Todos los juegos"; color: white; vertical-alignment: center; x: 12px; }
-                    TouchArea { clicked => { root.active-system = ""; root.refresh(); } }
+                    background: root.active-system == "" ? #ffb23e26 : (all-touch.has-hover ? #ffffff0f : #00000000);
+                    all-touch := TouchArea { clicked => { root.active-system = ""; root.refresh(); } }
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        padding-right: 10px;
+                        spacing: 8px;
+                        Rectangle { width: 4px; border-radius: 2px;
+                                    background: root.active-system == "" ? #ffb23e : #00000000; }
+                        Text { text: "Todos los juegos"; color: white; font-weight: 600; vertical-alignment: center; horizontal-stretch: 1; }
+                    }
                 }
                 ListView {
                     for s in root.systems: Rectangle {
                         height: 42px;
                         border-radius: 8px;
-                        background: root.active-system == s.id ? #ffb23e26 : #00000000;
-                        TouchArea { clicked => { root.active-system = s.id; root.refresh(); } }
+                        background: root.active-system == s.id ? #ffb23e26 : (row-touch.has-hover ? #ffffff0f : #00000000);
+                        row-touch := TouchArea { clicked => { root.active-system = s.id; root.refresh(); } }
                         HorizontalLayout {
-                            padding-left: 6px;
+                            padding-left: 8px;
                             padding-right: 10px;
                             spacing: 8px;
                             Rectangle { width: 4px; border-radius: 2px;
                                         background: root.active-system == s.id ? s.color : #00000000; }
-                            if s.has-logo: Image { source: s.logo; height: 24px; width: 130px;
-                                                   image-fit: contain; horizontal-alignment: left; vertical-alignment: center; }
-                            if !s.has-logo: Text { text: s.name; color: white; vertical-alignment: center; }
-                            Rectangle { horizontal-stretch: 1; }
-                            Text { text: "\{s.count}"; color: #ffffff59; vertical-alignment: center; }
+                            if s.has-logo: Image { source: s.logo; height: 22px;
+                                                   image-fit: contain; horizontal-alignment: left; vertical-alignment: center;
+                                                   horizontal-stretch: 1; }
+                            if !s.has-logo: Text { text: s.name; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                            Text { text: "\{s.count}"; color: #ffffff59; font-size: 12px; vertical-alignment: center; }
                         }
                     }
                 }
@@ -304,10 +391,13 @@ export component MainWindow inherits Window {
                             Text { text: c.subtitle; color: #ffffff66; font-size: 10px; overflow: elide; }
 
                             // Action row
-                            if c.busy: Rectangle {
+                            if c.busy: VerticalLayout {
                                 height: 28px;
-                                Text { text: "Instalando…"; color: #ffb23e; font-size: 12px;
-                                       horizontal-alignment: center; vertical-alignment: center; }
+                                spacing: 4px;
+                                Text { text: c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…";
+                                       color: #ffb23e; font-size: 11px; font-weight: 700;
+                                       horizontal-alignment: center; }
+                                Bar { value: c.progress > 0 ? c.progress : -1; }
                             }
                             if !c.busy && c.installed: HorizontalLayout {
                                 height: 28px; spacing: 5px;
@@ -320,7 +410,7 @@ export component MainWindow inherits Window {
                                 Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall(c.id); } }
                             }
                             if !c.busy && !c.installed: Btn {
-                                label: "⭳ Instalar"; bg: #1c1f28; fg: #ffb23e;
+                                label: "↓ Instalar"; bg: #1c1f28; fg: #ffb23e;
                                 clicked => { root.install(c.id); }
                             }
                         }
@@ -369,25 +459,34 @@ export component MainWindow inherits Window {
                                         Text { text: ch.text; color: white; font-size: 12px; vertical-alignment: center; } }
                                 }
                             }
-                            HorizontalLayout {
+                            if root.detail.busy: VerticalLayout {
+                                spacing: 5px;
+                                width: 280px;
+                                Text { text: root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…";
+                                       color: #ffb23e; font-weight: 700; }
+                                Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 8px; }
+                            }
+                            if !root.detail.busy: HorizontalLayout {
                                 spacing: 8px;
                                 alignment: start;
-                                if root.detail.busy: Text { text: "Instalando…"; color: #ffb23e; vertical-alignment: center; }
-                                if !root.detail.busy && root.detail.installed: Btn { label: "▶ Jugar"; clicked => { root.play(root.detail.id); } }
-                                if !root.detail.busy && root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
-                                if !root.detail.busy && root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
-                                if !root.detail.busy && root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall(root.detail.id); } }
-                                if !root.detail.busy && !root.detail.installed: Btn { label: "⭳ Instalar"; clicked => { root.install(root.detail.id); } }
+                                if root.detail.installed: Btn { label: "▶ Jugar"; clicked => { root.play(root.detail.id); } }
+                                if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
+                                if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
+                                if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall(root.detail.id); } }
+                                if !root.detail.installed: Btn { label: "↓ Instalar"; clicked => { root.install(root.detail.id); } }
                             }
                         }
                     }
-                    if root.detail.has-screens: HorizontalLayout {
-                        spacing: 10px;
-                        alignment: start;
-                        for s in root.detail.screens: Rectangle {
-                            width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
-                            Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
-                            TouchArea { clicked => { root.open-screenshot(s.path); } }
+                    if root.detail.has-screens: ScrollView {
+                        height: 152px;
+                        HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            for s in root.detail.screens: Rectangle {
+                                width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
+                                Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
+                                TouchArea { clicked => { root.open-screenshot(s.path); } }
+                            }
                         }
                     }
                     if root.detail.about != "": VerticalLayout {
@@ -403,18 +502,21 @@ export component MainWindow inherits Window {
                     if root.detail.has-related: VerticalLayout {
                         spacing: 8px;
                         Text { text: "Relacionados"; font-size: 18px; font-weight: 800; color: white; }
-                        HorizontalLayout {
-                            spacing: 12px;
-                            alignment: start;
-                            for r in root.detail.related: Rectangle {
-                                width: 110px; height: 172px;
-                                VerticalLayout {
-                                    spacing: 4px;
-                                    Rectangle { height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
-                                        Image { source: r.cover; width: 100%; height: 100%; image-fit: cover; }
-                                        TouchArea { clicked => { root.open-game(r.id); } }
+                        ScrollView {
+                            height: 184px;
+                            HorizontalLayout {
+                                spacing: 12px;
+                                alignment: start;
+                                for r in root.detail.related: Rectangle {
+                                    width: 110px; height: 172px;
+                                    VerticalLayout {
+                                        spacing: 4px;
+                                        Rectangle { height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
+                                            Image { source: r.cover; width: 100%; height: 100%; image-fit: cover; }
+                                            TouchArea { clicked => { root.open-game(r.id); } }
+                                        }
+                                        Text { text: r.title; color: white; font-size: 10px; overflow: elide; }
                                     }
-                                    Text { text: r.title; color: white; font-size: 10px; overflow: elide; }
                                 }
                             }
                         }
@@ -423,20 +525,35 @@ export component MainWindow inherits Window {
                         spacing: 8px;
                         Text { text: "Mods"; font-size: 18px; font-weight: 800; color: white; }
                         for m in root.detail.mods: Rectangle {
-                            height: 66px;
+                            height: 74px;
                             border-radius: 8px;
                             background: #14161d;
+                            border-width: 1px;
+                            border-color: m.installed ? #4de1c144 : #00000000;
                             HorizontalLayout {
                                 padding: 10px;
                                 spacing: 10px;
+                                Rectangle {
+                                    width: 54px; height: 54px; border-radius: 8px; background: #1c1f28; clip: true;
+                                    if m.has-icon: Image { source: m.icon; width: 100%; height: 100%; image-fit: cover; }
+                                    if !m.has-icon: Text { text: "🧩"; font-size: 24px;
+                                                           horizontal-alignment: center; vertical-alignment: center; }
+                                }
                                 VerticalLayout {
                                     horizontal-stretch: 1;
-                                    spacing: 2px;
-                                    Text { text: m.name; color: white; font-weight: 700; font-size: 13px; overflow: elide; }
+                                    spacing: 3px;
+                                    HorizontalLayout {
+                                        spacing: 6px;
+                                        alignment: start;
+                                        Text { text: m.name; color: white; font-weight: 700; font-size: 13px; overflow: elide; }
+                                        if m.installed: Tag { label: "INSTALADO"; fg: #0b0c10; bg: #4de1c1; }
+                                    }
                                     Text { text: "\{m.owner} · \{m.downloads} descargas"; color: #ffffff66; font-size: 11px; }
-                                    Text { text: m.description; color: #ffffff88; font-size: 11px; overflow: elide; }
+                                    if !m.busy: Text { text: m.description; color: #ffffff88; font-size: 11px; overflow: elide; }
+                                    if m.busy: Bar { value: m.progress > 0 ? m.progress : -1; }
                                 }
-                                if m.busy: Text { text: "…"; color: #ffb23e; vertical-alignment: center; }
+                                if m.busy: Text { text: m.phase == "extract" ? "Extrayendo…" : (m.progress > 0 ? "\{floor(m.progress * 100)}%" : "…");
+                                                  color: #ffb23e; font-size: 11px; font-weight: 700; vertical-alignment: center; }
                                 if !m.busy && m.update: Btn { label: "Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install-mod(root.detail.id, m.full-name); } }
                                 if !m.busy && m.installed && !m.update: Btn { label: "Quitar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall-mod(root.detail.id, m.full-name); } }
                                 if !m.busy && !m.installed: Btn { label: "Instalar"; clicked => { root.install-mod(root.detail.id, m.full-name); } }
@@ -501,6 +618,8 @@ export component MainWindow inherits Window {
             }
         }
     }
+    } // ── end content area ───────────────────────
+    } // ── end window column (titlebar + content) ─
 
     // ── Modo TV / Big Picture ────────────────────────────
     if root.tv-visible: FocusScope {
@@ -580,4 +699,32 @@ export component MainWindow inherits Window {
             }
         }
     }
+
+    // ── Resize handles (frameless) ───────────────────────
+    // Edges
+    Rectangle { x: 0; y: 0; width: root.width; height: 4px;
+        TouchArea { mouse-cursor: ns-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("n"); } } } }
+    Rectangle { x: 0; y: root.height - 4px; width: root.width; height: 4px;
+        TouchArea { mouse-cursor: ns-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("s"); } } } }
+    Rectangle { x: 0; y: 0; width: 4px; height: root.height;
+        TouchArea { mouse-cursor: ew-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("w"); } } } }
+    Rectangle { x: root.width - 4px; y: 0; width: 4px; height: root.height;
+        TouchArea { mouse-cursor: ew-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("e"); } } } }
+    // Corners (on top of edges)
+    Rectangle { x: 0; y: 0; width: 9px; height: 9px;
+        TouchArea { mouse-cursor: nwse-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("nw"); } } } }
+    Rectangle { x: root.width - 9px; y: 0; width: 9px; height: 9px;
+        TouchArea { mouse-cursor: nesw-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("ne"); } } } }
+    Rectangle { x: 0; y: root.height - 9px; width: 9px; height: 9px;
+        TouchArea { mouse-cursor: nesw-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("sw"); } } } }
+    Rectangle { x: root.width - 9px; y: root.height - 9px; width: 9px; height: 9px;
+        TouchArea { mouse-cursor: nwse-resize;
+            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("se"); } } } }
 }

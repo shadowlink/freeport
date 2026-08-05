@@ -539,13 +539,13 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
         "down" => {
             if s + 1 < count {
                 s += 1;
-                c = c.min(len_of(s) - 1).max(0);
+                c = 0; // start each new row at its first item
             }
         }
         "up" => {
             if s > 0 {
                 s -= 1;
-                c = c.min(len_of(s) - 1).max(0);
+                c = 0;
             }
         }
         "right" => {

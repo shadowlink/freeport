@@ -538,12 +538,14 @@ export component MainWindow inherits Window {
                     if root.detail.about != "": VerticalLayout {
                         spacing: 6px;
                         Text { text: "Acerca del juego"; font-size: 18px; font-weight: 800; color: white; }
-                        Text { text: root.detail.about; color: #ffffffcc; font-size: 14px; wrap: word-wrap; }
+                        Text { text: root.detail.about; color: #ffffffcc; font-size: 14px; wrap: word-wrap;
+                               width: dscroll.visible-width - 44px; }
                     }
                     if root.detail.port-notes != "": VerticalLayout {
                         spacing: 6px;
                         Text { text: "Sobre este port"; font-size: 18px; font-weight: 800; color: white; }
-                        Text { text: root.detail.port-notes; color: #ffffffaa; font-size: 14px; wrap: word-wrap; }
+                        Text { text: root.detail.port-notes; color: #ffffffaa; font-size: 14px; wrap: word-wrap;
+                               width: dscroll.visible-width - 44px; }
                     }
                     if root.detail.has-related: VerticalLayout {
                         spacing: 8px;

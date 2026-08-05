@@ -479,6 +479,9 @@ export component MainWindow inherits Window {
                 }
             }
             ScrollView {
+                // Constrain the content to the visible width so wrapping text
+                // (Acerca / Sobre este port) reflows instead of overflowing.
+                viewport-width: self.visible-width;
                 VerticalLayout {
                     padding: 22px;
                     spacing: 18px;
@@ -491,8 +494,8 @@ export component MainWindow inherits Window {
                         }
                         VerticalLayout {
                             spacing: 10px;
-                            Text { text: root.detail.title; font-size: 30px; font-weight: 900; color: white; }
-                            Text { text: root.detail.subtitle; font-size: 16px; color: #ffb23e; }
+                            Text { text: root.detail.title; font-size: 30px; font-weight: 900; color: white; wrap: word-wrap; }
+                            Text { text: root.detail.subtitle; font-size: 16px; color: #ffb23e; wrap: word-wrap; }
                             HorizontalLayout {
                                 spacing: 6px;
                                 alignment: start;

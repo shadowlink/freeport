@@ -36,6 +36,44 @@ component Btn inherits Rectangle {
     touch := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
 
+// Cover art that never crops the boxart: the full image is shown (contain),
+// centered on an ambient fill made from the same art (scaled up + darkened),
+// so mismatched aspect ratios look intentional instead of cutting off logos.
+component Cover inherits Rectangle {
+    in property <image> source;
+    in property <string> title;
+    in property <bool> hovered;
+    clip: true;
+    background: #14161d;
+    // Ambient fill: the same art, blown up and darkened.
+    Image {
+        source: root.source;
+        width: parent.width * 1.6;
+        height: parent.height * 1.6;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        image-fit: cover;
+        opacity: 0.55;
+    }
+    Rectangle { background: #0b0c10bb; }
+    // Placeholder title until the thumbnail loads.
+    if root.source.width == 0: Text {
+        x: 8px; width: parent.width - 16px; height: parent.height;
+        text: root.title; color: #ffffff88; font-size: 12px; font-weight: 700;
+        wrap: word-wrap; horizontal-alignment: center; vertical-alignment: center;
+    }
+    // Foreground: the full cover, never cropped.
+    Image {
+        source: root.source;
+        width: root.hovered ? parent.width * 1.05 : parent.width;
+        height: root.hovered ? parent.height * 1.05 : parent.height;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        image-fit: contain;
+        animate width, height { duration: 220ms; easing: ease-out; }
+    }
+}
+
 // Header sort selector chip.
 component SortChip inherits Rectangle {
     in property <string> label;
@@ -451,21 +489,9 @@ export component MainWindow inherits Window {
                                 drop-shadow-blur: cover-ta.has-hover ? 20px : 0px;
                                 drop-shadow-color: cover-ta.has-hover ? (c.installed ? #4de1c1aa : #ffb23e99) : #00000000;
                                 animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
-                                // Placeholder title shown until the cover thumbnail loads
-                                // (the Image renders opaque on top once available).
-                                Text {
-                                    x: 8px; width: parent.width - 16px; height: parent.height;
-                                    text: c.title; color: #ffffff66; font-size: 12px; font-weight: 700;
-                                    wrap: word-wrap; horizontal-alignment: center; vertical-alignment: center;
-                                }
-                                Image {
-                                    source: c.cover;
-                                    width: cover-ta.has-hover ? parent.width * 1.09 : parent.width;
-                                    height: cover-ta.has-hover ? parent.height * 1.09 : parent.height;
-                                    x: (parent.width - self.width) / 2;
-                                    y: (parent.height - self.height) / 2;
-                                    image-fit: cover;
-                                    animate width, height { duration: 220ms; easing: ease-out; }
+                                Cover {
+                                    width: 100%; height: 100%;
+                                    source: c.cover; title: c.title; hovered: cover-ta.has-hover;
                                 }
                                 Tag {
                                     x: 6px; y: 6px;
@@ -575,8 +601,8 @@ export component MainWindow inherits Window {
                         spacing: 22px;
                         alignment: start;
                         Rectangle {
-                            width: 180px; height: 240px; border-radius: 12px; background: #1c1f28; clip: true;
-                            Image { source: root.detail.cover; width: 100%; height: 100%; image-fit: cover; }
+                            width: 180px; height: 240px; border-radius: 12px; clip: true;
+                            Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; }
                         }
                         VerticalLayout {
                             spacing: 10px;
@@ -657,9 +683,9 @@ export component MainWindow inherits Window {
                                     width: 110px; height: 172px;
                                     VerticalLayout {
                                         spacing: 4px;
-                                        Rectangle { height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
-                                            Image { source: r.cover; width: 100%; height: 100%; image-fit: cover; }
-                                            TouchArea { clicked => { root.open-game(r.id); } }
+                                        Rectangle { height: 146px; border-radius: 8px; clip: true;
+                                            rel-cover := Cover { width: 100%; height: 100%; source: r.cover; title: r.title; hovered: rel-ta.has-hover; }
+                                            rel-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(r.id); } }
                                         }
                                         Text { text: r.title; color: white; font-size: 10px; overflow: elide; }
                                     }
@@ -845,15 +871,7 @@ export component MainWindow inherits Window {
                                         drop-shadow-blur: focused ? 26px : 0px;
                                         drop-shadow-color: focused ? #ffb23eaa : #00000000;
                                         animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
-                                        Image {
-                                            source: game.cover;
-                                            width: focused ? parent.width * 1.08 : parent.width;
-                                            height: focused ? parent.height * 1.08 : parent.height;
-                                            x: (parent.width - self.width) / 2;
-                                            y: (parent.height - self.height) / 2;
-                                            image-fit: cover;
-                                            animate width, height { duration: 200ms; easing: ease-out; }
-                                        }
+                                        Cover { width: 100%; height: 100%; source: game.cover; title: game.title; hovered: focused; }
                                     }
                                 }
                             }

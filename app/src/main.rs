@@ -12,7 +12,7 @@ use freeport_core::mods::ModInfo;
 use freeport_core::wiki::WikiInfo;
 use freeport_core::{actions, gamepad, platform, thumbs, update, wiki};
 use i_slint_backend_winit::WinitWindowAccessor;
-use slint::{Color, Image, Model, ModelRc, SharedString, VecModel, Weak};
+use slint::{Color, Image, ModelRc, SharedString, VecModel, Weak};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::Path;
@@ -98,24 +98,11 @@ struct App {
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
     tv_shelves: RefCell<Vec<(String, Vec<String>)>>,
     pending_update: RefCell<Option<update::Update>>,
-    toasts: Rc<VecModel<ToastMsg>>,
-}
-
-/// Show a transient toast on the UI thread. `kind`: "error" | "ok" | "info".
-/// Auto-expires after ~4.5s (FIFO removal).
-fn toast(kind: &str, text: impl Into<String>) {
-    let text: String = text.into();
-    UI.with(|u| {
-        if let Some((app, _)) = &*u.borrow() {
-            app.toasts.push(ToastMsg { text: text.into(), kind: kind.into() });
-            let model = app.toasts.clone();
-            slint::Timer::single_shot(std::time::Duration::from_millis(4500), move || {
-                if model.row_count() > 0 {
-                    model.remove(0);
-                }
-            });
-        }
-    });
+    /// Transient per-game launch state shown inline on the Play button:
+    /// present+false = "Jugando…", present+true = launch failed.
+    launching: RefCell<std::collections::HashMap<String, bool>>,
+    /// Games whose last install attempt failed (shows "Reintentar" inline).
+    install_error: RefCell<HashSet<String>>,
 }
 
 /// Whether a newer release than the installed one exists, comparing by publish
@@ -253,6 +240,12 @@ fn rebuild(app: &App, win: &MainWindow) {
         let year = p.year.unwrap_or(0) as i64;
         let last = entry.and_then(|e| e.last_played.as_ref()).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0);
         let name_lc = title.to_lowercase();
+        let play_state = match app.launching.borrow().get(&p.id) {
+            Some(false) => 1, // launching
+            Some(true) => 2,  // failed
+            None => 0,
+        };
+        let install_err = app.install_error.borrow().contains(&p.id);
         sortable.push((
             is_fav,
             name_lc,
@@ -273,6 +266,8 @@ fn rebuild(app: &App, win: &MainWindow) {
                 kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
                 sys_color,
                 favorite: is_fav,
+                play_state,
+                install_error: install_err,
             },
         ));
     }
@@ -388,6 +383,8 @@ fn build_detail(app: &App, win: &MainWindow) {
             kind: "".into(),
             sys_color,
             favorite: false,
+            play_state: 0,
+            install_error: false,
         })
         .collect();
 
@@ -500,6 +497,8 @@ fn build_detail(app: &App, win: &MainWindow) {
         rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
         busy: app.busy.borrow().contains(&p.id),
         progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
+        play_state: match app.launching.borrow().get(&p.id) { Some(false) => 1, Some(true) => 2, None => 0 },
+        install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
         about: state.wiki.as_ref().map(|w| w.extract.clone()).unwrap_or_default().into(),
         port_notes: p.rom.notes.clone().into(),
@@ -620,6 +619,8 @@ fn build_tv(app: &App, win: &MainWindow) {
                 kind: "".into(),
                 sys_color,
                 favorite: false,
+                play_state: 0,
+                install_error: false,
             })
             .collect();
         bounds.push((s.name.clone(), games.iter().map(|p| p.id.clone()).collect()));
@@ -691,17 +692,12 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
             if let Some((_, ids)) = shelves.get(s as usize) {
                 if let Some(id) = ids.get(c as usize) {
                     if let Some(p) = app.find(id) {
-                        let name = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
                         let installed = store::load_installed(&app.paths).unwrap_or_default();
                         if installed.contains_key(&p.id) {
-                            match actions::launch_project(&app.paths, &p) {
-                                Ok(_) => toast("ok", format!("Iniciando {name}…")),
-                                Err(e) => toast("error", format!("{name}: {e}")),
-                            }
+                            let _ = actions::launch_project(&app.paths, &p);
                         } else {
                             // Not installed → kick off the normal install flow.
                             win.invoke_install(p.id.clone().into());
-                            toast("info", format!("Instalando {name}…"));
                         }
                     }
                 }
@@ -756,7 +752,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         size_cache: RefCell::new(std::collections::HashMap::new()),
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
-        toasts: Rc::new(VecModel::default()),
+        launching: RefCell::new(std::collections::HashMap::new()),
+        install_error: RefCell::new(HashSet::new()),
     });
 
     let win = MainWindow::new()?;
@@ -778,7 +775,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
-    win.set_toasts(ModelRc::from(app.toasts.clone()));
     win.set_sort_mode("name".into());
 
     // Populate settings UI.
@@ -984,7 +980,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Some(dir) => {
                     let _ = open::that(dir);
                 }
-                None => toast("error", "El juego no está instalado"),
+                None => {}
             }
         }
     });
@@ -1145,16 +1141,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 };
                 let err = actions::install_mod(&client, &paths, &project, &all, &fname2, on_prog).await.err();
                 let _ = slint::invoke_from_event_loop(move || {
+                    let _ = &err;
                     UI.with(|u| {
                         if let Some((app, _)) = &*u.borrow() {
                             app.mod_busy.borrow_mut().remove(&fname2);
                             app.mod_progress.borrow_mut().remove(&fname2);
                         }
                     });
-                    match &err {
-                        Some(e) => toast("error", format!("Mod: {e}")),
-                        None => toast("ok", "Mod instalado ✓"),
-                    }
                     ui_refresh();
                 });
             });
@@ -1187,12 +1180,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let Some(project) = app.find(&id) else { return };
             app.busy.borrow_mut().insert(id.clone());
             app.install_progress.borrow_mut().insert(id.clone(), 0.0);
+            app.install_error.borrow_mut().remove(&id);
             ui_refresh();
             let client = app.client.clone();
             let paths = app.paths.clone();
             let cfg = store::load_config(&paths).unwrap_or_default();
             let pid = id.clone();
-            let pname = if project.original_game.is_empty() { project.name.clone() } else { project.original_game.clone() };
             handle.spawn(async move {
                 let prog_id = pid.clone();
                 let mut last = -1i32;
@@ -1223,12 +1216,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             app.busy.borrow_mut().remove(&pid);
                             app.install_progress.borrow_mut().remove(&pid);
                             app.size_cache.borrow_mut().remove(&pid);
+                            if err.is_some() {
+                                app.install_error.borrow_mut().insert(pid.clone());
+                            } else {
+                                app.install_error.borrow_mut().remove(&pid);
+                            }
                         }
                     });
-                    match &err {
-                        Some(e) => toast("error", format!("No se pudo instalar {pname}: {e}")),
-                        None => toast("ok", format!("{pname} instalado ✓")),
-                    }
                     ui_refresh();
                 });
             });
@@ -1238,28 +1232,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     win.on_play({
         let app = app.clone();
         move |id| {
-            if let Some(project) = app.find(&id) {
-                let name = if project.original_game.is_empty() { project.name.clone() } else { project.original_game.clone() };
-                match actions::launch_project(&app.paths, &project) {
-                    Ok(_) => toast("ok", format!("Iniciando {name}…")),
-                    Err(e) => toast("error", format!("No se pudo iniciar {name}: {e}")),
-                }
+            let id = id.to_string();
+            let Some(project) = app.find(&id) else { return };
+            app.launching.borrow_mut().insert(id.clone(), false); // "Jugando…"
+            ui_refresh();
+            if actions::launch_project(&app.paths, &project).is_err() {
+                app.launching.borrow_mut().insert(id.clone(), true); // failed
+                ui_refresh();
             }
+            // Clear the transient state after a few seconds.
+            let idc = id.clone();
+            slint::Timer::single_shot(std::time::Duration::from_secs(4), move || {
+                UI.with(|u| {
+                    if let Some((app, _)) = &*u.borrow() {
+                        app.launching.borrow_mut().remove(&idc);
+                    }
+                });
+                ui_refresh();
+            });
         }
     });
 
     win.on_uninstall({
         let app = app.clone();
         move |id| {
-            let name = app
-                .find(&id)
-                .map(|p| if p.original_game.is_empty() { p.name } else { p.original_game })
-                .unwrap_or_else(|| id.to_string());
-            match actions::uninstall_project(&app.paths, &id) {
-                Ok(_) => toast("ok", format!("{name} eliminado")),
-                Err(e) => toast("error", format!("No se pudo eliminar: {e}")),
-            }
+            let _ = actions::uninstall_project(&app.paths, &id);
             app.size_cache.borrow_mut().remove(&id.to_string());
+            app.install_error.borrow_mut().remove(&id.to_string());
             ui_refresh();
         }
     });
@@ -1272,10 +1271,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 .set_title(format!("ROM de {}", project.original_game))
                 .pick_file()
             {
-                match actions::set_rom(&app.paths, &project, &file.to_string_lossy()) {
-                    Ok(_) => toast("ok", "ROM asignada ✓"),
-                    Err(e) => toast("error", format!("ROM: {e}")),
-                }
+                let _ = actions::set_rom(&app.paths, &project, &file.to_string_lossy());
                 ui_refresh();
             }
         }
@@ -1317,22 +1313,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let Some(upd) = app.pending_update.borrow().clone() else { return };
             if let Some(w) = weak.upgrade() {
                 w.set_update_busy(true);
+                w.set_update_error(false);
             }
             let client = app.client.clone();
             handle.spawn(async move {
                 if let Err(e) = update::apply(&client, &upd).await {
-                    let msg = e.to_string();
+                    let _ = e;
                     let _ = slint::invoke_from_event_loop(move || {
                         UI.with(|u| {
                             if let Some((_, weak)) = &*u.borrow() {
                                 if let Some(w) = weak.upgrade() {
                                     w.set_update_busy(false);
-                                    // Keep the banner so the user can retry.
-                                    w.set_update_available(true);
+                                    w.set_update_available(true); // keep banner to retry
+                                    w.set_update_error(true);
                                 }
                             }
                         });
-                        toast("error", format!("La actualización falló: {msg}"));
                     });
                 }
                 // On success apply() replaces the process and never returns.

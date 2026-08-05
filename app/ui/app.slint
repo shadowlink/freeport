@@ -1,10 +1,5 @@
 import { ListView, LineEdit, ScrollView, CheckBox, ComboBox } from "std-widgets.slint";
 
-struct ToastMsg {
-    text: string,
-    kind: string, // "error" | "ok" | "info"
-}
-
 struct CardItem {
     id: string,
     title: string,
@@ -20,6 +15,8 @@ struct CardItem {
     kind: string,
     sys-color: color,
     favorite: bool,
+    play-state: int, // 0 none, 1 launching, 2 failed
+    install-error: bool,
 }
 
 component Btn inherits Rectangle {
@@ -145,6 +142,8 @@ struct DetailData {
     rom-ok: bool,
     busy: bool,
     progress: float,
+    play-state: int,
+    install-error: bool,
     stats: string,
     about: string,
     port-notes: string,
@@ -194,8 +193,6 @@ export component MainWindow inherits Window {
     callback open-screenshot(string);
     in property <DetailData> detail;
     in property <bool> detail-visible;
-    // Transient toast notifications (errors / confirmations).
-    in property <[ToastMsg]> toasts;
     // Uninstall confirmation
     in-out property <bool> confirm-visible;
     in-out property <string> confirm-id;
@@ -228,6 +225,7 @@ export component MainWindow inherits Window {
     in property <string> update-version;
     in property <string> update-notes;
     in-out property <bool> update-busy;
+    in property <bool> update-error;
     callback do-update();
     callback dismiss-update();
     // Frameless window controls
@@ -403,13 +401,15 @@ export component MainWindow inherits Window {
                         alignment: center;
                         spacing: 3px;
                         Text {
-                            text: root.update-busy ? "Actualizando…" : "Nueva versión v\{root.update-version} disponible";
+                            text: root.update-busy ? "Actualizando…"
+                                  : (root.update-error ? "La actualización falló"
+                                     : "Nueva versión v\{root.update-version} disponible");
                             color: #0b0c10; font-weight: 800;
                         }
                         if root.update-busy: Bar { value: -1; height: 6px; fill: #0b0c10; }
-                        if !root.update-busy && root.update-notes != "": Text { text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; }
+                        if !root.update-busy && !root.update-error && root.update-notes != "": Text { text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; }
                     }
-                    if !root.update-busy: Btn { label: "Actualizar"; bg: #0b0c10; fg: #ffb23e; clicked => { root.do-update(); } }
+                    if !root.update-busy: Btn { label: root.update-error ? "Reintentar" : "Actualizar"; bg: #0b0c10; fg: #ffb23e; clicked => { root.do-update(); } }
                     if !root.update-busy: Btn { label: "Después"; bg: #ffffff44; fg: #0b0c10; clicked => { root.dismiss-update(); } }
                 }
             }
@@ -506,7 +506,13 @@ export component MainWindow inherits Window {
                             }
                             if !c.busy && c.installed: HorizontalLayout {
                                 height: 28px; spacing: 5px;
-                                Btn { label: "▶ Jugar"; horizontal-stretch: 1; clicked => { root.play(c.id); } }
+                                Btn {
+                                    label: c.play-state == 1 ? "▶ Jugando…" : (c.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
+                                    bg: c.play-state == 2 ? #ff5d73 : #ffb23e;
+                                    fg: c.play-state == 2 ? white : #0b0c10;
+                                    horizontal-stretch: 1;
+                                    clicked => { if (c.play-state != 1) { root.play(c.id); } }
+                                }
                                 if c.needs-rom: Btn {
                                     label: c.rom-ok ? "ROM ✓" : "ROM";
                                     bg: #1c1f28; fg: c.rom-ok ? #4de1c1 : white;
@@ -515,7 +521,8 @@ export component MainWindow inherits Window {
                                 Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = c.id; root.confirm-title = c.title; root.confirm-visible = true; } }
                             }
                             if !c.busy && !c.installed: Btn {
-                                label: "↓ Instalar"; bg: #1c1f28; fg: #ffb23e;
+                                label: c.install-error ? "⚠ Reintentar" : "↓ Instalar";
+                                bg: #1c1f28; fg: c.install-error ? #ff5d73 : #ffb23e;
                                 clicked => { root.install(c.id); }
                             }
                         }
@@ -595,12 +602,22 @@ export component MainWindow inherits Window {
                             if !root.detail.busy: HorizontalLayout {
                                 spacing: 8px;
                                 alignment: start;
-                                if root.detail.installed: Btn { label: "▶ Jugar"; clicked => { root.play(root.detail.id); } }
+                                if root.detail.installed: Btn {
+                                    label: root.detail.play-state == 1 ? "▶ Jugando…" : (root.detail.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
+                                    bg: root.detail.play-state == 2 ? #ff5d73 : #ffb23e;
+                                    fg: root.detail.play-state == 2 ? white : #0b0c10;
+                                    clicked => { if (root.detail.play-state != 1) { root.play(root.detail.id); } }
+                                }
                                 if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
                                 if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
                                 if root.detail.installed: Btn { label: "📂 Carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
                                 if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
-                                if !root.detail.installed: Btn { label: "↓ Instalar"; clicked => { root.install(root.detail.id); } }
+                                if !root.detail.installed: Btn {
+                                    label: root.detail.install-error ? "⚠ Reintentar" : "↓ Instalar";
+                                    bg: root.detail.install-error ? #ff5d73 : #ffb23e;
+                                    fg: root.detail.install-error ? white : #0b0c10;
+                                    clicked => { root.install(root.detail.id); }
+                                }
                             }
                         }
                     }
@@ -918,26 +935,4 @@ export component MainWindow inherits Window {
         TouchArea { mouse-cursor: nwse-resize;
             pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("se"); } } } }
 
-    // ── Toasts (top-center, above everything) ──────────────
-    VerticalLayout {
-        x: (root.width - self.width) / 2;
-        y: 52px;
-        width: 460px;
-        spacing: 8px;
-        for t in root.toasts: Rectangle {
-            height: msg.preferred-height + 20px;
-            border-radius: 8px;
-            background: t.kind == "error" ? #e04b5a : (t.kind == "ok" ? #2ea56b : #2b2f3a);
-            drop-shadow-blur: 18px;
-            drop-shadow-color: #000000aa;
-            opacity: 0;
-            init => { self.opacity = 1; }
-            animate opacity { duration: 200ms; easing: ease-out; }
-            msg := Text {
-                x: 14px; width: parent.width - 28px; y: 10px;
-                text: t.text; color: white; font-weight: 600; font-size: 13px;
-                wrap: word-wrap; horizontal-alignment: center;
-            }
-        }
-    }
 }

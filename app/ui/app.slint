@@ -478,11 +478,11 @@ export component MainWindow inherits Window {
                     Btn { label: "← Volver"; bg: #1c1f28; fg: white; clicked => { root.close-detail(); } }
                 }
             }
-            ScrollView {
-                // Constrain the content to the visible width so wrapping text
-                // (Acerca / Sobre este port) reflows instead of overflowing.
-                viewport-width: self.visible-width;
+            dscroll := ScrollView {
                 VerticalLayout {
+                    // Explicit width = visible area so wrapping text (Acerca /
+                    // Sobre este port) reflows instead of overflowing/overlapping.
+                    width: dscroll.visible-width;
                     padding: 22px;
                     spacing: 18px;
                     HorizontalLayout {

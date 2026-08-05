@@ -475,11 +475,11 @@ export component MainWindow inherits Window {
                     alignment: start;
                     for c in row: Rectangle {
                         width: 158px;
-                        height: 286px;
+                        height: 326px;
                         VerticalLayout {
                             spacing: 4px;
                             Rectangle {
-                                height: 196px;
+                                height: 236px;
                                 border-radius: 10px;
                                 background: #1c1f28;
                                 clip: true;
@@ -601,7 +601,7 @@ export component MainWindow inherits Window {
                         spacing: 22px;
                         alignment: start;
                         Rectangle {
-                            width: 180px; height: 240px; border-radius: 12px; clip: true;
+                            width: 180px; height: 270px; border-radius: 12px; clip: true;
                             Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; }
                         }
                         VerticalLayout {
@@ -675,15 +675,15 @@ export component MainWindow inherits Window {
                         spacing: 8px;
                         Text { text: "Relacionados"; font-size: 18px; font-weight: 800; color: white; }
                         ScrollView {
-                            height: 184px;
+                            height: 205px;
                             HorizontalLayout {
                                 spacing: 12px;
                                 alignment: start;
                                 for r in root.detail.related: Rectangle {
-                                    width: 110px; height: 172px;
+                                    width: 110px; height: 190px;
                                     VerticalLayout {
                                         spacing: 4px;
-                                        Rectangle { height: 146px; border-radius: 8px; clip: true;
+                                        Rectangle { height: 165px; border-radius: 8px; clip: true;
                                             rel-cover := Cover { width: 100%; height: 100%; source: r.cover; title: r.title; hovered: rel-ta.has-hover; }
                                             rel-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(r.id); } }
                                         }
@@ -840,12 +840,12 @@ export component MainWindow inherits Window {
                 // Shelves (viewport follows focus on both axes)
                 Flickable {
                     interactive: false;
-                    viewport-height: root.tv-shelf-count * 252px;
-                    viewport-y: -root.tv-shelf * 252px;
+                    viewport-height: root.tv-shelf-count * 279px;
+                    viewport-y: -root.tv-shelf * 279px;
                     animate viewport-y { duration: 280ms; easing: ease-in-out; }
                     VerticalLayout {
                         for shelf[si] in root.tv-shelves: VerticalLayout {
-                            height: 252px;
+                            height: 279px;
                             padding-left: 24px;
                             spacing: 6px;
                             Text { text: shelf.name; color: white; font-weight: 800; font-size: 16px;
@@ -853,7 +853,7 @@ export component MainWindow inherits Window {
                                    animate opacity { duration: 220ms; } }
                             Flickable {
                                 interactive: false;
-                                height: 214px;
+                                height: 241px;
                                 viewport-width: shelf.count * 170px;
                                 viewport-x: si == root.tv-shelf ? -root.tv-col * 170px : 0px;
                                 animate viewport-x { duration: 240ms; easing: ease-out; }
@@ -862,7 +862,7 @@ export component MainWindow inherits Window {
                                     for game[col] in shelf.games: Rectangle {
                                         property <bool> focused: si == root.tv-shelf && col == root.tv-col;
                                         width: 158px;
-                                        height: 210px;
+                                        height: 237px;
                                         border-radius: 10px;
                                         clip: true;
                                         background: #1c1f28;

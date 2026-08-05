@@ -148,9 +148,12 @@ fn rebuild(app: &App, win: &MainWindow) {
     let active = win.get_active_system().to_string();
     let library = win.get_library_tab();
     let query = win.get_search_text().to_lowercase();
+    let sort_mode = win.get_sort_mode().to_string();
     let busy = app.busy.borrow();
     let catalog = app.catalog.borrow();
-    let show_windows = store::load_config(&app.paths).map(|c| c.show_windows).unwrap_or(false);
+    let cfg = store::load_config(&app.paths).unwrap_or_default();
+    let show_windows = cfg.show_windows;
+    let favs: std::collections::HashSet<&str> = cfg.favorites.iter().map(|s| s.as_str()).collect();
 
     let mut sys_rows: Vec<SysRow> = Vec::new();
     for s in &catalog.systems {
@@ -174,7 +177,8 @@ fn rebuild(app: &App, win: &MainWindow) {
         });
     }
 
-    let mut cards: Vec<CardItem> = Vec::new();
+    // (favorite, name_lc, year, last_played_epoch, card) for sorting.
+    let mut sortable: Vec<(bool, String, i64, i64, CardItem)> = Vec::new();
     for p in &catalog.projects {
         let (visible, is_win) = app.visibility(p, &installed, show_windows);
         if !visible
@@ -183,10 +187,16 @@ fn rebuild(app: &App, win: &MainWindow) {
         {
             continue;
         }
-        if !query.is_empty()
-            && !format!("{} {}", p.original_game, p.name).to_lowercase().contains(&query)
-        {
-            continue;
+        if !query.is_empty() {
+            let sys_name = catalog.systems.iter().find(|s| s.id == p.system).map(|s| s.name.as_str()).unwrap_or("");
+            let hay = format!(
+                "{} {} {} {}",
+                p.original_game, p.name, sys_name, p.genre.clone().unwrap_or_default()
+            )
+            .to_lowercase();
+            if !hay.contains(&query) {
+                continue;
+            }
         }
         let entry = installed.get(&p.id);
         let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
@@ -197,23 +207,42 @@ fn rebuild(app: &App, win: &MainWindow) {
             .map(|s| parse_color(&s.color))
             .unwrap_or(Color::from_rgb_u8(0x88, 0x88, 0x88));
         let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
-        cards.push(CardItem {
-            id: p.id.clone().into(),
-            title: title.into(),
-            subtitle: p.name.clone().into(),
-            cover: app
-                .cover(p),
-            installed: entry.is_some(),
-            is_windows: is_win,
-            update_available: update,
-            needs_rom: p.rom.mode == "copy",
-            rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
-            busy: busy.contains(&p.id),
-            progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
-            kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
-            sys_color,
-        });
+        let is_fav = favs.contains(p.id.as_str());
+        let year = p.year.unwrap_or(0) as i64;
+        let last = entry.and_then(|e| e.last_played.as_ref()).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0);
+        let name_lc = title.to_lowercase();
+        sortable.push((
+            is_fav,
+            name_lc,
+            year,
+            last,
+            CardItem {
+                id: p.id.clone().into(),
+                title: title.into(),
+                subtitle: p.name.clone().into(),
+                cover: app.cover(p),
+                installed: entry.is_some(),
+                is_windows: is_win,
+                update_available: update,
+                needs_rom: p.rom.mode == "copy",
+                rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
+                busy: busy.contains(&p.id),
+                progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
+                kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
+                sys_color,
+                favorite: is_fav,
+            },
+        ));
     }
+    // Favorites first, then by the selected sort mode.
+    sortable.sort_by(|a, b| {
+        b.0.cmp(&a.0).then_with(|| match sort_mode.as_str() {
+            "year" => b.2.cmp(&a.2),
+            "recent" => b.3.cmp(&a.3),
+            _ => a.1.cmp(&b.1),
+        })
+    });
+    let cards: Vec<CardItem> = sortable.into_iter().map(|t| t.4).collect();
 
     let count = cards.len() as i32;
     let cols = (win.get_cols().max(1)) as usize;
@@ -316,6 +345,7 @@ fn build_detail(app: &App, win: &MainWindow) {
             progress: 0.0,
             kind: "".into(),
             sys_color,
+            favorite: false,
         })
         .collect();
 
@@ -521,6 +551,7 @@ fn build_tv(app: &App, win: &MainWindow) {
                 progress: 0.0,
                 kind: "".into(),
                 sys_color,
+                favorite: false,
             })
             .collect();
         bounds.push((s.name.clone(), games.iter().map(|p| p.id.clone()).collect()));
@@ -672,6 +703,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     win.set_toasts(ModelRc::from(app.toasts.clone()));
+    win.set_sort_mode("name".into());
 
     // Populate settings UI.
     {
@@ -835,6 +867,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     win.on_refresh(|| ui_refresh());
+
+    win.on_toggle_favorite({
+        let app = app.clone();
+        move |id| {
+            let id = id.to_string();
+            if let Ok(mut cfg) = store::load_config(&app.paths) {
+                if let Some(pos) = cfg.favorites.iter().position(|f| f == &id) {
+                    cfg.favorites.remove(pos);
+                } else {
+                    cfg.favorites.push(id.clone());
+                }
+                let _ = store::save_config(&app.paths, &cfg);
+            }
+            ui_refresh();
+        }
+    });
+
+    win.on_open_folder({
+        let app = app.clone();
+        move |id| {
+            match actions::installed_dir(&app.paths, &id) {
+                Some(dir) => {
+                    let _ = open::that(dir);
+                }
+                None => toast("error", "El juego no está instalado"),
+            }
+        }
+    });
 
     win.on_open_game({
         let app = app.clone();

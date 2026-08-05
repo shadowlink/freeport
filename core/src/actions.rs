@@ -176,6 +176,8 @@ pub async fn install_project(
         rom_path: installed.get(&project.id).and_then(|e| e.rom_path.clone()),
         installed_at: Some(now_epoch()),
         windows: is_windows_install,
+        last_played: installed.get(&project.id).and_then(|e| e.last_played.clone()),
+        play_secs: installed.get(&project.id).map(|e| e.play_secs).unwrap_or(0),
     };
     installed.insert(project.id.clone(), entry.clone());
     store::save_installed(paths, &installed)?;
@@ -236,9 +238,29 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
         launch::launch_binary(&bin)?
     };
     let pid = child.id();
-    // Reap the child in the background so it doesn't become a zombie.
+
+    // Record the launch timestamp now.
+    {
+        let mut installed = store::load_installed(paths)?;
+        if let Some(e) = installed.get_mut(&project.id) {
+            e.last_played = Some(now_epoch());
+        }
+        let _ = store::save_installed(paths, &installed);
+    }
+
+    // Reap the child in the background (avoids a zombie) and accumulate play time.
+    let paths2 = paths.clone();
+    let id2 = project.id.clone();
+    let start = std::time::Instant::now();
     std::thread::spawn(move || {
         let _ = child.wait();
+        let secs = start.elapsed().as_secs();
+        if let Ok(mut installed) = store::load_installed(&paths2) {
+            if let Some(e) = installed.get_mut(&id2) {
+                e.play_secs = e.play_secs.saturating_add(secs);
+                let _ = store::save_installed(&paths2, &installed);
+            }
+        }
     });
     Ok(pid)
 }

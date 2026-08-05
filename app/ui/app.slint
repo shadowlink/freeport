@@ -19,6 +19,7 @@ struct CardItem {
     progress: float,
     kind: string,
     sys-color: color,
+    favorite: bool,
 }
 
 component Btn inherits Rectangle {
@@ -36,6 +37,24 @@ component Btn inherits Rectangle {
                horizontal-alignment: center; vertical-alignment: center; }
     }
     touch := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
+}
+
+// Header sort selector chip.
+component SortChip inherits Rectangle {
+    in property <string> label;
+    in property <string> mode;
+    in property <string> active;
+    callback pick(string);
+    height: 26px;
+    border-radius: 6px;
+    background: root.active == root.mode ? #ffb23e : #1c1f28;
+    animate background { duration: 120ms; easing: ease-out; }
+    HorizontalLayout {
+        padding-left: 10px; padding-right: 10px;
+        Text { text: root.label; color: root.active == root.mode ? #0b0c10 : #ffffffaa;
+               font-size: 12px; font-weight: 700; vertical-alignment: center; }
+    }
+    TouchArea { mouse-cursor: pointer; clicked => { root.pick(root.mode); } }
 }
 
 // Thin progress bar. `value` in 0.0..1.0; when < 0 shows an indeterminate sweep.
@@ -159,7 +178,10 @@ export component MainWindow inherits Window {
     in-out property <string> active-system;
     in-out property <bool> library-tab;
     in-out property <string> search-text;
+    in-out property <string> sort-mode; // "name" | "year" | "recent"
     callback refresh();
+    callback toggle-favorite(string);
+    callback open-folder(string);
     callback open-game(string);
     callback install(string);
     callback play(string);
@@ -390,7 +412,12 @@ export component MainWindow inherits Window {
                     padding-right: 22px;
                     spacing: 10px;
                     Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
-                    Text { text: "\{root.header-count} juegos"; color: #ffffff66; font-size: 14px; vertical-alignment: center; }
+                    Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
+                    Rectangle { horizontal-stretch: 1; }
+                    Text { text: "Ordenar"; color: #ffffff66; font-size: 12px; vertical-alignment: center; }
+                    SortChip { label: "A-Z"; mode: "name"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
+                    SortChip { label: "Año"; mode: "year"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
+                    SortChip { label: "Recientes"; mode: "recent"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
                 }
             }
             Rectangle {
@@ -446,6 +473,16 @@ export component MainWindow inherits Window {
                                     label: "UPDATE"; fg: #ffd166; bg: #000000cc;
                                 }
                                 cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                                // Favorite star (top-right)
+                                Rectangle {
+                                    x: parent.width - 28px; y: 6px; width: 22px; height: 22px;
+                                    border-radius: 11px;
+                                    background: fav-ta.has-hover ? #000000cc : #00000088;
+                                    visible: c.favorite || cover-ta.has-hover || fav-ta.has-hover;
+                                    Text { text: c.favorite ? "★" : "☆"; color: c.favorite ? #ffd166 : white;
+                                           font-size: 13px; horizontal-alignment: center; vertical-alignment: center; }
+                                    fav-ta := TouchArea { mouse-cursor: pointer; clicked => { root.toggle-favorite(c.id); } }
+                                }
                             }
                             Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
                             Text { text: c.subtitle; color: #ffffff66; font-size: 10px; overflow: elide; }
@@ -552,6 +589,7 @@ export component MainWindow inherits Window {
                                 if root.detail.installed: Btn { label: "▶ Jugar"; clicked => { root.play(root.detail.id); } }
                                 if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
                                 if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
+                                if root.detail.installed: Btn { label: "📂 Carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
                                 if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
                                 if !root.detail.installed: Btn { label: "↓ Instalar"; clicked => { root.install(root.detail.id); } }
                             }

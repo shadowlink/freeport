@@ -147,6 +147,12 @@ pub struct InstalledEntry {
     /// True when this is a Windows build installed to run via Wine/Proton.
     #[serde(default)]
     pub windows: bool,
+    /// Unix epoch (secs) of the last launch.
+    #[serde(default)]
+    pub last_played: Option<String>,
+    /// Accumulated play time in seconds.
+    #[serde(default)]
+    pub play_secs: u64,
 }
 
 /// Persisted user configuration (`config.json`).
@@ -174,6 +180,9 @@ pub struct Config {
     /// None/empty = presence disabled. See `discord.rs`.
     #[serde(default)]
     pub discord_app_id: Option<String>,
+    /// Project ids the user marked as favorite.
+    #[serde(default)]
+    pub favorites: Vec<String>,
 }
 
 /// Enriched view of a project sent to the frontend: the catalog entry plus its

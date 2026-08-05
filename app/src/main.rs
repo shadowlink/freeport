@@ -17,6 +17,47 @@ use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::Path;
 use std::rc::Rc;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+/// Recursively sums the size of a directory tree (best-effort).
+fn dir_size(path: &Path) -> u64 {
+    let mut total = 0u64;
+    if let Ok(entries) = std::fs::read_dir(path) {
+        for e in entries.flatten() {
+            match e.file_type() {
+                Ok(ft) if ft.is_dir() => total += dir_size(&e.path()),
+                Ok(ft) if ft.is_file() => total += e.metadata().map(|m| m.len()).unwrap_or(0),
+                _ => {}
+            }
+        }
+    }
+    total
+}
+
+fn fmt_bytes(b: u64) -> String {
+    const U: [&str; 4] = ["B", "KB", "MB", "GB"];
+    let mut v = b as f64;
+    let mut i = 0;
+    while v >= 1024.0 && i < 3 {
+        v /= 1024.0;
+        i += 1;
+    }
+    if i == 0 { format!("{b} B") } else { format!("{v:.1} {}", U[i]) }
+}
+
+fn fmt_duration(secs: u64) -> String {
+    let (h, m) = (secs / 3600, (secs % 3600) / 60);
+    if h > 0 { format!("{h}h {m}m") } else if m > 0 { format!("{m}m") } else { format!("{secs}s") }
+}
+
+fn fmt_ago(epoch: i64) -> String {
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
+    let d = (now - epoch).max(0);
+    if d < 60 { "hace un momento".into() }
+    else if d < 3600 { format!("hace {}m", d / 60) }
+    else if d < 86400 { format!("hace {}h", d / 3600) }
+    else { format!("hace {}d", d / 86400) }
+}
 
 const LOGOS: &[(&str, &[u8])] = &[
     ("amiga", include_bytes!("../assets/logos/amiga.svg")),
@@ -54,6 +95,7 @@ struct App {
     mod_icons: RefCell<std::collections::HashMap<String, Image>>,
     screens_cache: RefCell<std::collections::HashMap<String, Vec<String>>>,
     cover_cache: RefCell<std::collections::HashMap<String, Image>>,
+    size_cache: RefCell<std::collections::HashMap<String, u64>>,
     tv_shelves: RefCell<Vec<(String, Vec<String>)>>,
     pending_update: RefCell<Option<update::Update>>,
     toasts: Rc<VecModel<ToastMsg>>,
@@ -421,6 +463,31 @@ fn build_detail(app: &App, win: &MainWindow) {
     }
 
     let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
+    // Play stats (only for installed games): play time · last played · size.
+    let stats = match entry {
+        Some(e) => {
+            let mut parts: Vec<String> = Vec::new();
+            if e.play_secs > 0 {
+                parts.push(format!("Jugado {}", fmt_duration(e.play_secs)));
+            }
+            if let Some(lp) = e.last_played.as_ref().and_then(|s| s.parse::<i64>().ok()) {
+                parts.push(format!("Última vez {}", fmt_ago(lp)));
+            }
+            let size = app.size_cache.borrow().get(&p.id).copied().unwrap_or(0);
+            let size = if size == 0 {
+                let s = dir_size(Path::new(&e.install_path));
+                app.size_cache.borrow_mut().insert(p.id.clone(), s);
+                s
+            } else {
+                size
+            };
+            if size > 0 {
+                parts.push(fmt_bytes(size));
+            }
+            parts.join("  ·  ")
+        }
+        None => String::new(),
+    };
     let data = DetailData {
         id: p.id.clone().into(),
         title: title.into(),
@@ -433,6 +500,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
         busy: app.busy.borrow().contains(&p.id),
         progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
+        stats: stats.into(),
         about: state.wiki.as_ref().map(|w| w.extract.clone()).unwrap_or_default().into(),
         port_notes: p.rom.notes.clone().into(),
         has_related: !related.is_empty(),
@@ -624,9 +692,16 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
                 if let Some(id) = ids.get(c as usize) {
                     if let Some(p) = app.find(id) {
                         let name = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
-                        match actions::launch_project(&app.paths, &p) {
-                            Ok(_) => toast("ok", format!("Iniciando {name}…")),
-                            Err(e) => toast("error", format!("{name}: {e}")),
+                        let installed = store::load_installed(&app.paths).unwrap_or_default();
+                        if installed.contains_key(&p.id) {
+                            match actions::launch_project(&app.paths, &p) {
+                                Ok(_) => toast("ok", format!("Iniciando {name}…")),
+                                Err(e) => toast("error", format!("{name}: {e}")),
+                            }
+                        } else {
+                            // Not installed → kick off the normal install flow.
+                            win.invoke_install(p.id.clone().into());
+                            toast("info", format!("Instalando {name}…"));
                         }
                     }
                 }
@@ -678,6 +753,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         mod_icons: RefCell::new(std::collections::HashMap::new()),
         screens_cache: RefCell::new(std::collections::HashMap::new()),
         cover_cache: RefCell::new(std::collections::HashMap::new()),
+        size_cache: RefCell::new(std::collections::HashMap::new()),
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
         toasts: Rc::new(VecModel::default()),
@@ -738,7 +814,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let weak = win.as_weak();
         move || {
             if let Some(w) = weak.upgrade() {
-                w.window().with_winit_window(|ww| ww.set_maximized(!ww.is_maximized()));
+                let now = w
+                    .window()
+                    .with_winit_window(|ww| {
+                        let next = !ww.is_maximized();
+                        ww.set_maximized(next);
+                        next
+                    })
+                    .unwrap_or(false);
+                w.set_win_maximized(now);
             }
         }
     });
@@ -809,7 +893,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     win.on_refresh_catalog({
         let app = app.clone();
         let handle = handle.clone();
+        let weak = win.as_weak();
         move || {
+            if let Some(w) = weak.upgrade() {
+                if w.get_catalog_busy() {
+                    return;
+                }
+                w.set_catalog_busy(true);
+                w.set_settings_msg("".into());
+            }
             let client = app.client.clone();
             let paths = app.paths.clone();
             let url = store::load_config(&paths).ok().and_then(|c| c.catalog_url);
@@ -830,6 +922,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             };
                             if let Some(w) = weak.upgrade() {
                                 w.set_settings_msg(msg.into());
+                                w.set_catalog_busy(false);
                             }
                         }
                     });
@@ -1129,6 +1222,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         if let Some((app, _)) = &*u.borrow() {
                             app.busy.borrow_mut().remove(&pid);
                             app.install_progress.borrow_mut().remove(&pid);
+                            app.size_cache.borrow_mut().remove(&pid);
                         }
                     });
                     match &err {
@@ -1165,6 +1259,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 Ok(_) => toast("ok", format!("{name} eliminado")),
                 Err(e) => toast("error", format!("No se pudo eliminar: {e}")),
             }
+            app.size_cache.borrow_mut().remove(&id.to_string());
             ui_refresh();
         }
     });
@@ -1246,9 +1341,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     win.on_dismiss_update({
+        let app = app.clone();
         let weak = win.as_weak();
         move || {
             if let Some(w) = weak.upgrade() {
+                let ver = w.get_update_version().to_string();
+                if let Ok(mut cfg) = store::load_config(&app.paths) {
+                    cfg.skip_version = Some(ver);
+                    let _ = store::save_config(&app.paths, &cfg);
+                }
                 w.set_update_available(false);
             }
         }
@@ -1260,12 +1361,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         handle.spawn(async move {
             if let Some(upd) = update::check(&client, env!("CARGO_PKG_VERSION")).await {
                 let ver = upd.version.clone();
+                let notes = upd.notes.clone();
                 let _ = slint::invoke_from_event_loop(move || {
                     UI.with(|u| {
                         if let Some((app, weak)) = &*u.borrow() {
+                            // Respect a version the user chose to skip.
+                            let skipped = store::load_config(&app.paths).ok().and_then(|c| c.skip_version);
+                            if skipped.as_deref() == Some(ver.as_str()) {
+                                return;
+                            }
                             *app.pending_update.borrow_mut() = Some(upd);
                             if let Some(w) = weak.upgrade() {
                                 w.set_update_version(ver.into());
+                                w.set_update_notes(notes.into());
                                 w.set_update_available(true);
                             }
                         }

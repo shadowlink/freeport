@@ -183,6 +183,9 @@ pub struct Config {
     /// Project ids the user marked as favorite.
     #[serde(default)]
     pub favorites: Vec<String>,
+    /// Update version the user chose to skip ("Después/omitir").
+    #[serde(default)]
+    pub skip_version: Option<String>,
 }
 
 /// Enriched view of a project sent to the frontend: the catalog entry plus its

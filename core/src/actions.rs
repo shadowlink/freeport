@@ -216,6 +216,13 @@ pub fn set_rom(paths: &Paths, project: &Project, rom_source: &str) -> AppResult<
     store::save_installed(paths, &installed)
 }
 
+/// Process-wide Discord Rich Presence (lazily connected, best-effort).
+fn presence() -> &'static crate::discord::DiscordPresence {
+    use std::sync::OnceLock;
+    static P: OnceLock<crate::discord::DiscordPresence> = OnceLock::new();
+    P.get_or_init(crate::discord::DiscordPresence::new)
+}
+
 /// Launches an installed game (native or via Wine/Proton). Returns the PID.
 pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
     let installed = store::load_installed(paths)?;
@@ -248,12 +255,23 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
         let _ = store::save_installed(paths, &installed);
     }
 
-    // Reap the child in the background (avoids a zombie) and accumulate play time.
+    // Discord Rich Presence: "Jugando <game>" (best-effort, off this thread).
+    if let Some(app_id) = crate::discord::resolve_app_id(
+        store::load_config(paths).ok().and_then(|c| c.discord_app_id).as_deref(),
+    ) {
+        let game = if project.original_game.is_empty() { project.name.clone() } else { project.original_game.clone() };
+        let subtitle = project.name.clone();
+        std::thread::spawn(move || presence().set_playing(&app_id, &game, &subtitle));
+    }
+
+    // Reap the child in the background (avoids a zombie), clear presence on exit,
+    // and accumulate play time.
     let paths2 = paths.clone();
     let id2 = project.id.clone();
     let start = std::time::Instant::now();
     std::thread::spawn(move || {
         let _ = child.wait();
+        presence().clear();
         let secs = start.elapsed().as_secs();
         if let Ok(mut installed) = store::load_installed(&paths2) {
             if let Some(e) = installed.get_mut(&id2) {

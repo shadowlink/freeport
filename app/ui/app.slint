@@ -145,6 +145,7 @@ struct DetailData {
     rom-ok: bool,
     busy: bool,
     progress: float,
+    stats: string,
     about: string,
     port-notes: string,
     has-related: bool,
@@ -207,6 +208,7 @@ export component MainWindow inherits Window {
     in property <string> platform-label;
     in property <[string]> runner-labels;
     in property <string> settings-msg;
+    in-out property <bool> catalog-busy;
     callback toggle-windows(bool);
     callback set-runner(string);
     callback refresh-catalog();
@@ -224,10 +226,12 @@ export component MainWindow inherits Window {
     // Self-update
     in property <bool> update-available;
     in property <string> update-version;
+    in property <string> update-notes;
     in-out property <bool> update-busy;
     callback do-update();
     callback dismiss-update();
     // Frameless window controls
+    in-out property <bool> win-maximized;
     callback win-minimize();
     callback win-maximize();
     callback win-close();
@@ -280,7 +284,7 @@ export component MainWindow inherits Window {
                    vertical-alignment: center; }
             Rectangle { horizontal-stretch: 1; }
             WinBtn { symbol: "–"; clicked => { root.win-minimize(); } }
-            WinBtn { symbol: "▢"; clicked => { root.win-maximize(); } }
+            WinBtn { symbol: root.win-maximized ? "❐" : "▢"; clicked => { root.win-maximize(); } }
             WinBtn { symbol: "✕"; hover-bg: #e04b5a; clicked => { root.win-close(); } }
         }
     }
@@ -365,7 +369,7 @@ export component MainWindow inherits Window {
                                         image-fit: contain; horizontal-alignment: left; }
                             }
                             if !s.has-logo: Text { text: s.name; color: white; vertical-alignment: center; horizontal-stretch: 1; }
-                            Text { text: "\{s.count}"; color: #ffffff59; font-size: 12px; vertical-alignment: center; }
+                            Text { text: "\{s.count}"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
                         }
                     }
                 }
@@ -376,7 +380,7 @@ export component MainWindow inherits Window {
                         spacing: 6px;
                         Btn { label: "📺 Modo TV"; bg: #ffb23e26; fg: #ffb23e; clicked => { root.open-tv(); } }
                         Btn { label: "⚙ Ajustes"; bg: #1c1f28; fg: white; clicked => { root.settings-visible = true; } }
-                        Text { text: "Freeport \{root.version}"; color: #ffffff44; font-size: 10px; horizontal-alignment: center; }
+                        Text { text: "Freeport \{root.version}"; color: #ffffff88; font-size: 10px; horizontal-alignment: center; }
                     }
                 }
             }
@@ -385,7 +389,7 @@ export component MainWindow inherits Window {
         // ── Main ────────────────────────────────
         VerticalLayout {
             if root.update-available: Rectangle {
-                height: 44px;
+                height: 54px;
                 background: #ffb23e;
                 opacity: 0;
                 init => { self.opacity = 1; }
@@ -394,12 +398,16 @@ export component MainWindow inherits Window {
                     padding-left: 16px;
                     padding-right: 8px;
                     spacing: 12px;
-                    Text {
-                        text: root.update-busy ? "Actualizando…" : "Nueva versión v\{root.update-version} disponible";
-                        color: #0b0c10;
-                        font-weight: 800;
-                        vertical-alignment: center;
+                    VerticalLayout {
                         horizontal-stretch: 1;
+                        alignment: center;
+                        spacing: 3px;
+                        Text {
+                            text: root.update-busy ? "Actualizando…" : "Nueva versión v\{root.update-version} disponible";
+                            color: #0b0c10; font-weight: 800;
+                        }
+                        if root.update-busy: Bar { value: -1; height: 6px; fill: #0b0c10; }
+                        if !root.update-busy && root.update-notes != "": Text { text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; }
                     }
                     if !root.update-busy: Btn { label: "Actualizar"; bg: #0b0c10; fg: #ffb23e; clicked => { root.do-update(); } }
                     if !root.update-busy: Btn { label: "Después"; bg: #ffffff44; fg: #0b0c10; clicked => { root.dismiss-update(); } }
@@ -414,7 +422,7 @@ export component MainWindow inherits Window {
                     Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
                     Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
                     Rectangle { horizontal-stretch: 1; }
-                    Text { text: "Ordenar"; color: #ffffff66; font-size: 12px; vertical-alignment: center; }
+                    Text { text: "Ordenar"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
                     SortChip { label: "A-Z"; mode: "name"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
                     SortChip { label: "Año"; mode: "year"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
                     SortChip { label: "Recientes"; mode: "recent"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
@@ -485,7 +493,7 @@ export component MainWindow inherits Window {
                                 }
                             }
                             Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
-                            Text { text: c.subtitle; color: #ffffff66; font-size: 10px; overflow: elide; }
+                            Text { text: c.subtitle; color: #ffffff99; font-size: 10px; overflow: elide; }
 
                             // Action row
                             if c.busy: VerticalLayout {
@@ -567,6 +575,7 @@ export component MainWindow inherits Window {
                             spacing: 10px;
                             Text { text: root.detail.title; font-size: 30px; font-weight: 900; color: white; wrap: word-wrap; }
                             Text { text: root.detail.subtitle; font-size: 16px; color: #ffb23e; wrap: word-wrap; }
+                            if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
                             HorizontalLayout {
                                 spacing: 6px;
                                 alignment: start;
@@ -668,7 +677,7 @@ export component MainWindow inherits Window {
                                         Text { text: m.name; color: white; font-weight: 700; font-size: 13px; overflow: elide; }
                                         if m.installed: Tag { label: "INSTALADO"; fg: #0b0c10; bg: #4de1c1; }
                                     }
-                                    Text { text: "\{m.owner} · \{m.downloads} descargas"; color: #ffffff66; font-size: 11px; }
+                                    Text { text: "\{m.owner} · \{m.downloads} descargas"; color: #ffffff99; font-size: 11px; }
                                     if !m.busy: Text { text: m.description; color: #ffffff88; font-size: 11px; overflow: elide; }
                                     if m.busy: Bar { value: m.progress > 0 ? m.progress : -1; }
                                 }
@@ -715,7 +724,7 @@ export component MainWindow inherits Window {
                 spacing: 14px;
                 HorizontalLayout {
                     Text { text: "Ajustes"; font-size: 22px; font-weight: 900; color: white; horizontal-stretch: 1; }
-                    Text { text: "Freeport \{root.version} · \{root.platform-label}"; color: #ffffff44; font-size: 12px; vertical-alignment: center; }
+                    Text { text: "Freeport \{root.version} · \{root.platform-label}"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
                 }
                 Rectangle {
                     border-radius: 8px;
@@ -737,7 +746,9 @@ export component MainWindow inherits Window {
                 }
                 HorizontalLayout {
                     spacing: 10px;
-                    Btn { label: "Actualizar catálogo"; clicked => { root.refresh-catalog(); } }
+                    Btn { label: root.catalog-busy ? "Actualizando…" : "Actualizar catálogo";
+                          bg: root.catalog-busy ? #1c1f28 : #ffb23e; fg: root.catalog-busy ? #ffb23e : #0b0c10;
+                          clicked => { if (!root.catalog-busy) { root.refresh-catalog(); } } }
                     Text { text: root.settings-msg; color: #ffd166; font-size: 12px; vertical-alignment: center; }
                 }
                 Rectangle { vertical-stretch: 1; }
@@ -839,9 +850,10 @@ export component MainWindow inherits Window {
                     HorizontalLayout {
                         padding-left: 24px;
                         spacing: 24px;
-                        Text { text: "Ⓐ Jugar"; color: #ffb23e; vertical-alignment: center; }
+                        Text { text: "✚ Mover"; color: #ffffff88; vertical-alignment: center; }
+                        Text { text: "Ⓐ Jugar / Instalar"; color: #ffb23e; vertical-alignment: center; }
                         Text { text: "LB / RB  Consola"; color: #ffffff88; vertical-alignment: center; }
-                        Text { text: "☰ / Esc  Salir"; color: #ffffff88; vertical-alignment: center; }
+                        Text { text: "Ⓑ / ☰ / Esc  Salir"; color: #ffffff88; vertical-alignment: center; }
                     }
                 }
             }

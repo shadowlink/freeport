@@ -304,7 +304,7 @@ fn rebuild(app: &App, win: &MainWindow) {
 
 impl App {
     fn cover(&self, p: &Project) -> Image {
-        let Some(url) = p.cover_url.as_ref() else { return Image::default() };
+        let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()) else { return Image::default() };
         if let Some(img) = self.cover_cache.borrow().get(url) {
             return img.clone();
         }
@@ -549,7 +549,7 @@ fn spawn_missing_thumbs(app: &Rc<App>, handle: &tokio::runtime::Handle) {
         .borrow()
         .projects
         .iter()
-        .filter_map(|p| p.cover_url.clone())
+        .filter_map(|p| p.box_art.clone().or_else(|| p.cover_url.clone()))
         .filter(|u| !thumbs::path_for(&app.paths, u).exists())
         .collect();
     if missing.is_empty() {

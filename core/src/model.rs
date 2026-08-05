@@ -43,6 +43,11 @@ pub struct Project {
     pub rolling_tag: Option<String>,
     #[serde(default)]
     pub cover_url: Option<String>,
+    /// Preferred boxart (e.g. from ScreenScraper, baked by the catalog tool).
+    /// When present the app uses it for the cover; `cover_url` still drives the
+    /// libretro-derived screenshots.
+    #[serde(default)]
+    pub box_art: Option<String>,
     #[serde(default)]
     pub logo_url: Option<String>,
     // Curated "museum" metadata for the game page.

@@ -14,6 +14,15 @@ pub async fn download_to_file<F>(
 where
     F: FnMut(u64, u64),
 {
+    if let Some(parent) = dest.parent() {
+        tokio::fs::create_dir_all(parent).await?;
+    }
+    // Download to a sibling ".part" and rename on success, so a mid-stream
+    // failure never leaves a truncated file where the real one should be.
+    let part = dest.with_file_name(format!(
+        "{}.part",
+        dest.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_else(|| "download".into())
+    ));
     let resp = client
         .get(url)
         .header("User-Agent", "decompdeck")
@@ -21,17 +30,39 @@ where
         .await?
         .error_for_status()?;
     let total = resp.content_length().unwrap_or(0);
-    let mut file = tokio::fs::File::create(dest).await?;
-    let mut downloaded: u64 = 0;
-    let mut stream = resp.bytes_stream();
-    while let Some(chunk) = stream.next().await {
-        let chunk = chunk?;
-        file.write_all(&chunk).await?;
-        downloaded += chunk.len() as u64;
-        on_progress(downloaded, total);
+
+    let result: AppResult<u64> = async {
+        let mut file = tokio::fs::File::create(&part).await?;
+        let mut downloaded: u64 = 0;
+        let mut stream = resp.bytes_stream();
+        while let Some(chunk) = stream.next().await {
+            let chunk = chunk?;
+            file.write_all(&chunk).await?;
+            downloaded += chunk.len() as u64;
+            on_progress(downloaded, total);
+        }
+        file.flush().await?;
+        let _ = file.sync_all().await;
+        Ok(downloaded)
     }
-    file.flush().await?;
-    Ok(())
+    .await;
+
+    match result {
+        Ok(downloaded) => {
+            if total > 0 && downloaded != total {
+                let _ = tokio::fs::remove_file(&part).await;
+                return Err(AppError::msg(format!(
+                    "descarga incompleta ({downloaded}/{total} bytes)"
+                )));
+            }
+            tokio::fs::rename(&part, dest).await?;
+            Ok(())
+        }
+        Err(e) => {
+            let _ = tokio::fs::remove_file(&part).await;
+            Err(e)
+        }
+    }
 }
 
 /// Extracts a downloaded archive into `dest_dir`, dispatching on file extension.
@@ -128,6 +159,11 @@ fn extract_deb(deb: &Path, dest_dir: &Path) -> AppResult<()> {
             lzma_rs::xz_decompress(&mut c, &mut dec)
                 .map_err(|e| AppError::msg(format!("error al descomprimir xz del .deb: {e}")))?;
             tar::Archive::new(std::io::Cursor::new(dec)).unpack(dest_dir)?;
+        } else if ident.ends_with(".zst") {
+            // Modern dpkg (Debian 12+/Ubuntu 21.10+) defaults to zstd.
+            let dec = zstd::stream::read::Decoder::new(cursor)
+                .map_err(|e| AppError::msg(format!("error al abrir zstd del .deb: {e}")))?;
+            tar::Archive::new(dec).unpack(dest_dir)?;
         } else {
             return Err(AppError::msg(format!(
                 "compresión de data.tar no soportada en el .deb: {ident}"
@@ -209,7 +245,7 @@ pub fn find_launch_binary(dir: &Path, hint: Option<&str>, windows: bool) -> AppR
         if !h.is_empty() {
             if let Some(found) = candidates
                 .iter()
-                .find(|p| p.file_name().and_then(|n| n.to_str()) == Some(h))
+                .find(|p| p.file_name().and_then(|n| n.to_str()).map(|n| n.eq_ignore_ascii_case(h)).unwrap_or(false))
             {
                 return Ok(found.clone());
             }
@@ -266,6 +302,25 @@ pub fn find_launch_binary(dir: &Path, hint: Option<&str>, windows: bool) -> AppR
         if let Some((p, _)) = execs.first() {
             return Ok(p.clone());
         }
+        // Fallback: no file has the exec bit (e.g. an ELF extracted from a zip
+        // that dropped Unix modes). Pick the largest plain file that isn't a
+        // library/script/data; launch_binary will chmod it.
+        let mut plain: Vec<(PathBuf, u64)> = candidates
+            .iter()
+            .filter(|p| {
+                let ext = p.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+                !matches!(
+                    ext.as_str(),
+                    "so" | "dll" | "dylib" | "exe" | "txt" | "md" | "json" | "png" | "jpg"
+                        | "cfg" | "ini" | "toml" | "dat" | "pak" | "wad" | "bin" | "sh"
+                )
+            })
+            .filter_map(|p| std::fs::metadata(p).ok().filter(|m| m.is_file()).map(|m| (p.clone(), m.len())))
+            .collect();
+        plain.sort_by_key(|(_, sz)| std::cmp::Reverse(*sz));
+        if let Some((p, _)) = plain.first() {
+            return Ok(p.clone());
+        }
     }
 
     Err(AppError::msg(
@@ -274,7 +329,7 @@ pub fn find_launch_binary(dir: &Path, hint: Option<&str>, windows: bool) -> AppR
 }
 
 fn collect_files(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) {
-    if depth > 4 {
+    if depth > 8 {
         return;
     }
     let Ok(entries) = std::fs::read_dir(dir) else {

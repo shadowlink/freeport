@@ -93,13 +93,25 @@ pub async fn apply(client: &reqwest::Client, upd: &Update) -> Result<(), String>
     let exe = std::env::current_exe().map_err(|e| e.to_string())?;
     #[cfg(windows)]
     {
-        // Windows locks a running executable, so it can't be overwritten. Rename
-        // it aside (which IS allowed), write the new one in its place, relaunch.
-        // The stale ".old" is cleaned up on the next start (see `cleanup`).
+        // Windows locks a running executable, so it can't be overwritten. Write
+        // the new binary to ".new" first, verify it, then rename the running exe
+        // aside (".old", allowed while running) and ".new" into place — so a crash
+        // mid-swap never leaves the machine with no executable. ".old" is cleaned
+        // up on next start (see `cleanup`).
         let old = exe.with_extension("old");
+        let new = exe.with_extension("new");
         let _ = std::fs::remove_file(&old);
+        let _ = std::fs::remove_file(&new);
+        std::fs::write(&new, &bytes).map_err(|e| e.to_string())?;
+        if std::fs::metadata(&new).map(|m| m.len()).unwrap_or(0) != bytes.len() as u64 {
+            let _ = std::fs::remove_file(&new);
+            return Err("no se pudo escribir el nuevo ejecutable".to_string());
+        }
         std::fs::rename(&exe, &old).map_err(|e| e.to_string())?;
-        std::fs::write(&exe, &bytes).map_err(|e| e.to_string())?;
+        if let Err(e) = std::fs::rename(&new, &exe) {
+            let _ = std::fs::rename(&old, &exe); // restore
+            return Err(e.to_string());
+        }
     }
     #[cfg(unix)]
     {

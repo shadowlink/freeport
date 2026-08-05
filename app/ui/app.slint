@@ -1,5 +1,10 @@
 import { ListView, LineEdit, ScrollView, CheckBox, ComboBox } from "std-widgets.slint";
 
+struct ToastMsg {
+    text: string,
+    kind: string, // "error" | "ok" | "info"
+}
+
 struct CardItem {
     id: string,
     title: string,
@@ -166,6 +171,12 @@ export component MainWindow inherits Window {
     callback open-screenshot(string);
     in property <DetailData> detail;
     in property <bool> detail-visible;
+    // Transient toast notifications (errors / confirmations).
+    in property <[ToastMsg]> toasts;
+    // Uninstall confirmation
+    in-out property <bool> confirm-visible;
+    in-out property <string> confirm-id;
+    in-out property <string> confirm-title;
     // Settings
     in-out property <bool> settings-visible;
     in-out property <bool> show-windows;
@@ -382,6 +393,8 @@ export component MainWindow inherits Window {
                     Text { text: "\{root.header-count} juegos"; color: #ffffff66; font-size: 14px; vertical-alignment: center; }
                 }
             }
+            Rectangle {
+            vertical-stretch: 1;
             ListView {
                 for row in root.rows: HorizontalLayout {
                     spacing: 14px;
@@ -403,6 +416,13 @@ export component MainWindow inherits Window {
                                 drop-shadow-blur: cover-ta.has-hover ? 20px : 0px;
                                 drop-shadow-color: cover-ta.has-hover ? (c.installed ? #4de1c1aa : #ffb23e99) : #00000000;
                                 animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
+                                // Placeholder title shown until the cover thumbnail loads
+                                // (the Image renders opaque on top once available).
+                                Text {
+                                    x: 8px; width: parent.width - 16px; height: parent.height;
+                                    text: c.title; color: #ffffff66; font-size: 12px; font-weight: 700;
+                                    wrap: word-wrap; horizontal-alignment: center; vertical-alignment: center;
+                                }
                                 Image {
                                     source: c.cover;
                                     width: cover-ta.has-hover ? parent.width * 1.09 : parent.width;
@@ -447,7 +467,7 @@ export component MainWindow inherits Window {
                                     bg: #1c1f28; fg: c.rom-ok ? #4de1c1 : white;
                                     clicked => { root.pick-rom(c.id); }
                                 }
-                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall(c.id); } }
+                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = c.id; root.confirm-title = c.title; root.confirm-visible = true; } }
                             }
                             if !c.busy && !c.installed: Btn {
                                 label: "↓ Instalar"; bg: #1c1f28; fg: #ffb23e;
@@ -456,6 +476,20 @@ export component MainWindow inherits Window {
                         }
                     }
                 }
+            }
+            if root.header-count == 0: Rectangle {
+                width: 100%; height: 100%;
+                VerticalLayout {
+                    alignment: center;
+                    spacing: 6px;
+                    Text { text: root.library-tab ? "Tu biblioteca está vacía"
+                                 : (root.search-text != "" ? "Sin resultados para «\{root.search-text}»" : "Nada por aquí");
+                           color: #ffffffcc; font-size: 18px; font-weight: 800; horizontal-alignment: center; }
+                    Text { text: root.library-tab ? "Instala un juego desde el catálogo"
+                                 : "Prueba otra búsqueda o cambia de consola";
+                           color: #ffffff77; font-size: 13px; horizontal-alignment: center; }
+                }
+            }
             }
         }
     }
@@ -518,7 +552,7 @@ export component MainWindow inherits Window {
                                 if root.detail.installed: Btn { label: "▶ Jugar"; clicked => { root.play(root.detail.id); } }
                                 if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
                                 if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
-                                if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall(root.detail.id); } }
+                                if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
                                 if !root.detail.installed: Btn { label: "↓ Instalar"; clicked => { root.install(root.detail.id); } }
                             }
                         }
@@ -776,6 +810,36 @@ export component MainWindow inherits Window {
         }
     }
 
+    // ── Confirm uninstall ────────────────────────────────
+    if root.confirm-visible: Rectangle {
+        width: 100%; height: 100%;
+        background: #000000cc;
+        opacity: 0;
+        init => { self.opacity = 1; }
+        animate opacity { duration: 140ms; easing: ease-out; }
+        TouchArea { clicked => { root.confirm-visible = false; } }
+        Rectangle {
+            width: 400px; height: 190px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            border-radius: 14px; background: #14161d;
+            border-width: 1px; border-color: #2b2f3a;
+            drop-shadow-blur: 40px; drop-shadow-color: #00000099;
+            TouchArea { }
+            VerticalLayout {
+                padding: 22px; spacing: 12px;
+                Text { text: "¿Eliminar «\{root.confirm-title}»?"; color: white; font-size: 18px; font-weight: 800; wrap: word-wrap; }
+                Text { text: "Se borrará la instalación y sus mods. No se puede deshacer."; color: #ffffffaa; font-size: 13px; wrap: word-wrap; }
+                Rectangle { vertical-stretch: 1; }
+                HorizontalLayout {
+                    alignment: end; spacing: 8px;
+                    Btn { label: "Cancelar"; bg: #1c1f28; fg: white; clicked => { root.confirm-visible = false; } }
+                    Btn { label: "Eliminar"; bg: #e04b5a; fg: white; clicked => { root.uninstall(root.confirm-id); root.confirm-visible = false; } }
+                }
+            }
+        }
+    }
+
     // ── Resize handles (frameless) ───────────────────────
     // Edges
     Rectangle { x: 0; y: 0; width: root.width; height: 4px;
@@ -803,4 +867,27 @@ export component MainWindow inherits Window {
     Rectangle { x: root.width - 9px; y: root.height - 9px; width: 9px; height: 9px;
         TouchArea { mouse-cursor: nwse-resize;
             pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("se"); } } } }
+
+    // ── Toasts (top-center, above everything) ──────────────
+    VerticalLayout {
+        x: (root.width - self.width) / 2;
+        y: 52px;
+        width: 460px;
+        spacing: 8px;
+        for t in root.toasts: Rectangle {
+            height: msg.preferred-height + 20px;
+            border-radius: 8px;
+            background: t.kind == "error" ? #e04b5a : (t.kind == "ok" ? #2ea56b : #2b2f3a);
+            drop-shadow-blur: 18px;
+            drop-shadow-color: #000000aa;
+            opacity: 0;
+            init => { self.opacity = 1; }
+            animate opacity { duration: 200ms; easing: ease-out; }
+            msg := Text {
+                x: 14px; width: parent.width - 28px; y: 10px;
+                text: t.text; color: white; font-weight: 600; font-size: 13px;
+                wrap: word-wrap; horizontal-alignment: center;
+            }
+        }
+    }
 }

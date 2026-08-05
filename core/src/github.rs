@@ -49,7 +49,7 @@ pub async fn fetch_releases(
     slug: &str,
     token: Option<&str>,
 ) -> AppResult<Vec<Release>> {
-    let url = format!("https://api.github.com/repos/{slug}/releases?per_page=10");
+    let url = format!("https://api.github.com/repos/{slug}/releases?per_page=50");
     let req = apply_headers(client.get(&url), token);
     let resp = req.send().await?;
     if resp.status() == reqwest::StatusCode::NOT_FOUND {

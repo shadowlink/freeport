@@ -1804,6 +1804,7 @@ dependencies = [
  "tokio",
  "urlencoding",
  "zip",
+ "zstd",
 ]
 
 [[package]]

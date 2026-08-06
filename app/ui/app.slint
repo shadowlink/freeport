@@ -841,6 +841,14 @@ export component MainWindow inherits Window {
                         Text { text: root.tv-hero-subtitle; color: #ffb23e; font-size: 18px; }
                     }
                 }
+                if root.tv-shelf-count == 0: Rectangle {
+                    vertical-stretch: 1;
+                    VerticalLayout {
+                        alignment: center; spacing: 6px;
+                        Text { text: "No hay juegos instalados"; color: white; font-size: 22px; font-weight: 800; horizontal-alignment: center; }
+                        Text { text: "Instala juegos desde el catálogo y aparecerán aquí"; color: #ffffff88; font-size: 14px; horizontal-alignment: center; }
+                    }
+                }
                 // Shelves (viewport follows focus on both axes)
                 Flickable {
                     interactive: false;
@@ -890,7 +898,7 @@ export component MainWindow inherits Window {
                         padding-left: 24px;
                         spacing: 24px;
                         Text { text: "✚ Mover"; color: #ffffff88; vertical-alignment: center; }
-                        Text { text: "Ⓐ Jugar / Instalar"; color: #ffb23e; vertical-alignment: center; }
+                        Text { text: "Ⓐ Jugar"; color: #ffb23e; vertical-alignment: center; }
                         Text { text: "LB / RB  Consola"; color: #ffffff88; vertical-alignment: center; }
                         Text { text: "Ⓑ / ☰ / Esc  Salir"; color: #ffffff88; vertical-alignment: center; }
                     }

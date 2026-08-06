@@ -629,15 +629,15 @@ fn tv_hero(app: &App, win: &MainWindow) {
 
 fn build_tv(app: &App, win: &MainWindow) {
     let installed = store::load_installed(&app.paths).unwrap_or_default();
-    let show_windows = store::load_config(&app.paths).map(|c| c.show_windows).unwrap_or(false);
     let catalog = app.catalog.borrow();
     let mut bounds: Vec<(String, Vec<String>)> = Vec::new();
     let mut shelves: Vec<TvShelf> = Vec::new();
     for s in &catalog.systems {
+        // TV / Big Picture is a couch experience: show only installed games.
         let games: Vec<&Project> = catalog
             .projects
             .iter()
-            .filter(|p| p.system == s.id && app.visibility(p, &installed, show_windows).0)
+            .filter(|p| p.system == s.id && installed.contains_key(&p.id))
             .collect();
         if games.is_empty() {
             continue;
@@ -733,13 +733,8 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
             if let Some((_, ids)) = shelves.get(s as usize) {
                 if let Some(id) = ids.get(c as usize) {
                     if let Some(p) = app.find(id) {
-                        let installed = store::load_installed(&app.paths).unwrap_or_default();
-                        if installed.contains_key(&p.id) {
-                            let _ = actions::launch_project(&app.paths, &p);
-                        } else {
-                            // Not installed → kick off the normal install flow.
-                            win.invoke_install(p.id.clone().into());
-                        }
+                        // TV only lists installed games, so A always launches.
+                        let _ = actions::launch_project(&app.paths, &p);
                     }
                 }
             }

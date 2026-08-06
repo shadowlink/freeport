@@ -183,6 +183,7 @@ struct DetailData {
     play-state: int,
     install-error: bool,
     stats: string,
+    repo-url: string,
     about: string,
     port-notes: string,
     has-related: bool,
@@ -228,7 +229,10 @@ export component MainWindow inherits Window {
     callback close-detail();
     callback install-mod(string, string);
     callback uninstall-mod(string, string);
-    callback open-screenshot(string);
+    callback open-url(string);
+    // In-app screenshot viewer (lightbox)
+    in-out property <image> viewer-image;
+    in-out property <bool> viewer-visible;
     in property <DetailData> detail;
     in property <bool> detail-visible;
     // Uninstall confirmation
@@ -496,13 +500,19 @@ export component MainWindow inherits Window {
                                     width: 100%; height: 100%;
                                     source: c.cover; title: c.title; hovered: cover-ta.has-hover;
                                 }
-                                Tag {
-                                    x: 6px; y: 6px;
-                                    label: c.kind;
-                                    fg: c.kind == "RECOMP" ? #ffb23e : #4de1c1;
+                                // Kind badge (RECOMP / PORT): solid accent pill.
+                                Rectangle {
+                                    x: 6px; y: 6px; height: 18px;
+                                    border-radius: 5px;
+                                    background: c.kind == "RECOMP" ? #ffb23e : #4de1c1;
+                                    drop-shadow-blur: 6px; drop-shadow-color: #000000aa;
+                                    HorizontalLayout {
+                                        padding-left: 7px; padding-right: 7px;
+                                        Text { text: c.kind; color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
+                                    }
                                 }
                                 if c.is-windows: Tag {
-                                    x: 6px; y: 26px;
+                                    x: 6px; y: 28px;
                                     label: "WIN"; fg: white; bg: #2b6fb3;
                                 }
                                 if c.update-available: Tag {
@@ -583,6 +593,8 @@ export component MainWindow inherits Window {
         opacity: 0;
         init => { self.opacity = 1; }
         animate opacity { duration: 170ms; easing: ease-out; }
+        // Absorb clicks so they don't fall through to the catalog grid behind.
+        TouchArea { }
         VerticalLayout {
             Rectangle {
                 height: 46px;
@@ -647,6 +659,7 @@ export component MainWindow inherits Window {
                                     fg: root.detail.install-error ? white : #0b0c10;
                                     clicked => { root.install(root.detail.id); }
                                 }
+                                if root.detail.repo-url != "": Btn { label: "⧉ GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
                             }
                         }
                     }
@@ -658,7 +671,8 @@ export component MainWindow inherits Window {
                             for s in root.detail.screens: Rectangle {
                                 width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
                                 Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
-                                TouchArea { clicked => { root.open-screenshot(s.path); } }
+                                sc-ta := TouchArea { mouse-cursor: pointer;
+                                    clicked => { root.viewer-image = s.img; root.viewer-visible = true; } }
                             }
                         }
                     }
@@ -666,13 +680,13 @@ export component MainWindow inherits Window {
                         spacing: 6px;
                         Text { text: "Acerca del juego"; font-size: 18px; font-weight: 800; color: white; }
                         Text { text: root.detail.about; color: #ffffffcc; font-size: 14px; wrap: word-wrap;
-                               width: dscroll.visible-width - 44px; }
+                               width: max(120px, dscroll.visible-width - 44px); }
                     }
                     if root.detail.port-notes != "": VerticalLayout {
                         spacing: 6px;
                         Text { text: "Sobre este port"; font-size: 18px; font-weight: 800; color: white; }
                         Text { text: root.detail.port-notes; color: #ffffffaa; font-size: 14px; wrap: word-wrap;
-                               width: dscroll.visible-width - 44px; }
+                               width: max(120px, dscroll.visible-width - 44px); }
                     }
                     if root.detail.has-related: VerticalLayout {
                         spacing: 8px;
@@ -936,6 +950,24 @@ export component MainWindow inherits Window {
                 }
             }
         }
+    }
+
+    // ── Screenshot viewer (lightbox) ─────────────────────
+    if root.viewer-visible: Rectangle {
+        width: 100%; height: 100%;
+        background: #000000ee;
+        opacity: 0;
+        init => { self.opacity = 1; }
+        animate opacity { duration: 140ms; easing: ease-out; }
+        TouchArea { clicked => { root.viewer-visible = false; } }
+        Image {
+            source: root.viewer-image;
+            width: parent.width * 0.92; height: parent.height * 0.9;
+            x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
+            image-fit: contain;
+        }
+        Text { y: parent.height - 34px; width: parent.width; text: "Clic para cerrar";
+               color: #ffffff88; font-size: 12px; horizontal-alignment: center; }
     }
 
     // ── Resize handles (frameless) ───────────────────────

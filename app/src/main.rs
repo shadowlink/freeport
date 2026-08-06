@@ -95,6 +95,7 @@ struct App {
     mod_icons: RefCell<std::collections::HashMap<String, Image>>,
     screens_cache: RefCell<std::collections::HashMap<String, Vec<String>>>,
     cover_cache: RefCell<std::collections::HashMap<String, Image>>,
+    hero_cache: RefCell<std::collections::HashMap<String, Image>>,
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
     tv_shelves: RefCell<Vec<(String, Vec<String>)>>,
     pending_update: RefCell<Option<update::Update>>,
@@ -502,6 +503,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         play_state: match app.launching.borrow().get(&p.id) { Some(false) => 1, Some(true) => 2, None => 0 },
         install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
+        repo_url: format!("https://github.com/{}", p.repo.slug()).into(),
         about: state.wiki.as_ref().map(|w| w.extract.clone()).unwrap_or_default().into(),
         port_notes: p.rom.notes.clone().into(),
         has_related: !related.is_empty(),
@@ -616,7 +618,12 @@ fn tv_hero(app: &App, win: &MainWindow) {
         if let Some(id) = ids.get(c) {
             if let Some(p) = app.find(id) {
                 let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
-                win.set_tv_hero_cover(app.cover(&p));
+                // Prefer the full-res hero art (prefetched); fall back to the thumb.
+                let art = p.box_art.as_ref().or(p.cover_url.as_ref());
+                let img = art
+                    .and_then(|u| app.hero_cache.borrow().get(u).cloned())
+                    .unwrap_or_else(|| app.cover(&p));
+                win.set_tv_hero_cover(img);
                 win.set_tv_hero_title(title.into());
                 win.set_tv_hero_subtitle(p.name.clone().into());
                 return;
@@ -785,6 +792,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         mod_icons: RefCell::new(std::collections::HashMap::new()),
         screens_cache: RefCell::new(std::collections::HashMap::new()),
         cover_cache: RefCell::new(std::collections::HashMap::new()),
+        hero_cache: RefCell::new(std::collections::HashMap::new()),
         size_cache: RefCell::new(std::collections::HashMap::new()),
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
@@ -971,6 +979,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     win.on_open_tv({
         let app = app.clone();
+        let handle = handle.clone();
         let weak = win.as_weak();
         move || {
             if let Some(w) = weak.upgrade() {
@@ -978,6 +987,50 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 w.set_tv_visible(true);
                 let _ = w.window().set_fullscreen(true);
             }
+            // Prefetch full-resolution hero art for installed games (the grid
+            // thumbnails are only 320px and look pixelated blown up in the hero).
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            let urls: Vec<String> = app
+                .catalog
+                .borrow()
+                .projects
+                .iter()
+                .filter(|p| installed.contains_key(&p.id))
+                .filter_map(|p| p.box_art.clone().or_else(|| p.cover_url.clone()))
+                .filter(|u| !app.hero_cache.borrow().contains_key(u))
+                .collect();
+            if urls.is_empty() {
+                return;
+            }
+            let client = app.client.clone();
+            let paths = app.paths.clone();
+            handle.spawn(async move {
+                let mut fetched: Vec<(String, String)> = Vec::new();
+                for u in urls {
+                    if let Ok(p) = thumbs::get_full(&client, &paths, &u).await {
+                        fetched.push((u, p.display().to_string()));
+                    }
+                }
+                if fetched.is_empty() {
+                    return;
+                }
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|uu| {
+                        if let Some((app, weak)) = &*uu.borrow() {
+                            for (url, path) in &fetched {
+                                if let Ok(img) = Image::load_from_path(Path::new(path)) {
+                                    app.hero_cache.borrow_mut().insert(url.clone(), img);
+                                }
+                            }
+                            if let Some(w) = weak.upgrade() {
+                                if w.get_tv_visible() {
+                                    tv_hero(app, &w);
+                                }
+                            }
+                        }
+                    });
+                });
+            });
         }
     });
 
@@ -1130,8 +1183,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    win.on_open_screenshot(|path| {
-        let _ = open::that(path.as_str());
+    win.on_open_url(|url| {
+        let _ = open::that(url.as_str());
     });
 
     win.on_install_mod({

@@ -40,6 +40,19 @@ pub async fn refresh_catalog(
     Ok(catalog)
 }
 
+/// Fetches the latest release's changelog for a project: (tag, published_at, body).
+pub async fn fetch_changelog(
+    client: &reqwest::Client,
+    paths: &Paths,
+    project: &Project,
+) -> AppResult<(String, Option<String>, String)> {
+    let token = store::load_config(paths).ok().and_then(|c| c.github_token);
+    let releases = github::fetch_releases(client, &project.repo.slug(), token.as_deref()).await?;
+    let rel = github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
+        .ok_or_else(|| AppError::msg("sin release"))?;
+    Ok((rel.tag_name.clone(), rel.published_at.clone(), rel.body.clone().unwrap_or_default()))
+}
+
 /// Detected Wine/Proton runner. `id` is understood by `launch_windows_with`.
 #[derive(Clone)]
 pub struct Runner {

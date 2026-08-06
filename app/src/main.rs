@@ -50,6 +50,19 @@ fn fmt_duration(secs: u64) -> String {
     if h > 0 { format!("{h}h {m}m") } else if m > 0 { format!("{m}m") } else { format!("{secs}s") }
 }
 
+/// "2026-08-05T02:16:24Z" -> "5 ago 2026".
+fn fmt_date(iso: &str) -> String {
+    let date = iso.split('T').next().unwrap_or(iso);
+    let parts: Vec<&str> = date.split('-').collect();
+    if parts.len() != 3 {
+        return date.to_string();
+    }
+    const MES: [&str; 12] = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+    let mi = parts[1].parse::<usize>().ok().filter(|x| (1..=12).contains(x)).map(|x| MES[x - 1]).unwrap_or(parts[1]);
+    let di = parts[2].trim_start_matches('0');
+    format!("{di} {mi} {}", parts[0])
+}
+
 fn fmt_ago(epoch: i64) -> String {
     let now = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
     let d = (now - epoch).max(0);
@@ -97,6 +110,8 @@ struct App {
     cover_cache: RefCell<std::collections::HashMap<String, Image>>,
     hero_cache: RefCell<std::collections::HashMap<String, Image>>,
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
+    // id -> (tag, published_at ISO, changelog body)
+    changelog_cache: RefCell<std::collections::HashMap<String, (String, String, String)>>,
     tv_shelves: RefCell<Vec<(String, Vec<String>)>>,
     pending_update: RefCell<Option<update::Update>>,
     /// Transient per-game launch state shown inline on the Play button:
@@ -504,6 +519,25 @@ fn build_detail(app: &App, win: &MainWindow) {
         install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
         repo_url: format!("https://github.com/{}", p.repo.slug()).into(),
+        last_updated: {
+            let cl = app.changelog_cache.borrow();
+            let (tag, date) = cl.get(&p.id).map(|(t, d, _)| (t.clone(), d.clone())).unwrap_or_else(|| {
+                let c = p.cached.as_ref();
+                (
+                    c.and_then(|c| c.latest_tag.clone()).unwrap_or_default(),
+                    c.and_then(|c| c.published_at.clone()).unwrap_or_default(),
+                )
+            });
+            if date.is_empty() {
+                String::new()
+            } else if tag.is_empty() {
+                format!("Actualizado {}", fmt_date(&date))
+            } else {
+                format!("{} · {}", tag, fmt_date(&date))
+            }
+            .into()
+        },
+        changelog: app.changelog_cache.borrow().get(&p.id).map(|(_, _, b)| b.clone()).unwrap_or_default().into(),
         about: state.wiki.as_ref().map(|w| w.extract.clone()).unwrap_or_default().into(),
         port_notes: p.rom.notes.clone().into(),
         has_related: !related.is_empty(),
@@ -814,6 +848,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         cover_cache: RefCell::new(std::collections::HashMap::new()),
         hero_cache: RefCell::new(std::collections::HashMap::new()),
         size_cache: RefCell::new(std::collections::HashMap::new()),
+        changelog_cache: RefCell::new(std::collections::HashMap::new()),
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
@@ -1102,6 +1137,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let Some(project) = app.find(&id) else { return };
             *app.detail.borrow_mut() = Some(DetailState { id: id.clone(), wiki: None });
             ui_refresh();
+            // Fetch the latest release changelog + date (once, cached).
+            if !app.changelog_cache.borrow().contains_key(&id) {
+                let client = app.client.clone();
+                let paths = app.paths.clone();
+                let proj = project.clone();
+                let pid = id.clone();
+                handle.spawn(async move {
+                    if let Ok((tag, date, body)) = actions::fetch_changelog(&client, &paths, &proj).await {
+                        let _ = slint::invoke_from_event_loop(move || {
+                            UI.with(|u| {
+                                if let Some((app, _)) = &*u.borrow() {
+                                    app.changelog_cache.borrow_mut().insert(pid, (tag, date.unwrap_or_default(), body));
+                                }
+                            });
+                            ui_refresh();
+                        });
+                    }
+                });
+            }
             if let Some(title) = project.wiki.clone() {
                 let client = app.client.clone();
                 let paths = app.paths.clone();

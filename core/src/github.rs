@@ -10,6 +10,9 @@ pub struct Release {
     pub name: Option<String>,
     #[serde(default)]
     pub published_at: Option<String>,
+    /// Release notes / changelog (Markdown).
+    #[serde(default)]
+    pub body: Option<String>,
     #[serde(default)]
     pub prerelease: bool,
     #[serde(default)]

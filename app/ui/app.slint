@@ -184,6 +184,8 @@ struct DetailData {
     install-error: bool,
     stats: string,
     repo-url: string,
+    last-updated: string,
+    changelog: string,
     about: string,
     port-notes: string,
     has-related: bool,
@@ -687,6 +689,16 @@ export component MainWindow inherits Window {
                         spacing: 6px;
                         Text { text: "Sobre este port"; font-size: 18px; font-weight: 800; color: white; }
                         Text { text: root.detail.port-notes; color: #ffffffaa; font-size: 14px; wrap: word-wrap;
+                               width: max(120px, dscroll.visible-width - 44px); }
+                    }
+                    if root.detail.changelog != "": VerticalLayout {
+                        spacing: 6px;
+                        HorizontalLayout {
+                            spacing: 10px; alignment: start;
+                            Text { text: "Novedades"; font-size: 18px; font-weight: 800; color: white; }
+                            if root.detail.last-updated != "": Text { text: root.detail.last-updated; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
+                        }
+                        Text { text: root.detail.changelog; color: #ffffffcc; font-size: 13px; wrap: word-wrap;
                                width: max(120px, dscroll.visible-width - 44px); }
                     }
                     if root.detail.has-related: VerticalLayout {

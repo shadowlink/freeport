@@ -122,6 +122,8 @@ fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<free
 
 thread_local! {
     static UI: RefCell<Option<(Rc<App>, Weak<MainWindow>)>> = const { RefCell::new(None) };
+    // Keeps the periodic update-check timer alive for the process lifetime.
+    static UPDATE_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
 }
 
 fn parse_color(hex: &str) -> Color {
@@ -523,6 +525,45 @@ fn ui_refresh() {
                 build_detail(app, &w);
             }
         }
+    });
+}
+
+/// Runs a self-update check and reflects the result in the UI. `manual` = the
+/// user pressed "Buscar actualizaciones" (show up-to-date/error feedback and
+/// ignore a previously skipped version); otherwise it's an automatic check.
+async fn run_update_check(client: reqwest::Client, manual: bool) {
+    let res = update::check(&client, env!("CARGO_PKG_VERSION")).await;
+    let _ = slint::invoke_from_event_loop(move || {
+        UI.with(|u| {
+            let Some((app, weak)) = &*u.borrow() else { return };
+            let Some(w) = weak.upgrade() else { return };
+            match res {
+                Ok(Some(upd)) => {
+                    let skipped = store::load_config(&app.paths).ok().and_then(|c| c.skip_version);
+                    if !manual && skipped.as_deref() == Some(upd.version.as_str()) {
+                        return; // automatic check respects a skipped version
+                    }
+                    w.set_update_version(upd.version.clone().into());
+                    w.set_update_notes(upd.notes.clone().into());
+                    w.set_update_error(false);
+                    w.set_update_available(true);
+                    if manual {
+                        w.set_settings_msg(format!("Nueva versión v{} disponible ↑", upd.version).into());
+                    }
+                    *app.pending_update.borrow_mut() = Some(upd);
+                }
+                Ok(None) => {
+                    if manual {
+                        w.set_settings_msg("Ya estás en la última versión ✓".into());
+                    }
+                }
+                Err(_) => {
+                    if manual {
+                        w.set_settings_msg("No se pudo comprobar".into());
+                    }
+                }
+            }
+        });
     });
 }
 
@@ -1351,32 +1392,33 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    // Check for app updates on startup.
+    // Manual "Buscar actualizaciones" (from Settings).
+    win.on_check_updates({
+        let app = app.clone();
+        let handle = handle.clone();
+        let weak = win.as_weak();
+        move || {
+            if let Some(w) = weak.upgrade() {
+                w.set_settings_msg("Comprobando…".into());
+            }
+            handle.spawn(run_update_check(app.client.clone(), true));
+        }
+    });
+
+    // Check for app updates on startup, then every 6 hours.
+    handle.spawn(run_update_check(app.client.clone(), false));
     {
         let client = app.client.clone();
-        handle.spawn(async move {
-            if let Some(upd) = update::check(&client, env!("CARGO_PKG_VERSION")).await {
-                let ver = upd.version.clone();
-                let notes = upd.notes.clone();
-                let _ = slint::invoke_from_event_loop(move || {
-                    UI.with(|u| {
-                        if let Some((app, weak)) = &*u.borrow() {
-                            // Respect a version the user chose to skip.
-                            let skipped = store::load_config(&app.paths).ok().and_then(|c| c.skip_version);
-                            if skipped.as_deref() == Some(ver.as_str()) {
-                                return;
-                            }
-                            *app.pending_update.borrow_mut() = Some(upd);
-                            if let Some(w) = weak.upgrade() {
-                                w.set_update_version(ver.into());
-                                w.set_update_notes(notes.into());
-                                w.set_update_available(true);
-                            }
-                        }
-                    });
-                });
-            }
-        });
+        let handle2 = handle.clone();
+        let timer = slint::Timer::default();
+        timer.start(
+            slint::TimerMode::Repeated,
+            std::time::Duration::from_secs(6 * 3600),
+            move || {
+                handle2.spawn(run_update_check(client.clone(), false));
+            },
+        );
+        UPDATE_TIMER.with(|t| *t.borrow_mut() = Some(timer));
     }
 
     // Windows-only fine polish: rounded corners, shadow and Snap Layouts.

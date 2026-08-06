@@ -48,24 +48,33 @@ pub fn platform_key() -> &'static str {
     }
 }
 
-/// Returns an available update newer than `current`, or None.
-pub async fn check(client: &reqwest::Client, current: &str) -> Option<Update> {
+/// Checks the manifest. `Ok(Some)` = newer version available, `Ok(None)` = up to
+/// date (or no artifact for this platform), `Err` = the check itself failed
+/// (network/parse) — so callers can tell "up to date" from "couldn't check".
+pub async fn check(client: &reqwest::Client, current: &str) -> Result<Option<Update>, String> {
     let m: Manifest = client
         .get(MANIFEST_URL)
         .header("User-Agent", "freeport")
         .send()
         .await
-        .ok()?
+        .map_err(|e| e.to_string())?
         .error_for_status()
-        .ok()?
+        .map_err(|e| e.to_string())?
         .json()
         .await
-        .ok()?;
+        .map_err(|e| e.to_string())?;
     if !is_newer(&m.version, current) {
-        return None;
+        return Ok(None);
     }
-    let p = m.platforms.get(platform_key())?;
-    Some(Update { version: m.version, notes: m.notes, url: p.url.clone(), signature: p.signature.clone() })
+    match m.platforms.get(platform_key()) {
+        Some(p) => Ok(Some(Update {
+            version: m.version,
+            notes: m.notes,
+            url: p.url.clone(),
+            signature: p.signature.clone(),
+        })),
+        None => Ok(None),
+    }
 }
 
 /// Downloads, verifies (ed25519), replaces the current executable and relaunches.

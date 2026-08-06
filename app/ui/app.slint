@@ -266,6 +266,7 @@ export component MainWindow inherits Window {
     in property <bool> update-error;
     callback do-update();
     callback dismiss-update();
+    callback check-updates();
     // Frameless window controls
     in-out property <bool> win-maximized;
     callback win-minimize();
@@ -794,8 +795,9 @@ export component MainWindow inherits Window {
                     Btn { label: root.catalog-busy ? "Actualizando…" : "Actualizar catálogo";
                           bg: root.catalog-busy ? #1c1f28 : #ffb23e; fg: root.catalog-busy ? #ffb23e : #0b0c10;
                           clicked => { if (!root.catalog-busy) { root.refresh-catalog(); } } }
-                    Text { text: root.settings-msg; color: #ffd166; font-size: 12px; vertical-alignment: center; }
+                    Btn { label: "Buscar actualizaciones"; bg: #1c1f28; fg: white; clicked => { root.check-updates(); } }
                 }
+                Text { text: root.settings-msg; color: #ffd166; font-size: 12px; }
                 Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     alignment: end;

@@ -10,7 +10,7 @@ use freeport_core::model::{Catalog, Project};
 use freeport_core::store::{self, Paths};
 use freeport_core::mods::ModInfo;
 use freeport_core::wiki::WikiInfo;
-use freeport_core::{actions, gamepad, platform, thumbs, update, wiki};
+use freeport_core::{actions, gamepad, platform, ra, thumbs, update, wiki};
 use i_slint_backend_winit::WinitWindowAccessor;
 use slint::{Color, Image, ModelRc, SharedString, VecModel, Weak};
 use std::cell::RefCell;
@@ -883,6 +883,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_platform_label(app.triple.clone().into());
         win.set_show_windows(cfg.show_windows);
         win.set_crt_visible(cfg.crt);
+        if let (Some(u), Some(_)) = (cfg.ra_user.as_ref(), cfg.ra_token.as_ref()) {
+            win.set_ra_logged_in(true);
+            win.set_ra_status(format!("Conectado como {u}").into());
+        }
         let mut labels: Vec<SharedString> = vec!["Automático".into()];
         for r in &app.runners {
             labels.push(r.label.clone().into());
@@ -977,6 +981,63 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Ok(mut c) = store::load_config(&app.paths) {
                 c.crt = v;
                 let _ = store::save_config(&app.paths, &c);
+            }
+        }
+    });
+
+    win.on_ra_login({
+        let app = app.clone();
+        let handle = handle.clone();
+        let weak = win.as_weak();
+        move |user, pass| {
+            if user.is_empty() || pass.is_empty() {
+                if let Some(w) = weak.upgrade() { w.set_ra_status("Introduce usuario y contraseña".into()); }
+                return;
+            }
+            if let Some(w) = weak.upgrade() { w.set_ra_status("Conectando…".into()); }
+            let client = app.client.clone();
+            let user = user.to_string();
+            let pass = pass.to_string();
+            handle.spawn(async move {
+                let res = ra::login(&client, &user, &pass).await;
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((app, weak)) = &*u.borrow() {
+                            let Some(w) = weak.upgrade() else { return };
+                            match res {
+                                Ok((ruser, token)) => {
+                                    if let Ok(mut c) = store::load_config(&app.paths) {
+                                        c.ra_user = Some(ruser.clone());
+                                        c.ra_token = Some(token);
+                                        let _ = store::save_config(&app.paths, &c);
+                                    }
+                                    w.set_ra_logged_in(true);
+                                    w.set_ra_status(format!("Conectado como {ruser}").into());
+                                }
+                                Err(e) => {
+                                    w.set_ra_logged_in(false);
+                                    w.set_ra_status(e.into());
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
+
+    win.on_ra_logout({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.ra_user = None;
+                c.ra_token = None;
+                let _ = store::save_config(&app.paths, &c);
+            }
+            if let Some(w) = weak.upgrade() {
+                w.set_ra_logged_in(false);
+                w.set_ra_status("".into());
             }
         }
     });

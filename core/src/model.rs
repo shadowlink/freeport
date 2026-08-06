@@ -194,6 +194,11 @@ pub struct Config {
     /// Retro CRT screen effect (scanlines + vignette).
     #[serde(default)]
     pub crt: bool,
+    /// RetroAchievements account (managed centrally; handed to the RA mod).
+    #[serde(default)]
+    pub ra_user: Option<String>,
+    #[serde(default)]
+    pub ra_token: Option<String>,
 }
 
 /// Enriched view of a project sent to the frontend: the catalog entry plus its

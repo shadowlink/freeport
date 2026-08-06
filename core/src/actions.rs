@@ -247,6 +247,15 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
     let hint = project.launch.get(hint_os).and_then(|v| v.clone());
     let bin = install::find_launch_binary(install_dir, hint.as_deref(), entry.windows)?;
 
+    // Hand RetroAchievements credentials to the in-game RA mod via env (the mod,
+    // when present, reads these; harmless otherwise). The child inherits our env.
+    if let Ok(cfg) = store::load_config(paths) {
+        if let (Some(u), Some(t)) = (cfg.ra_user.as_deref(), cfg.ra_token.as_deref()) {
+            std::env::set_var("FREEPORT_RA_USER", u);
+            std::env::set_var("FREEPORT_RA_TOKEN", t);
+        }
+    }
+
     let mut child = if entry.windows {
         let cfg = store::load_config(paths)?;
         let runner = resolve_runner(&cfg, &project.id).ok_or_else(|| {

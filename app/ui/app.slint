@@ -250,6 +250,11 @@ export component MainWindow inherits Window {
     in property <[string]> runner-labels;
     in property <string> settings-msg;
     in-out property <bool> catalog-busy;
+    // RetroAchievements account
+    in property <bool> ra-logged-in;
+    in property <string> ra-status;
+    callback ra-login(string, string);
+    callback ra-logout();
     callback toggle-windows(bool);
     callback set-runner(string);
     callback refresh-catalog();
@@ -783,7 +788,7 @@ export component MainWindow inherits Window {
             property <length> enter: 14px;
             init => { self.enter = 0px; }
             width: 470px;
-            height: 400px;
+            height: 520px;
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2 + self.enter;
             border-radius: 14px;
@@ -822,6 +827,31 @@ export component MainWindow inherits Window {
                             spacing: 10px;
                             CheckBox { checked <=> root.crt-visible; toggled => { root.toggle-crt(root.crt-visible); } }
                             Text { text: "Efecto CRT (scanlines retro)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                        }
+                    }
+                }
+                // RetroAchievements account
+                Rectangle {
+                    border-radius: 8px;
+                    background: #1c1f28;
+                    VerticalLayout {
+                        padding: 12px;
+                        spacing: 8px;
+                        Text { text: "RetroAchievements"; color: white; font-weight: 800; }
+                        if root.ra-logged-in: HorizontalLayout {
+                            spacing: 10px;
+                            Text { text: root.ra-status; color: #4de1c1; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
+                            Btn { label: "Cerrar sesión"; bg: #14161d; fg: #ff5d73; clicked => { root.ra-logout(); } }
+                        }
+                        if !root.ra-logged-in: VerticalLayout {
+                            spacing: 8px;
+                            ra-user := LineEdit { placeholder-text: "Usuario de RetroAchievements"; }
+                            ra-pass := LineEdit { placeholder-text: "Contraseña"; input-type: password; }
+                            HorizontalLayout {
+                                spacing: 10px;
+                                Btn { label: "Iniciar sesión"; clicked => { root.ra-login(ra-user.text, ra-pass.text); } }
+                                Text { text: root.ra-status; color: #ffd166; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; }
+                            }
                         }
                     }
                 }

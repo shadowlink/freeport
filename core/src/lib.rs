@@ -11,6 +11,7 @@ pub mod launch;
 pub mod mods;
 pub mod model;
 pub mod platform;
+pub mod ra;
 pub mod store;
 pub mod thumbs;
 pub mod update;

@@ -1,6 +1,6 @@
 [package]
 name = "freeport"
-version = "0.2.14"
+version = "0.2.15"
 edition = "2021"
 
 [[bin]]
@@ -11,7 +11,7 @@ path = "src/main.rs"
 slint-build = "1"
 
 [dependencies]
-slint = "1"
+slint = { version = "1", features = ["unstable-fontique-010"] }
 i-slint-backend-winit = "=1.17.1"
 freeport-core = { path = "../core" }
 tokio = { version = "1", features = ["rt-multi-thread"] }

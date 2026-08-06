@@ -287,6 +287,7 @@ export component MainWindow inherits Window {
     no-frame: true;
     background: #0b0c10;
     default-font-size: 14px;
+    default-font-family: "DejaVu Sans";
 
     // Responsive column count for the cover grid. Card slot ≈ 158px + 14px gap;
     // main area = window width minus the 244px sidebar and grid padding.
@@ -419,7 +420,7 @@ export component MainWindow inherits Window {
                     VerticalLayout {
                         padding: 6px;
                         spacing: 6px;
-                        Btn { label: "📺 Modo TV"; bg: #ffb23e26; fg: #ffb23e; clicked => { root.open-tv(); } }
+                        Btn { label: "▭ Modo TV"; bg: #ffb23e26; fg: #ffb23e; clicked => { root.open-tv(); } }
                         Btn { label: "⚙ Ajustes"; bg: #1c1f28; fg: white; clicked => { root.settings-visible = true; } }
                         Text { text: "Freeport \{root.version}"; color: #ffffff88; font-size: 10px; horizontal-alignment: center; }
                     }
@@ -651,7 +652,7 @@ export component MainWindow inherits Window {
                                 }
                                 if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
                                 if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
-                                if root.detail.installed: Btn { label: "📂 Carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
+                                if root.detail.installed: Btn { label: "Carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
                                 if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
                                 if !root.detail.installed: Btn {
                                     label: root.detail.install-error ? "⚠ Reintentar" : "↓ Instalar";
@@ -659,7 +660,7 @@ export component MainWindow inherits Window {
                                     fg: root.detail.install-error ? white : #0b0c10;
                                     clicked => { root.install(root.detail.id); }
                                 }
-                                if root.detail.repo-url != "": Btn { label: "⧉ GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
+                                if root.detail.repo-url != "": Btn { label: "↗ GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
                             }
                         }
                     }
@@ -725,7 +726,7 @@ export component MainWindow inherits Window {
                                 Rectangle {
                                     width: 54px; height: 54px; border-radius: 8px; background: #1c1f28; clip: true;
                                     if m.has-icon: Image { source: m.icon; width: 100%; height: 100%; image-fit: cover; }
-                                    if !m.has-icon: Text { text: "🧩"; font-size: 24px;
+                                    if !m.has-icon: Text { text: "◈"; font-size: 24px;
                                                            horizontal-alignment: center; vertical-alignment: center; }
                                 }
                                 VerticalLayout {
@@ -913,9 +914,9 @@ export component MainWindow inherits Window {
                         padding-left: 24px;
                         spacing: 24px;
                         Text { text: "✚ Mover"; color: #ffffff88; vertical-alignment: center; }
-                        Text { text: "Ⓐ Jugar"; color: #ffb23e; vertical-alignment: center; }
+                        Text { text: "A  Jugar"; color: #ffb23e; vertical-alignment: center; }
                         Text { text: "LB / RB  Consola"; color: #ffffff88; vertical-alignment: center; }
-                        Text { text: "Ⓑ / ☰ / Esc  Salir"; color: #ffffff88; vertical-alignment: center; }
+                        Text { text: "B / ☰ / Esc  Salir"; color: #ffffff88; vertical-alignment: center; }
                     }
                 }
             }

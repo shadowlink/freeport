@@ -767,6 +767,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let backend = i_slint_backend_winit::Backend::new().expect("winit backend");
     slint::platform::set_platform(Box::new(backend)).expect("set winit platform");
 
+    // Bundle DejaVu Sans so UI glyphs (arrows, ★, ⚓, ⚙…) render identically on
+    // every OS instead of falling back to each system's fonts (Windows showed
+    // some as color emoji or missing). Registered as the default font family.
+    {
+        use slint::fontique_010::{fontique, shared_collection};
+        let mut c = shared_collection();
+        c.register_fonts(
+            fontique::Blob::new(std::sync::Arc::new(
+                include_bytes!("../assets/fonts/DejaVuSans.ttf").to_vec(),
+            )),
+            None,
+        );
+        c.register_fonts(
+            fontique::Blob::new(std::sync::Arc::new(
+                include_bytes!("../assets/fonts/DejaVuSans-Bold.ttf").to_vec(),
+            )),
+            None,
+        );
+    }
+
     update::cleanup();
     let rt = tokio::runtime::Runtime::new()?;
     let handle = rt.handle().clone();

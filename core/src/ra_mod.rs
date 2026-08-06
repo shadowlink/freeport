@@ -20,11 +20,15 @@ const NRM_BYTES: &[u8] = include_bytes!("../assets/ra/freeport_retroachievements
 const NATIVE_BYTES: &[u8] = include_bytes!("../assets/ra/ra_native.so");
 #[cfg(target_os = "linux")]
 const NATIVE_NAME: &str = "ra_native.so";
+#[cfg(target_os = "windows")]
+const NATIVE_BYTES: &[u8] = include_bytes!("../assets/ra/ra_native.dll");
+#[cfg(target_os = "windows")]
+const NATIVE_NAME: &str = "ra_native.dll";
 
 /// Whether the RA mod can be installed on this platform. The native library is
-/// currently only built for Linux.
+/// built for Linux (.so) and Windows (.dll).
 pub fn platform_supported() -> bool {
-    cfg!(target_os = "linux")
+    cfg!(any(target_os = "linux", target_os = "windows"))
 }
 
 /// The recomp's config directory (parent of `mods/` and `mods.json`), derived
@@ -87,7 +91,7 @@ pub fn is_enabled(project: &Project) -> bool {
 }
 
 /// Install the mod files into the recomp's mods folder (idempotent).
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 fn install_files(project: &Project) -> AppResult<()> {
     let mods_dir = recomp_config_dir(project)?.join("mods");
     std::fs::create_dir_all(&mods_dir)?;
@@ -96,10 +100,10 @@ fn install_files(project: &Project) -> AppResult<()> {
     Ok(())
 }
 
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "windows")))]
 fn install_files(_project: &Project) -> AppResult<()> {
     Err(AppError::msg(
-        "RetroAchievements solo está disponible en Linux por ahora",
+        "RetroAchievements no está disponible en esta plataforma",
     ))
 }
 
@@ -128,7 +132,7 @@ fn remove_from_array(value: &mut Value, key: &str, id: &str) {
 pub fn set_enabled(project: &Project, enable: bool) -> AppResult<()> {
     if enable && !platform_supported() {
         return Err(AppError::msg(
-            "RetroAchievements solo está disponible en Linux por ahora",
+            "RetroAchievements no está disponible en esta plataforma",
         ));
     }
     let mut value = read_mods_json(project)?;

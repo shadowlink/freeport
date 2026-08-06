@@ -852,6 +852,7 @@ export component MainWindow inherits Window {
                 // Shelves (viewport follows focus on both axes)
                 Flickable {
                     interactive: false;
+                    vertical-stretch: 1;
                     viewport-height: root.tv-shelf-count * 279px;
                     viewport-y: -root.tv-shelf * 279px;
                     animate viewport-y { duration: 280ms; easing: ease-in-out; }

@@ -543,6 +543,8 @@ fn build_detail(app: &App, win: &MainWindow) {
         has_related: !related.is_empty(),
         has_mods: !mod_rows.is_empty(),
         has_screens: !screens.is_empty(),
+        ra_eligible: p.ra_supported && freeport_core::ra_mod::platform_supported(),
+        ra_enabled: p.ra_supported && freeport_core::ra_mod::is_enabled(&p),
         chips: ModelRc::new(VecModel::from(chips)),
         related: ModelRc::new(VecModel::from(related)),
         mods: ModelRc::new(VecModel::from(mod_rows)),
@@ -1038,6 +1040,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(w) = weak.upgrade() {
                 w.set_ra_logged_in(false);
                 w.set_ra_status("".into());
+            }
+        }
+    });
+
+    win.on_toggle_ra({
+        let app = app.clone();
+        move |id, enable| {
+            let Some(project) = app.find(&id) else { return };
+            match freeport_core::ra_mod::set_enabled(&project, enable) {
+                Ok(()) => ui_refresh(),
+                Err(e) => eprintln!("[freeport] toggle RA falló: {e}"),
             }
         }
     });

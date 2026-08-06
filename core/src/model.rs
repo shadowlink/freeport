@@ -63,6 +63,10 @@ pub struct Project {
     /// Optional mod source (e.g. a Thunderstore community) for one-click mods.
     #[serde(default)]
     pub mods: Option<ModSource>,
+    /// Whether this game supports the Freeport RetroAchievements mod (N64
+    /// recomps on the mod loader). Gates the RA toggle in the game page.
+    #[serde(default)]
+    pub ra_supported: bool,
     /// platform triple -> regex used to pick the matching release asset.
     #[serde(default)]
     pub asset_rules: HashMap<String, String>,

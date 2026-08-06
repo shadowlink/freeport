@@ -191,6 +191,9 @@ pub struct Config {
     /// Update version the user chose to skip ("Después/omitir").
     #[serde(default)]
     pub skip_version: Option<String>,
+    /// Retro CRT screen effect (scanlines + vignette).
+    #[serde(default)]
+    pub crt: bool,
 }
 
 /// Enriched view of a project sent to the frontend: the catalog entry plus its

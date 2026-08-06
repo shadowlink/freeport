@@ -882,6 +882,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_version(env!("CARGO_PKG_VERSION").into());
         win.set_platform_label(app.triple.clone().into());
         win.set_show_windows(cfg.show_windows);
+        win.set_crt_visible(cfg.crt);
         let mut labels: Vec<SharedString> = vec!["Automático".into()];
         for r in &app.runners {
             labels.push(r.label.clone().into());
@@ -967,6 +968,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let _ = store::save_config(&app.paths, &c);
             }
             ui_refresh();
+        }
+    });
+
+    win.on_toggle_crt({
+        let app = app.clone();
+        move |v| {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.crt = v;
+                let _ = store::save_config(&app.paths, &c);
+            }
         }
     });
 

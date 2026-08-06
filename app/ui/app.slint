@@ -273,6 +273,9 @@ export component MainWindow inherits Window {
     callback do-update();
     callback dismiss-update();
     callback check-updates();
+    // Retro CRT effect
+    in-out property <bool> crt-visible;
+    callback toggle-crt(bool);
     // Frameless window controls
     in-out property <bool> win-maximized;
     callback win-minimize();
@@ -815,6 +818,11 @@ export component MainWindow inherits Window {
                             current-value <=> root.current-runner-label;
                             selected(v) => { root.set-runner(v); }
                         }
+                        HorizontalLayout {
+                            spacing: 10px;
+                            CheckBox { checked <=> root.crt-visible; toggled => { root.toggle-crt(root.crt-visible); } }
+                            Text { text: "Efecto CRT (scanlines retro)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                        }
                     }
                 }
                 HorizontalLayout {
@@ -1011,4 +1019,19 @@ export component MainWindow inherits Window {
         TouchArea { mouse-cursor: nwse-resize;
             pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("se"); } } } }
 
+    // ── Retro CRT effect (scanlines + vignette), purely visual ───────────
+    if root.crt-visible: Rectangle {
+        width: 100%; height: 100%;
+        // Scanlines: a tiny texture tiled with GPU (cheap, no per-frame recompose).
+        Image {
+            source: @image-url("../assets/crt-scanlines.png");
+            width: 100%; height: 100%;
+            vertical-tiling: repeat;
+            horizontal-tiling: repeat;
+            image-rendering: pixelated;
+            opacity: 0.7;
+        }
+        // Vignette: darken the edges like a curved tube.
+        Rectangle { background: @radial-gradient(circle, #00000000 48%, #000000b0 120%); }
+    }
 }

@@ -1650,6 +1650,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     }
 
+    // `--tv`: boot straight into TV (Big Picture) mode, e.g. when launched by
+    // Sunshine for streaming to a couch/TV client.
+    if std::env::args().any(|a| a == "--tv") {
+        build_tv(&app, &win);
+        win.set_tv_visible(true);
+        let _ = win.window().set_fullscreen(true);
+    }
+
     println!("[freeport] plataforma {}", app.triple);
     win.run()?;
     Ok(())

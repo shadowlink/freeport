@@ -67,6 +67,24 @@ fn mods_json_path(project: &Project) -> AppResult<PathBuf> {
     Ok(recomp_config_dir(project)?.join("mods.json"))
 }
 
+/// The ROM the recomp stores in its own config dir (used to hash-identify the
+/// game for RetroAchievements). Returns the largest .z64/.n64/.v64 there.
+pub fn rom_path(project: &Project) -> Option<PathBuf> {
+    let dir = recomp_config_dir(project).ok()?;
+    let mut best: Option<(u64, PathBuf)> = None;
+    for entry in std::fs::read_dir(&dir).ok()?.flatten() {
+        let p = entry.path();
+        let ext = p.extension().and_then(|e| e.to_str()).map(|e| e.to_ascii_lowercase());
+        if matches!(ext.as_deref(), Some("z64") | Some("n64") | Some("v64")) {
+            let sz = p.metadata().map(|m| m.len()).unwrap_or(0);
+            if best.as_ref().is_none_or(|(b, _)| sz > *b) {
+                best = Some((sz, p));
+            }
+        }
+    }
+    best.map(|(_, p)| p)
+}
+
 fn read_mods_json(project: &Project) -> AppResult<Value> {
     let path = mods_json_path(project)?;
     match std::fs::read(&path) {

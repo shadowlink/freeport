@@ -5,7 +5,7 @@
 use crate::error::{AppError, AppResult};
 use crate::model::{Config, InstalledEntry, Project};
 use crate::store::{self, Paths};
-use crate::{github, install, launch, platform};
+use crate::{github, install, launch, platform, ra_mod};
 use std::path::Path;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -254,6 +254,13 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
             std::env::set_var("FREEPORT_RA_USER", u);
             std::env::set_var("FREEPORT_RA_TOKEN", t);
         }
+    }
+    // Tell the RA mod which ROM to hash-identify. Per-game (each recomp keeps its
+    // ROM in its own config dir); without this the mod would identify the wrong
+    // game. env is process-global, so clear it for non-RA games.
+    match ra_mod::rom_path(project) {
+        Some(rom) if project.ra_supported => std::env::set_var("FREEPORT_RA_ROM", rom),
+        _ => std::env::remove_var("FREEPORT_RA_ROM"),
     }
 
     let mut child = if entry.windows {

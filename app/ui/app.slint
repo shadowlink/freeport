@@ -193,6 +193,7 @@ struct DetailData {
     has-screens: bool,
     ra-eligible: bool,
     ra-enabled: bool,
+    ra-beta: bool,
     chips: [ChipData],
     related: [CardItem],
     mods: [ModRow],
@@ -666,7 +667,9 @@ export component MainWindow inherits Window {
                                 if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
                                 if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
                                 if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
-                                    label: root.detail.ra-enabled ? "🏆 RetroAchievements ✓" : "🏆 RetroAchievements";
+                                    label: root.detail.ra-enabled
+                                        ? "🏆 RetroAchievements ✓"
+                                        : (root.detail.ra-beta ? "🏆 RetroAchievements (beta)" : "🏆 RetroAchievements");
                                     bg: root.detail.ra-enabled ? #123430 : #1c1f28;
                                     fg: root.detail.ra-enabled ? #4de1c1 : white;
                                     clicked => { root.toggle-ra(root.detail.id, !root.detail.ra-enabled); }

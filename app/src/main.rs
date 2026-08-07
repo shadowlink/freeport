@@ -545,6 +545,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         has_screens: !screens.is_empty(),
         ra_eligible: p.ra_supported && freeport_core::ra_mod::platform_supported(),
         ra_enabled: p.ra_supported && freeport_core::ra_mod::is_enabled(&p),
+        ra_beta: p.ra_beta,
         chips: ModelRc::new(VecModel::from(chips)),
         related: ModelRc::new(VecModel::from(related)),
         mods: ModelRc::new(VecModel::from(mod_rows)),

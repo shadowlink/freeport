@@ -67,6 +67,10 @@ pub struct Project {
     /// recomps on the mod loader). Gates the RA toggle in the game page.
     #[serde(default)]
     pub ra_supported: bool,
+    /// RA support is built but not yet runtime-verified for this game (shown as
+    /// "beta" in the UI).
+    #[serde(default)]
+    pub ra_beta: bool,
     /// platform triple -> regex used to pick the matching release asset.
     #[serde(default)]
     pub asset_rules: HashMap<String, String>,

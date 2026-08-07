@@ -14,8 +14,20 @@ use std::path::PathBuf;
 /// The mod id, as declared in the mod manifest.
 pub const MOD_ID: &str = "freeport_retroachievements";
 
-// Embedded artifacts (built from ~/freeport-ra-mod, staged under core/assets/ra).
-const NRM_BYTES: &[u8] = include_bytes!("../assets/ra/freeport_retroachievements.nrm");
+// Embedded per-game mod packages (built from ~/freeport-ra-mod, staged under
+// core/assets/ra). Each `.nrm` differs only in game_id + per-frame hook symbol;
+// they all share the one native library below.
+fn nrm_for(project_id: &str) -> Option<&'static [u8]> {
+    Some(match project_id {
+        "zelda64-recomp-mm" => include_bytes!("../assets/ra/zelda64-recomp-mm.nrm"),
+        "banjo-recomp" => include_bytes!("../assets/ra/banjo-recomp.nrm"),
+        "megaman64-recomp" => include_bytes!("../assets/ra/megaman64-recomp.nrm"),
+        "bomberman64-recomp" => include_bytes!("../assets/ra/bomberman64-recomp.nrm"),
+        "harvestmoon64-recomp" => include_bytes!("../assets/ra/harvestmoon64-recomp.nrm"),
+        _ => return None,
+    })
+}
+
 #[cfg(target_os = "linux")]
 const NATIVE_BYTES: &[u8] = include_bytes!("../assets/ra/ra_native.so");
 #[cfg(target_os = "linux")]
@@ -93,9 +105,11 @@ pub fn is_enabled(project: &Project) -> bool {
 /// Install the mod files into the recomp's mods folder (idempotent).
 #[cfg(any(target_os = "linux", target_os = "windows"))]
 fn install_files(project: &Project) -> AppResult<()> {
+    let nrm = nrm_for(&project.id)
+        .ok_or_else(|| AppError::msg("este juego no tiene un mod de RetroAchievements"))?;
     let mods_dir = recomp_config_dir(project)?.join("mods");
     std::fs::create_dir_all(&mods_dir)?;
-    std::fs::write(mods_dir.join(format!("{MOD_ID}.nrm")), NRM_BYTES)?;
+    std::fs::write(mods_dir.join(format!("{MOD_ID}.nrm")), nrm)?;
     std::fs::write(mods_dir.join(NATIVE_NAME), NATIVE_BYTES)?;
     Ok(())
 }

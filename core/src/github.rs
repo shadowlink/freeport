@@ -127,6 +127,7 @@ mod tests {
         Release {
             tag_name: tag.into(),
             name: None,
+            body: None,
             published_at: Some("2026-01-01".into()),
             prerelease,
             draft,

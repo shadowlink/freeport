@@ -3237,6 +3237,170 @@
       "developer": "Konami",
       "genre": "Survival horror",
       "wiki": "Silent Hill (video game)"
+    },
+    {
+      "id": "regaiden-recomp",
+      "name": "RE Gaiden Recomp",
+      "original_game": "Resident Evil Gaiden",
+      "system": "gb",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "sergiomanzur",
+        "repo": "regaiden-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Color/Named_Boxarts/Resident%20Evil%20Gaiden%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "Resident Evil Gaiden (USA).gbc",
+        "subdir": null,
+        "notes": "Necesita tu ROM de Resident Evil Gaiden (USA, .gbc, 2 MB); se copia junto al ejecutable con el nombre exacto que espera. También tiene selector in-game en el primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.0",
+        "published_at": "2026-08-26T03:39:27Z"
+      },
+      "year": 2001,
+      "developer": "Capcom / M4",
+      "genre": "Survival horror",
+      "wiki": "Resident Evil Gaiden"
+    },
+    {
+      "id": "tekken3-recomp",
+      "name": "Tekken 3 Recomp",
+      "original_game": "Tekken 3",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "fabioap-cpu",
+        "repo": "Tekken3Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Tekken%203%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows_x64.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Configuración manual: copia el .cue y .bin de tu Tekken 3 (USA) a la carpeta del juego y pon la ruta del .cue en game.toml (sección [disc]). Por defecto espera «Tekken 3 (USA).cue»."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "Tekken3Recomp.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v2.0",
+        "published_at": "2026-07-31T20:36:55Z"
+      },
+      "year": 1998,
+      "developer": "Namco",
+      "genre": "Lucha",
+      "wiki": "Tekken 3"
+    },
+    {
+      "id": "sfa3-recomp",
+      "name": "SF Alpha 3 Recomp",
+      "original_game": "Street Fighter Alpha 3",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Street-Fighter-Alpha-3-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Street%20Fighter%20Alpha%203%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu Street Fighter Alpha 3 (PS1); el juego se genera desde tu copia. BIOS OpenBIOS incluida, la retail es opcional."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.15",
+        "published_at": "2026-08-26T05:23:22Z"
+      },
+      "year": 1998,
+      "developer": "Capcom",
+      "genre": "Lucha",
+      "wiki": "Street Fighter Alpha 3"
+    },
+    {
+      "id": "vandalhearts-pc",
+      "name": "Vandal Hearts PC Port",
+      "original_game": "Vandal Hearts",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HalmyLyseas",
+        "repo": "VandalHearts-PcPort"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Vandal%20Hearts%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": "game",
+        "notes": "Selecciona tu disco de Vandal Hearts como .bin crudo (USA, Asia o Japón — se autodetecta); se copia a la subcarpeta game/ junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "vandalhearts_pc.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v2.0.0",
+        "published_at": "2026-08-22T15:17:50Z"
+      },
+      "year": 1996,
+      "developer": "Konami",
+      "genre": "RPG táctico",
+      "wiki": "Vandal Hearts"
     }
   ]
 }

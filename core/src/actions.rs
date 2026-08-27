@@ -176,11 +176,18 @@ async fn resolve_release(
 }
 
 /// Downloads + extracts the right release asset for `project` and records it.
+///
+/// Safe by construction: everything happens in a staging directory and the
+/// existing install is only swapped out at the very end, so a failed or
+/// cancelled download/extract never destroys what was already installed —
+/// and updates carry over user files (ROMs, saves, wine prefix, mods).
+/// `cancel`, when set, aborts mid-download at the next chunk.
 pub async fn install_project(
     client: &reqwest::Client,
     paths: &Paths,
     project: &Project,
     cfg: &Config,
+    cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     mut on_progress: impl FnMut(u64, u64),
 ) -> AppResult<InstalledEntry> {
     let triple = platform::current_triple();
@@ -207,25 +214,45 @@ pub async fn install_project(
     let asset = github::pick_asset(&release, rule)?;
 
     let app_dir = paths.app_dir(&project.id);
+    let staging = app_dir.with_file_name(format!(".{}.staging", project.id));
+    if staging.exists() {
+        std::fs::remove_dir_all(&staging)?;
+    }
+    std::fs::create_dir_all(&staging)?;
+
+    let result = stage_install(client, &release, &asset, &staging, cancel, &mut on_progress).await;
+    if let Err(e) = result {
+        let _ = std::fs::remove_dir_all(&staging);
+        return Err(e);
+    }
+
+    let installed_before = store::load_installed(paths)?;
     if app_dir.exists() {
-        std::fs::remove_dir_all(&app_dir)?;
-    }
-    std::fs::create_dir_all(&app_dir)?;
-
-    let archive = app_dir.join(&asset.name);
-    install::download_to_file(client, &asset.browser_download_url, &archive, |d, t| {
-        on_progress(d, t)
-    })
-    .await?;
-
-    if install::is_archive(&asset.name) {
-        install::extract_archive(archive.clone(), app_dir.clone()).await?;
-        let _ = std::fs::remove_file(&archive);
+        // Update: carry the user's files over, then swap directories.
+        let mut extras: Vec<std::path::PathBuf> = Vec::new();
+        if let Some(rom) = installed_before.get(&project.id).and_then(|e| e.rom_path.as_ref()) {
+            if let Ok(rel) = Path::new(rom).strip_prefix(&app_dir) {
+                extras.push(rel.to_path_buf());
+            }
+        }
+        install::preserve_user_files(&app_dir, &staging, &extras)?;
+        let old = app_dir.with_file_name(format!(".{}.old", project.id));
+        if old.exists() {
+            std::fs::remove_dir_all(&old)?;
+        }
+        std::fs::rename(&app_dir, &old)?;
+        if let Err(e) = std::fs::rename(&staging, &app_dir) {
+            // Roll the old install back before failing.
+            let _ = std::fs::rename(&old, &app_dir);
+            let _ = std::fs::remove_dir_all(&staging);
+            return Err(e.into());
+        }
+        let _ = std::fs::remove_dir_all(&old);
     } else {
-        install::make_executable(&archive);
+        std::fs::rename(&staging, &app_dir)?;
     }
 
-    let mut installed = store::load_installed(paths)?;
+    let mut installed = installed_before;
     let entry = InstalledEntry {
         installed_tag: Some(release.tag_name.clone()),
         published_at: release.published_at.clone(),
@@ -239,6 +266,74 @@ pub async fn install_project(
     installed.insert(project.id.clone(), entry.clone());
     store::save_installed(paths, &installed)?;
     Ok(entry)
+}
+
+/// Downloads, checksum-verifies (when the release publishes SHA256SUMS) and
+/// extracts one asset into `staging`.
+async fn stage_install(
+    client: &reqwest::Client,
+    release: &github::Release,
+    asset: &github::Asset,
+    staging: &Path,
+    cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    on_progress: &mut impl FnMut(u64, u64),
+) -> AppResult<()> {
+    let archive = staging.join(&asset.name);
+    install::download_to_file_cancellable(
+        client,
+        &asset.browser_download_url,
+        &archive,
+        cancel.clone(),
+        |d, t| on_progress(d, t),
+    )
+    .await?;
+
+    // Integrity: many releases ship a SHA256SUMS(.txt) next to the binaries.
+    if let Some(sums) = release.assets.iter().find(|a| {
+        let n = a.name.to_lowercase();
+        n == "sha256sums" || n == "sha256sums.txt" || n == format!("{}.sha256", asset.name.to_lowercase())
+    }) {
+        let text = client
+            .get(&sums.browser_download_url)
+            .header("User-Agent", "decompdeck")
+            .send()
+            .await?
+            .error_for_status()?
+            .text()
+            .await?;
+        let expected = text.lines().find_map(|l| {
+            let mut it = l.split_whitespace();
+            let hash = it.next()?;
+            let file = it.next()?.trim_start_matches('*');
+            (file == asset.name || file.ends_with(&format!("/{}", asset.name))).then(|| hash.to_lowercase())
+        });
+        if let Some(expected) = expected {
+            let got = install::file_sha256(&archive)?;
+            if got != expected {
+                return Err(AppError::msg(format!(
+                    "la descarga de {} no supera la verificación SHA-256 (esperado {}…, obtenido {}…)",
+                    asset.name,
+                    &expected[..12.min(expected.len())],
+                    &got[..12]
+                )));
+            }
+        }
+    }
+
+    let cancelled = || cancel.as_ref().map(|c| c.load(std::sync::atomic::Ordering::Relaxed)).unwrap_or(false);
+    if cancelled() {
+        return Err(AppError::Cancelled);
+    }
+    if install::is_archive(&asset.name) {
+        install::extract_archive(archive.clone(), staging.to_path_buf()).await?;
+        let _ = std::fs::remove_file(&archive);
+    } else {
+        install::make_executable(&archive);
+    }
+    if cancelled() {
+        return Err(AppError::Cancelled);
+    }
+    Ok(())
 }
 
 /// Copies the user's ROM next to the launch binary so the port finds it.

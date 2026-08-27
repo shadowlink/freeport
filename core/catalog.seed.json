@@ -3401,6 +3401,46 @@
       "developer": "Konami",
       "genre": "RPG táctico",
       "wiki": "Vandal Hearts"
+    },
+    {
+      "id": "samurai-vs-zombies",
+      "name": "Samurai vs Zombies (Decomp)",
+      "original_game": "Samurai vs. Zombies Defense",
+      "system": "pc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Decomp-And-Recomp",
+        "repo": "Samurai-Vs-Zombies"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/224740/header.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)pc\\.7z$"
+      },
+      "rom": {
+        "required": false,
+        "mode": "none",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "No necesita ROM."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.2",
+        "published_at": "2025-11-25T02:25:54Z"
+      },
+      "year": 2011,
+      "developer": "Glu Mobile",
+      "genre": "Estrategia",
+      "wiki": "Samurai vs. Zombies Defense"
     }
   ]
 }

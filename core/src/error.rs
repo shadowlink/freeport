@@ -14,6 +14,15 @@ pub enum AppError {
     Zip(#[from] zip::result::ZipError),
     #[error("{0}")]
     Msg(String),
+    /// The user cancelled an in-flight install/update; not a failure.
+    #[error("instalación cancelada")]
+    Cancelled,
+}
+
+impl AppError {
+    pub fn is_cancelled(&self) -> bool {
+        matches!(self, AppError::Cancelled)
+    }
 }
 
 impl AppError {

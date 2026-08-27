@@ -9,11 +9,27 @@ pub async fn download_to_file<F>(
     client: &reqwest::Client,
     url: &str,
     dest: &Path,
+    on_progress: F,
+) -> AppResult<()>
+where
+    F: FnMut(u64, u64),
+{
+    download_to_file_cancellable(client, url, dest, None, on_progress).await
+}
+
+/// Like [`download_to_file`], but aborts (removing the partial file) as soon as
+/// `cancel` is set — checked once per received chunk.
+pub async fn download_to_file_cancellable<F>(
+    client: &reqwest::Client,
+    url: &str,
+    dest: &Path,
+    cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     mut on_progress: F,
 ) -> AppResult<()>
 where
     F: FnMut(u64, u64),
 {
+    use std::sync::atomic::Ordering;
     if let Some(parent) = dest.parent() {
         tokio::fs::create_dir_all(parent).await?;
     }
@@ -36,6 +52,9 @@ where
         let mut downloaded: u64 = 0;
         let mut stream = resp.bytes_stream();
         while let Some(chunk) = stream.next().await {
+            if cancel.as_ref().map(|c| c.load(Ordering::Relaxed)).unwrap_or(false) {
+                return Err(AppError::Cancelled);
+            }
             let chunk = chunk?;
             file.write_all(&chunk).await?;
             downloaded += chunk.len() as u64;
@@ -101,6 +120,7 @@ pub fn is_archive(name: &str) -> bool {
         || n.ends_with(".tar.xz")
         || n.ends_with(".txz")
         || n.ends_with(".deb")
+        || n.ends_with(".7z")
 }
 
 fn is_archive_name(name: &str) -> bool {
@@ -226,11 +246,98 @@ fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
         extract_tar_xz(archive, dest_dir)
     } else if name.ends_with(".deb") {
         extract_deb(archive, dest_dir)
+    } else if name.ends_with(".7z") {
+        sevenz_rust::decompress_file(archive, dest_dir)
+            .map_err(|e| AppError::msg(format!("error al descomprimir 7z: {e}")))?;
+        Ok(())
     } else {
         Err(AppError::msg(format!(
-            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar.gz, .tar.xz, .deb)"
+            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar.gz, .tar.xz, .deb, .7z)"
         )))
     }
+}
+
+/// SHA-256 of a file, streamed, as lowercase hex.
+pub fn file_sha256(path: &Path) -> AppResult<String> {
+    use sha2::Digest as _;
+    let mut file = std::fs::File::open(path)?;
+    let mut hasher = sha2::Sha256::new();
+    std::io::copy(&mut file, &mut hasher)?;
+    Ok(format!("{:x}", hasher.finalize()))
+}
+
+/// Directories whose contents belong to the *user*, not the release: they are
+/// carried over when a game is updated (moved, not copied — same filesystem).
+const PRESERVE_DIRS: &[&str] =
+    &["game", "saves", "save", "mods", ".wineprefix", "memcards", "memorycards", "portable"];
+/// File extensions that are user data (ROMs, disc images, saves, generated
+/// asset packs) — also carried over on update when the new tree lacks them.
+const PRESERVE_EXTS: &[&str] = &[
+    "z64", "n64", "v64", "gbc", "gb", "gba", "nds", "bin", "cue", "chd", "iso", "img", "gcm",
+    "rvz", "sav", "srm", "eep", "mpk", "fla", "state", "o2r", "otr",
+];
+
+/// Carries user files from `old` (the current install) into `new` (the freshly
+/// extracted update), so updating never loses ROMs, saves, wine prefixes or
+/// mods. Only fills what the new tree does NOT already provide; moves via
+/// rename (instant on the same filesystem). `extras` are old-relative paths to
+/// preserve regardless of pattern (e.g. the recorded ROM).
+pub fn preserve_user_files(old: &Path, new: &Path, extras: &[PathBuf]) -> AppResult<()> {
+    for rel in extras {
+        let (src, dst) = (old.join(rel), new.join(rel));
+        if src.exists() && !dst.exists() {
+            if let Some(parent) = dst.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            let _ = std::fs::rename(&src, &dst);
+        }
+    }
+    let entries = match std::fs::read_dir(old) {
+        Ok(e) => e,
+        Err(_) => return Ok(()),
+    };
+    for e in entries.flatten() {
+        let path = e.path();
+        let name = e.file_name().to_string_lossy().to_lowercase();
+        if path.is_dir() {
+            if PRESERVE_DIRS.contains(&name.as_str()) {
+                merge_missing(&path, &new.join(e.file_name()))?;
+            }
+        } else {
+            let keep = name == "portable.txt"
+                || path
+                    .extension()
+                    .and_then(|x| x.to_str())
+                    .map(|x| PRESERVE_EXTS.contains(&x.to_lowercase().as_str()))
+                    .unwrap_or(false);
+            let dst = new.join(e.file_name());
+            if keep && !dst.exists() {
+                let _ = std::fs::rename(&path, &dst);
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Moves everything under `old` into `new` that `new` doesn't already have.
+fn merge_missing(old: &Path, new: &Path) -> AppResult<()> {
+    if !new.exists() {
+        std::fs::create_dir_all(new.parent().unwrap_or(new))?;
+        // Whole directory absent in the new tree — move it as one rename.
+        if std::fs::rename(old, new).is_ok() {
+            return Ok(());
+        }
+        std::fs::create_dir_all(new)?;
+    }
+    for e in std::fs::read_dir(old)?.flatten() {
+        let (src, dst) = (e.path(), new.join(e.file_name()));
+        if src.is_dir() {
+            merge_missing(&src, &dst)?;
+        } else if !dst.exists() {
+            let _ = std::fs::rename(&src, &dst);
+        }
+    }
+    Ok(())
 }
 
 /// Resolves the executable to launch inside an install directory. Prefers the
@@ -577,5 +684,74 @@ mod tests {
         let bin = find_launch_binary(&dest, Some("pd.x86_64"), false).unwrap();
         assert!(bin.exists(), "expected launch binary in {}", dest.display());
         let _ = std::fs::remove_dir_all(&root);
+    }
+}
+
+#[cfg(test)]
+mod preserve_tests {
+    use super::*;
+
+    #[test]
+    fn update_keeps_roms_saves_and_prefix() {
+        let tmp = std::env::temp_dir().join(format!("fp-preserve-{}", std::process::id()));
+        let (old, new) = (tmp.join("old"), tmp.join("new"));
+        let _ = std::fs::remove_dir_all(&tmp);
+        for d in [&old, &new] {
+            std::fs::create_dir_all(d).unwrap();
+        }
+        // Old install: user data + release files.
+        std::fs::write(old.join("game.z64"), b"rom").unwrap();
+        std::fs::create_dir_all(old.join("saves")).unwrap();
+        std::fs::write(old.join("saves/slot1.sav"), b"save").unwrap();
+        std::fs::create_dir_all(old.join(".wineprefix/drive_c")).unwrap();
+        std::fs::write(old.join(".wineprefix/drive_c/x.dll"), b"d").unwrap();
+        std::fs::create_dir_all(old.join("data")).unwrap();
+        std::fs::write(old.join("data/pd.ntsc-final.z64"), b"pd").unwrap();
+        std::fs::write(old.join("binary"), b"OLD CODE").unwrap();
+        std::fs::create_dir_all(old.join("game")).unwrap();
+        std::fs::write(old.join("game/disc.bin"), b"disc").unwrap();
+        // New tree ships its own binary and an empty saves dir with a template.
+        std::fs::write(new.join("binary"), b"NEW CODE").unwrap();
+        std::fs::create_dir_all(new.join("saves")).unwrap();
+        std::fs::write(new.join("saves/readme.txt"), b"t").unwrap();
+
+        preserve_user_files(&old, &new, &[PathBuf::from("data/pd.ntsc-final.z64")]).unwrap();
+
+        assert_eq!(std::fs::read(new.join("binary")).unwrap(), b"NEW CODE"); // release wins
+        assert!(new.join("game.z64").exists());
+        assert_eq!(std::fs::read(new.join("saves/slot1.sav")).unwrap(), b"save");
+        assert!(new.join("saves/readme.txt").exists()); // merged, not replaced
+        assert!(new.join(".wineprefix/drive_c/x.dll").exists());
+        assert!(new.join("game/disc.bin").exists());
+        assert!(new.join("data/pd.ntsc-final.z64").exists()); // via extras
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+}
+
+#[cfg(test)]
+mod sevenz_tests {
+    use super::*;
+
+    #[test]
+    fn sevenz_roundtrip() {
+        if std::process::Command::new("7z").arg("i").output().is_err() {
+            return; // no 7z on this machine — skip
+        }
+        let tmp = std::env::temp_dir().join(format!("fp-7z-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(tmp.join("src")).unwrap();
+        std::fs::write(tmp.join("src/game.bin"), b"payload").unwrap();
+        let archive = tmp.join("test.7z");
+        let ok = std::process::Command::new("7z")
+            .args(["a", archive.to_str().unwrap(), tmp.join("src/game.bin").to_str().unwrap()])
+            .output()
+            .map(|o| o.status.success())
+            .unwrap_or(false);
+        assert!(ok, "7z a failed");
+        let out = tmp.join("out");
+        extract_one(&archive, &out).unwrap();
+        assert_eq!(std::fs::read(out.join("game.bin")).unwrap(), b"payload");
+        assert!(is_archive("Samurai.Vs.Zombies.PC.7z"));
+        let _ = std::fs::remove_dir_all(&tmp);
     }
 }

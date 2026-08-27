@@ -207,6 +207,9 @@ pub struct Config {
     pub ra_user: Option<String>,
     #[serde(default)]
     pub ra_token: Option<String>,
+    /// Cover grid card size: "s" | "m" (default) | "l".
+    #[serde(default)]
+    pub card_size: String,
 }
 
 /// Enriched view of a project sent to the frontend: the catalog entry plus its

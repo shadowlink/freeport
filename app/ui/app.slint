@@ -19,6 +19,8 @@ struct CardItem {
     install-error: bool,
     version: string,     // installed tag, or latest for catalog cards
     new-version: string, // target tag when an update is available
+    meta: string,        // extra line for the "Seguir jugando" strip ("hace 2h")
+    is-new: bool,        // recently added to the catalog
 }
 
 component Btn inherits Rectangle {
@@ -145,6 +147,12 @@ struct FactRow {
     accent: color,
 }
 
+struct RaBadge {
+    img: image,
+    has-img: bool,
+    unlocked: bool,
+}
+
 struct ScreenShot {
     img: image,
     path: string,
@@ -201,6 +209,8 @@ struct DetailData {
     version: string,     // installed tag
     new-version: string, // latest tag when an update is available
     facts: [FactRow],
+    ra-summary: string,      // "12/97 logros · 80/749 pts" (empty = no section)
+    badge-rows: [[RaBadge]],
     related: [CardItem],
     mods: [ModRow],
     screens: [ScreenShot],
@@ -261,6 +271,25 @@ export component MainWindow inherits Window {
     in property <float> bulk-progress;
     in property <string> bulk-label;
     callback update-all();
+    // "Seguir jugando" strip (library tab)
+    in property <[CardItem]> recent;
+    // Catalog filters
+    in-out property <string> filter-kind; // "" | "recompilation" | "native-port"
+    in-out property <string> filter-plat; // "" | "native" | "windows"
+    in-out property <string> filter-genre; // "" = all
+    in property <[string]> genre-labels;
+    in-out property <string> genre-current: "Todos los géneros";
+    // Card size (from settings): width of a grid card slot.
+    in property <length> card-w: 158px;
+    in-out property <string> card-size: "m";
+    callback set-card-size(string);
+    // Library footprint on disk ("3.2 GB"), shown in the sidebar.
+    in property <string> library-size;
+    // Add-to-Steam (game page side panel)
+    callback add-steam(string);
+    in property <string> detail-msg;
+    callback cancel-update-all();
+    callback cancel-install(string);
     callback refresh();
     callback toggle-favorite(string);
     callback open-folder(string);
@@ -341,9 +370,9 @@ export component MainWindow inherits Window {
     default-font-size: 14px;
     default-font-family: "DejaVu Sans";
 
-    // Responsive column count for the cover grid. Card slot ≈ 158px + 14px gap;
+    // Responsive column count for the cover grid. Card slot = card-w + 14px gap;
     // main area = window width minus the 244px sidebar and grid padding.
-    out property <int> cols: max(1, floor((root.width - 244px - 24px) / 172px));
+    out property <int> cols: max(1, floor((root.width - 244px - 24px) / (root.card-w + 14px)));
     changed cols => { root.refresh(); }
 
     VerticalLayout {
@@ -443,7 +472,18 @@ export component MainWindow inherits Window {
                         if root.bulk-busy: VerticalLayout {
                             spacing: 4px;
                             Bar { value: root.bulk-progress; fill: #ffd166; }
-                            Text { text: root.bulk-label; color: #ffffff99; font-size: 10px; overflow: elide; }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Text { text: root.bulk-label; color: #ffffff99; font-size: 10px; overflow: elide;
+                                       vertical-alignment: center; horizontal-stretch: 1; }
+                                Rectangle {
+                                    width: 18px; height: 18px; border-radius: 4px;
+                                    background: bc-ta.has-hover ? #ff5d7333 : #00000000;
+                                    Text { text: "✕"; color: #ff5d73; font-size: 11px; font-weight: 900;
+                                           horizontal-alignment: center; vertical-alignment: center; }
+                                    bc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.cancel-update-all(); } }
+                                }
+                            }
                         }
                     }
                 }
@@ -504,7 +544,8 @@ export component MainWindow inherits Window {
                         spacing: 6px;
                         Btn { label: "▭ Modo TV"; bg: #ffb23e26; fg: #ffb23e; clicked => { root.open-tv(); } }
                         Btn { label: "⚙ Ajustes"; bg: #1c1f28; fg: white; clicked => { root.settings-visible = true; } }
-                        Text { text: "Freeport \{root.version}"; color: #ffffff88; font-size: 10px; horizontal-alignment: center; }
+                        Text { text: root.library-size != "" ? "Freeport \{root.version} · \{root.library-size}" : "Freeport \{root.version}";
+                               color: #ffffff88; font-size: 10px; horizontal-alignment: center; }
                     }
                 }
             }
@@ -540,20 +581,91 @@ export component MainWindow inherits Window {
                 }
             }
             Rectangle {
-                height: 78px;
-                HorizontalLayout {
+                height: 108px;
+                VerticalLayout {
                     padding-left: 22px;
                     padding-right: 22px;
-                    padding-top: 18px;
-                    padding-bottom: 6px;
-                    spacing: 10px;
-                    Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
-                    Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
-                    Rectangle { horizontal-stretch: 1; }
-                    Text { text: "Ordenar"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
-                    SortChip { label: "A-Z"; mode: "name"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
-                    SortChip { label: "Año"; mode: "year"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
-                    SortChip { label: "Recientes"; mode: "recent"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
+                    padding-top: 14px;
+                    padding-bottom: 4px;
+                    spacing: 8px;
+                    HorizontalLayout {
+                        spacing: 10px;
+                        Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
+                        Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
+                        Rectangle { horizontal-stretch: 1; }
+                        Text { text: "Ordenar"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
+                        SortChip { label: "A-Z"; mode: "name"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
+                        SortChip { label: "Año"; mode: "year"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
+                        SortChip { label: "Recientes"; mode: "recent"; active: root.sort-mode; pick(m) => { root.sort-mode = m; root.refresh(); } }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        alignment: start;
+                        SortChip { label: "Todos"; mode: ""; active: root.filter-kind; pick(m) => { root.filter-kind = m; root.refresh(); } }
+                        SortChip { label: "⟳ Recomp"; mode: "recompilation"; active: root.filter-kind; pick(m) => { root.filter-kind = m; root.refresh(); } }
+                        SortChip { label: "⚓ Port"; mode: "native-port"; active: root.filter-kind; pick(m) => { root.filter-kind = m; root.refresh(); } }
+                        Rectangle { width: 14px; }
+                        SortChip { label: "Nativo"; mode: "native"; active: root.filter-plat == "" ? "×" : root.filter-plat; pick(m) => { root.filter-plat = root.filter-plat == m ? "" : m; root.refresh(); } }
+                        SortChip { label: "⊞ Proton"; mode: "windows"; active: root.filter-plat == "" ? "×" : root.filter-plat; pick(m) => { root.filter-plat = root.filter-plat == m ? "" : m; root.refresh(); } }
+                        Rectangle { width: 14px; }
+                        ComboBox {
+                            model: root.genre-labels;
+                            current-value <=> root.genre-current;
+                            selected(v) => {
+                                root.filter-genre = v == "Todos los géneros" ? "" : v;
+                                root.refresh();
+                            }
+                        }
+                    }
+                }
+            }
+            // "Seguir jugando": last-played shelf at the top of the library.
+            if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: VerticalLayout {
+                padding-left: 22px;
+                padding-right: 22px;
+                padding-bottom: 8px;
+                spacing: 8px;
+                SectionHeader { label: "Seguir jugando"; }
+                HorizontalLayout {
+                    spacing: 12px;
+                    alignment: start;
+                    for c in root.recent: Rectangle {
+                        width: 296px;
+                        height: 92px;
+                        border-radius: 12px;
+                        clip: true;
+                        background: #14161d;
+                        border-width: 1px;
+                        border-color: rc-ta.has-hover ? #ffb23e : #2b2f3a;
+                        animate border-color { duration: 150ms; easing: ease-out; }
+                        Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.18; }
+                        rc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                        HorizontalLayout {
+                            padding: 10px;
+                            spacing: 12px;
+                            Rectangle {
+                                width: 50px; border-radius: 6px; clip: true;
+                                Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 3px;
+                                horizontal-stretch: 1;
+                                Text { text: c.title; color: white; font-size: 13px; font-weight: 700; overflow: elide; }
+                                Text { text: c.meta; color: #ffffff88; font-size: 11px; overflow: elide; }
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle {
+                                    width: 40px; height: 40px; border-radius: 20px;
+                                    background: rp-ta.has-hover ? #ffb23e : #ffb23e22;
+                                    Text { text: "▶"; color: rp-ta.has-hover ? #0b0c10 : #ffb23e; font-size: 15px; font-weight: 900;
+                                           horizontal-alignment: center; vertical-alignment: center; }
+                                    rp-ta := TouchArea { mouse-cursor: pointer; clicked => { root.play(c.id); } }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             Rectangle {
@@ -564,12 +676,12 @@ export component MainWindow inherits Window {
                     padding: 8px;
                     alignment: start;
                     for c in row: Rectangle {
-                        width: 158px;
-                        height: 326px;
+                        width: root.card-w;
+                        height: root.card-w * 1.5 + 90px;
                         VerticalLayout {
                             spacing: 4px;
                             Rectangle {
-                                height: 236px;
+                                height: root.card-w * 1.5;
                                 border-radius: 10px;
                                 background: #1c1f28;
                                 clip: true;
@@ -592,6 +704,10 @@ export component MainWindow inherits Window {
                                 if c.is-windows: Tag {
                                     x: 6px; y: 28px;
                                     label: "WIN"; fg: white; bg: #2b6fb3;
+                                }
+                                if c.is-new && !c.installed: Tag {
+                                    x: 6px; y: c.is-windows ? 48px : 28px;
+                                    label: "NUEVO"; fg: #0b0c10; bg: #7de17d;
                                 }
                                 // Version (bottom-left) — installed tag, or latest for catalog cards.
                                 if c.version != "": Tag {
@@ -645,15 +761,20 @@ export component MainWindow inherits Window {
                             Text { text: c.subtitle; color: #ffffff99; font-size: 10px; overflow: elide; }
 
                             // Action row
-                            if c.busy: VerticalLayout {
+                            if c.busy: HorizontalLayout {
                                 height: 28px;
-                                spacing: 4px;
-                                Text { text: c.installed
-                                           ? (c.progress > 0 ? "Actualizando \{floor(c.progress * 100)}%" : "Actualizando…")
-                                           : (c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…");
-                                       color: #ffb23e; font-size: 11px; font-weight: 700;
-                                       horizontal-alignment: center; }
-                                Bar { value: c.progress > 0 ? c.progress : -1; }
+                                spacing: 5px;
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 4px;
+                                    Text { text: c.installed
+                                               ? (c.progress > 0 ? "Actualizando \{floor(c.progress * 100)}%" : "Actualizando…")
+                                               : (c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…");
+                                           color: #ffb23e; font-size: 11px; font-weight: 700;
+                                           horizontal-alignment: center; }
+                                    Bar { value: c.progress > 0 ? c.progress : -1; }
+                                }
+                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.cancel-install(c.id); } }
                             }
                             if !c.busy && c.installed: HorizontalLayout {
                                 height: 28px; spacing: 5px;
@@ -767,14 +888,19 @@ export component MainWindow inherits Window {
                                 Text { text: root.detail.title; font-size: 32px; font-weight: 900; color: white; wrap: word-wrap; }
                                 Text { text: root.detail.subtitle; font-size: 15px; color: #ffb23e; wrap: word-wrap; }
                                 if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
-                                if root.detail.busy: VerticalLayout {
-                                    spacing: 5px;
-                                    width: 300px;
-                                    Text { text: root.detail.installed
-                                               ? (root.detail.progress > 0 ? "Actualizando \{floor(root.detail.progress * 100)}%" : "Actualizando…")
-                                               : (root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…");
-                                           color: #ffb23e; font-weight: 700; }
-                                    Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 8px; }
+                                if root.detail.busy: HorizontalLayout {
+                                    spacing: 10px;
+                                    alignment: start;
+                                    VerticalLayout {
+                                        spacing: 5px;
+                                        width: 300px;
+                                        Text { text: root.detail.installed
+                                                   ? (root.detail.progress > 0 ? "Actualizando \{floor(root.detail.progress * 100)}%" : "Actualizando…")
+                                                   : (root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…");
+                                               color: #ffb23e; font-weight: 700; }
+                                        Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 8px; }
+                                    }
+                                    Btn { label: "✕ Cancelar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.cancel-install(root.detail.id); } }
                                 }
                                 if !root.detail.busy: HorizontalLayout {
                                     spacing: 8px;
@@ -874,6 +1000,27 @@ export component MainWindow inherits Window {
                             }
                         }
                     }
+                    if root.detail.ra-summary != "": VerticalLayout {
+                        spacing: 8px;
+                        SectionHeader { label: "🏆 Logros"; meta: root.detail.ra-summary; }
+                        VerticalLayout {
+                            spacing: 6px;
+                            for row in root.detail.badge-rows: HorizontalLayout {
+                                spacing: 6px;
+                                alignment: start;
+                                for b in row: Rectangle {
+                                    width: 44px; height: 44px; border-radius: 6px; clip: true;
+                                    background: #14161d;
+                                    border-width: 1px;
+                                    border-color: b.unlocked ? #ffb23e88 : #2b2f3a;
+                                    opacity: b.unlocked ? 1.0 : 0.4;
+                                    if b.has-img: Image { source: b.img; width: 100%; height: 100%; image-fit: cover; }
+                                    if !b.has-img: Text { text: "?"; color: #ffffff44; font-size: 16px;
+                                                          horizontal-alignment: center; vertical-alignment: center; }
+                                }
+                            }
+                        }
+                    }
                     if root.detail.has-related: VerticalLayout {
                         spacing: 8px;
                         SectionHeader { label: "Relacionados"; }
@@ -959,6 +1106,8 @@ export component MainWindow inherits Window {
                         }
                         if root.detail.repo-url != "": Btn { label: "↗ Ver en GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
                         if root.detail.installed: Btn { label: "◫ Abrir carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
+                        if root.detail.installed: Btn { label: "🕹 Añadir a Steam"; bg: #1c1f28; fg: white; clicked => { root.add-steam(root.detail.id); } }
+                        if root.detail-msg != "": Text { text: root.detail-msg; color: #ffd166; font-size: 11px; wrap: word-wrap; width: 270px; }
                     }
                     } // end body row
                 }
@@ -1018,6 +1167,13 @@ export component MainWindow inherits Window {
                             spacing: 10px;
                             CheckBox { checked <=> root.crt-visible; toggled => { root.toggle-crt(root.crt-visible); } }
                             Text { text: "Efecto CRT (scanlines retro)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                        }
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text { text: "Tamaño de carátulas"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                            SortChip { label: "S"; mode: "s"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
+                            SortChip { label: "M"; mode: "m"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
+                            SortChip { label: "L"; mode: "l"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
                         }
                     }
                 }
@@ -1141,6 +1297,16 @@ export component MainWindow inherits Window {
                                         drop-shadow-color: focused ? #ffb23eaa : #00000000;
                                         animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
                                         Cover { width: 100%; height: 100%; source: game.cover; title: game.title; hovered: focused; }
+                                        if game.update-available: Rectangle {
+                                            x: parent.width - self.width - 8px; y: 8px; height: 20px;
+                                            width: tvup-l.preferred-width;
+                                            border-radius: 5px; background: #ffd166;
+                                            tvup-l := HorizontalLayout {
+                                                padding-left: 7px; padding-right: 7px;
+                                                Text { text: game.new-version != "" ? "↑ \{game.new-version}" : "↑";
+                                                       color: #0b0c10; font-size: 10px; font-weight: 900; vertical-alignment: center; }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -1156,6 +1322,7 @@ export component MainWindow inherits Window {
                         spacing: 24px;
                         Text { text: "✚ Mover"; color: #ffffff88; vertical-alignment: center; }
                         Text { text: "A  Jugar"; color: #ffb23e; vertical-alignment: center; }
+                        Text { text: "Y  Actualizar"; color: #ffd166; vertical-alignment: center; }
                         Text { text: "LB / RB  Consola"; color: #ffffff88; vertical-alignment: center; }
                         Text { text: "B / ☰ / Esc  Salir"; color: #ffffff88; vertical-alignment: center; }
                     }

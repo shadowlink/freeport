@@ -91,6 +91,35 @@ const LOGOS: &[(&str, &[u8])] = &[
 struct DetailState {
     id: String,
     wiki: Option<WikiInfo>,
+    /// Transient side-panel feedback ("Añadido a Steam ✓").
+    msg: String,
+}
+
+/// Catalog ids recorded as already-seen (persisted across sessions).
+fn seen_file(paths: &Paths) -> std::path::PathBuf {
+    paths.data_dir.join("seen_catalog.json")
+}
+
+fn load_seen(paths: &Paths) -> HashSet<String> {
+    std::fs::read_to_string(seen_file(paths))
+        .ok()
+        .and_then(|s| serde_json::from_str::<Vec<String>>(&s).ok())
+        .map(|v| v.into_iter().collect())
+        .unwrap_or_default()
+}
+
+/// Persists seen ∪ current so next session's NUEVO badges start from here.
+fn save_seen(paths: &Paths, app: &App, current: Vec<String>) {
+    let mut union: HashSet<String> = load_seen(paths);
+    let empty = union.is_empty();
+    union.extend(current);
+    if empty {
+        union.extend(app.seen.borrow().iter().cloned());
+    }
+    let list: Vec<&String> = union.iter().collect();
+    if let Ok(json) = serde_json::to_string(&list) {
+        let _ = std::fs::write(seen_file(paths), json);
+    }
 }
 
 struct App {
@@ -120,6 +149,15 @@ struct App {
     launching: RefCell<std::collections::HashMap<String, bool>>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
+    /// Catalog ids already seen in previous sessions (drives the NUEVO badge).
+    seen: RefCell<HashSet<String>>,
+    /// RetroAchievements progress per project id + badge art by URL.
+    ra_cache: RefCell<std::collections::HashMap<String, ra::RaProgress>>,
+    ra_badges: RefCell<std::collections::HashMap<String, Image>>,
+    /// Per-game cancel flags for in-flight installs/updates.
+    cancels: RefCell<std::collections::HashMap<String, std::sync::Arc<std::sync::atomic::AtomicBool>>>,
+    /// Set while "update all" runs; cancelling stops the queue.
+    bulk_cancel: RefCell<Option<std::sync::Arc<std::sync::atomic::AtomicBool>>>,
 }
 
 /// Whether a newer release than the installed one exists, comparing by publish
@@ -141,6 +179,8 @@ thread_local! {
     static UI: RefCell<Option<(Rc<App>, Weak<MainWindow>)>> = const { RefCell::new(None) };
     // Keeps the periodic update-check timer alive for the process lifetime.
     static UPDATE_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
+    // Same, for the periodic catalog refresh.
+    static CATALOG_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
 }
 
 fn parse_color(hex: &str) -> Color {
@@ -197,6 +237,10 @@ fn rebuild(app: &App, win: &MainWindow) {
     let library = win.get_library_tab();
     let query = win.get_search_text().to_lowercase();
     let sort_mode = win.get_sort_mode().to_string();
+    let filter_kind = win.get_filter_kind().to_string();
+    let filter_plat = win.get_filter_plat().to_string();
+    let filter_genre = win.get_filter_genre().to_string();
+    let seen = app.seen.borrow();
     let busy = app.busy.borrow();
     let catalog = app.catalog.borrow();
     let cfg = store::load_config(&app.paths).unwrap_or_default();
@@ -233,6 +277,15 @@ fn rebuild(app: &App, win: &MainWindow) {
             || (library && !installed.contains_key(&p.id))
             || (!active.is_empty() && p.system != active)
         {
+            continue;
+        }
+        if !filter_kind.is_empty() && p.kind != filter_kind {
+            continue;
+        }
+        if (filter_plat == "native" && is_win) || (filter_plat == "windows" && !is_win) {
+            continue;
+        }
+        if !filter_genre.is_empty() && p.genre.as_deref() != Some(filter_genre.as_str()) {
             continue;
         }
         if !query.is_empty() {
@@ -294,6 +347,8 @@ fn rebuild(app: &App, win: &MainWindow) {
                 install_error: install_err,
                 version: version.into(),
                 new_version: if update { latest_tag.into() } else { "".into() },
+                meta: if last > 0 { format!("Jugado {}", fmt_ago(last)).into() } else { "".into() },
+                is_new: !seen.is_empty() && !seen.contains(&p.id),
             },
         ));
     }
@@ -305,6 +360,15 @@ fn rebuild(app: &App, win: &MainWindow) {
             _ => a.1.cmp(&b.1),
         })
     });
+    // "Seguir jugando": most recently played installed games (library shelf).
+    let mut recent_pool: Vec<(i64, CardItem)> = sortable
+        .iter()
+        .filter(|t| t.3 > 0 && t.4.installed)
+        .map(|t| (t.3, t.4.clone()))
+        .collect();
+    recent_pool.sort_by(|a, b| b.0.cmp(&a.0));
+    let recent: Vec<CardItem> = recent_pool.into_iter().take(4).map(|t| t.1).collect();
+
     let cards: Vec<CardItem> = sortable.into_iter().map(|t| t.4).collect();
 
     let count = cards.len() as i32;
@@ -330,11 +394,20 @@ fn rebuild(app: &App, win: &MainWindow) {
         .filter(|p| installed.get(&p.id).map(|e| has_update(e, &p.cached)).unwrap_or(false))
         .count();
 
+    // Genre filter options: every distinct curated genre.
+    let mut genres: Vec<String> = catalog.projects.iter().filter_map(|p| p.genre.clone()).collect();
+    genres.sort();
+    genres.dedup();
+    let mut genre_labels: Vec<SharedString> = vec!["Todos los géneros".into()];
+    genre_labels.extend(genres.into_iter().map(SharedString::from));
+
     win.set_systems(ModelRc::new(VecModel::from(sys_rows)));
     win.set_rows(ModelRc::new(VecModel::from(rows)));
     win.set_header_title(header.into());
     win.set_header_count(count);
     win.set_updates_pending(pending as i32);
+    win.set_recent(ModelRc::new(VecModel::from(recent)));
+    win.set_genre_labels(ModelRc::new(VecModel::from(genre_labels)));
 }
 
 impl App {
@@ -437,6 +510,8 @@ fn build_detail(app: &App, win: &MainWindow) {
             install_error: false,
             version: "".into(),
             new_version: "".into(),
+            meta: "".into(),
+            is_new: false,
         })
         .collect();
 
@@ -501,6 +576,29 @@ fn build_detail(app: &App, win: &MainWindow) {
             }
             mod_rows.push(make_row(m, false, false));
         }
+    }
+
+    // RetroAchievements: summary line + badge grid (12 per row).
+    let mut ra_summary = String::new();
+    let mut badge_rows: Vec<ModelRc<RaBadge>> = Vec::new();
+    if let Some(prog) = app.ra_cache.borrow().get(&p.id) {
+        ra_summary = format!(
+            "{}/{} logros · {}/{} puntos",
+            prog.earned, prog.total, prog.points_earned, prog.points_total
+        );
+        let icons = app.ra_badges.borrow();
+        let badges: Vec<RaBadge> = prog
+            .achievements
+            .iter()
+            .map(|a| {
+                let img = icons.get(&ra::badge_url(&a.badge_name, a.unlocked)).cloned();
+                RaBadge { img: img.clone().unwrap_or_default(), has_img: img.is_some(), unlocked: a.unlocked }
+            })
+            .collect();
+        badge_rows = badges
+            .chunks(12)
+            .map(|c| ModelRc::new(VecModel::from(c.to_vec())))
+            .collect();
     }
 
     let mut screens: Vec<ScreenShot> = Vec::new();
@@ -584,10 +682,13 @@ fn build_detail(app: &App, win: &MainWindow) {
         version: installed_tag.into(),
         new_version: if update { latest_tag.into() } else { "".into() },
         facts: ModelRc::new(VecModel::from(facts)),
+        ra_summary: ra_summary.into(),
+        badge_rows: ModelRc::new(VecModel::from(badge_rows)),
         related: ModelRc::new(VecModel::from(related)),
         mods: ModelRc::new(VecModel::from(mod_rows)),
         screens: ModelRc::new(VecModel::from(screens)),
     };
+    win.set_detail_msg(state.msg.clone().into());
     win.set_detail(data);
     win.set_detail_visible(true);
 }
@@ -726,25 +827,32 @@ fn build_tv(app: &App, win: &MainWindow) {
         let sys_color = parse_color(&s.color);
         let cards: Vec<CardItem> = games
             .iter()
-            .map(|p| CardItem {
-                id: p.id.clone().into(),
-                title: (if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() }).into(),
-                subtitle: p.name.clone().into(),
-                cover: app.cover(p),
-                installed: installed.contains_key(&p.id),
-                is_windows: false,
-                update_available: false,
-                needs_rom: false,
-                rom_ok: false,
-                busy: false,
-                progress: 0.0,
-                kind: "".into(),
-                sys_color,
-                favorite: false,
-                play_state: 0,
-                install_error: false,
-                version: "".into(),
-                new_version: "".into(),
+            .map(|p| {
+                let entry = installed.get(&p.id);
+                let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
+                let latest = p.cached.as_ref().and_then(|c| c.latest_tag.clone()).unwrap_or_default();
+                CardItem {
+                    id: p.id.clone().into(),
+                    title: (if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() }).into(),
+                    subtitle: p.name.clone().into(),
+                    cover: app.cover(p),
+                    installed: entry.is_some(),
+                    is_windows: false,
+                    update_available: update,
+                    needs_rom: false,
+                    rom_ok: false,
+                    busy: false,
+                    progress: 0.0,
+                    kind: "".into(),
+                    sys_color,
+                    favorite: false,
+                    play_state: 0,
+                    install_error: false,
+                    version: "".into(),
+                    new_version: if update { latest.into() } else { "".into() },
+                    meta: "".into(),
+                    is_new: false,
+                }
             })
             .collect();
         bounds.push((s.name.clone(), games.iter().map(|p| p.id.clone()).collect()));
@@ -823,6 +931,20 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
             }
             return;
         }
+        "y" => {
+            // Update the focused game if it has one pending.
+            if let Some(id) = shelves.get(s as usize).and_then(|(_, ids)| ids.get(c as usize)).cloned() {
+                drop(shelves);
+                let installed = store::load_installed(&app.paths).unwrap_or_default();
+                if let Some(p) = app.find(&id) {
+                    let has = installed.get(&id).map(|e| has_update(e, &p.cached)).unwrap_or(false);
+                    if has && !app.busy.borrow().contains(&id) {
+                        win.invoke_install(id.into());
+                    }
+                }
+            }
+            return;
+        }
         "b" | "start" | "back" => {
             drop(shelves);
             exit_tv(win);
@@ -836,7 +958,60 @@ fn tv_input(app: &App, win: &MainWindow, button: &str) {
     tv_hero(app, win);
 }
 
+/// Headless `freeport --play <id>`: launch a game and stay alive while it runs
+/// (lets Steam non-Steam shortcuts track the session).
+fn cli_play(id: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let paths = Paths::resolve()?;
+    let catalog = store::load_catalog(&paths)?;
+    let project = catalog
+        .projects
+        .iter()
+        .find(|p| p.id == id)
+        .ok_or_else(|| format!("juego desconocido: {id}"))?
+        .clone();
+    let pid = actions::launch_project(&paths, &project).map_err(|e| e.to_string())?;
+    println!("[freeport] jugando {} (pid {pid})", project.name);
+    while Path::new(&format!("/proc/{pid}")).exists() {
+        std::thread::sleep(std::time::Duration::from_secs(1));
+    }
+    Ok(())
+}
+
+/// Recomputes the total on-disk size of the library and updates the sidebar.
+async fn refresh_library_size(paths: Paths) {
+    let total = tokio::task::spawn_blocking(move || {
+        let installed = store::load_installed(&paths).unwrap_or_default();
+        installed.values().map(|e| dir_size(Path::new(&e.install_path))).sum::<u64>()
+    })
+    .await
+    .unwrap_or(0);
+    let _ = slint::invoke_from_event_loop(move || {
+        UI.with(|u| {
+            if let Some((_, weak)) = &*u.borrow() {
+                if let Some(w) = weak.upgrade() {
+                    w.set_library_size(if total > 0 { fmt_bytes(total).into() } else { "".into() });
+                }
+            }
+        });
+    });
+}
+
+fn apply_card_size(win: &MainWindow, size: &str) {
+    let w = match size {
+        "s" => 126.0,
+        "l" => 196.0,
+        _ => 158.0,
+    };
+    win.set_card_w(w);
+    win.set_card_size(if size == "s" || size == "l" { size.into() } else { "m".into() });
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let args: Vec<String> = std::env::args().collect();
+    if let Some(i) = args.iter().position(|a| a == "--play") {
+        let id = args.get(i + 1).cloned().unwrap_or_default();
+        return cli_play(&id);
+    }
     // Force the winit backend so we can reach the underlying window (drag/resize/
     // minimize/maximize) via WinitWindowAccessor. Decorations are turned off with
     // the Slint `no-frame` property (the backend would otherwise re-enable them).
@@ -895,6 +1070,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
         install_error: RefCell::new(HashSet::new()),
+        seen: RefCell::new(HashSet::new()),
+        ra_cache: RefCell::new(std::collections::HashMap::new()),
+        ra_badges: RefCell::new(std::collections::HashMap::new()),
+        cancels: RefCell::new(std::collections::HashMap::new()),
+        bulk_cancel: RefCell::new(None),
     });
 
     let win = MainWindow::new()?;
@@ -1136,6 +1316,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let msg = match res {
                                 Ok(cat) => {
                                     *app.catalog.borrow_mut() = cat;
+                                    // Record the refreshed ids so NUEVO badges expire
+                                    // next session, not never.
+                                    let ids: Vec<String> =
+                                        app.catalog.borrow().projects.iter().map(|p| p.id.clone()).collect();
+                                    save_seen(&app.paths, app, ids);
                                     "Catálogo actualizado ✓"
                                 }
                                 Err(_) => "No se pudo actualizar",
@@ -1260,7 +1445,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         move |id| {
             let id = id.to_string();
             let Some(project) = app.find(&id) else { return };
-            *app.detail.borrow_mut() = Some(DetailState { id: id.clone(), wiki: None });
+            *app.detail.borrow_mut() = Some(DetailState { id: id.clone(), wiki: None, msg: String::new() });
             ui_refresh();
             // Fetch the latest release changelog + date (once, cached).
             if !app.changelog_cache.borrow().contains_key(&id) {
@@ -1280,6 +1465,54 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         });
                     }
                 });
+            }
+            // RetroAchievements progress (RA-supported game + stored session).
+            if project.ra_supported && !app.ra_cache.borrow().contains_key(&id) {
+                let cfg = store::load_config(&app.paths).unwrap_or_default();
+                if let (Some(user), Some(token), Some(rom)) =
+                    (cfg.ra_user.clone(), cfg.ra_token.clone(), freeport_core::ra_mod::rom_path(&project))
+                {
+                    let client = app.client.clone();
+                    let paths = app.paths.clone();
+                    let pid = id.clone();
+                    handle.spawn(async move {
+                        let game_id = match ra::game_id_for_rom(&client, Path::new(&rom)).await {
+                            Ok(g) => g,
+                            Err(e) => { eprintln!("[ra] gameid: {e}"); return }
+                        };
+                        let progress = match ra::fetch_progress(&client, &user, &token, game_id).await {
+                            Ok(p) => p,
+                            Err(e) => { eprintln!("[ra] progress: {e}"); return }
+                        };
+                        eprintln!("[ra] {} logros para game {game_id}", progress.total);
+                        // Badge art: cache to disk, then hand paths to the UI thread.
+                        let mut fetched: Vec<(String, String)> = Vec::new();
+                        for a in &progress.achievements {
+                            if a.badge_name.is_empty() {
+                                continue;
+                            }
+                            let url = ra::badge_url(&a.badge_name, a.unlocked);
+                            if let Ok(p) = thumbs::get_full(&client, &paths, &url).await {
+                                fetched.push((url, p.display().to_string()));
+                            }
+                        }
+                        let _ = slint::invoke_from_event_loop(move || {
+                            UI.with(|u| {
+                                if let Some((app, _)) = &*u.borrow() {
+                                    for (url, path) in &fetched {
+                                        if !app.ra_badges.borrow().contains_key(url) {
+                                            if let Ok(img) = Image::load_from_path(Path::new(path)) {
+                                                app.ra_badges.borrow_mut().insert(url.clone(), img);
+                                            }
+                                        }
+                                    }
+                                    app.ra_cache.borrow_mut().insert(pid, progress);
+                                }
+                            });
+                            ui_refresh();
+                        });
+                    });
+                }
             }
             if let Some(title) = project.wiki.clone() {
                 let client = app.client.clone();
@@ -1469,6 +1702,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             app.busy.borrow_mut().insert(id.clone());
             app.install_progress.borrow_mut().insert(id.clone(), 0.0);
             app.install_error.borrow_mut().remove(&id);
+            let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            app.cancels.borrow_mut().insert(id.clone(), cancel.clone());
             ui_refresh();
             let client = app.client.clone();
             let paths = app.paths.clone();
@@ -1497,14 +1732,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         ui_refresh();
                     });
                 };
-                let err = actions::install_project(&client, &paths, &project, &cfg, on_prog).await.err();
+                let err = actions::install_project(&client, &paths, &project, &cfg, Some(cancel), on_prog)
+                    .await
+                    .err();
                 let _ = slint::invoke_from_event_loop(move || {
                     UI.with(|u| {
                         if let Some((app, _)) = &*u.borrow() {
                             app.busy.borrow_mut().remove(&pid);
                             app.install_progress.borrow_mut().remove(&pid);
                             app.size_cache.borrow_mut().remove(&pid);
-                            if err.is_some() {
+                            app.cancels.borrow_mut().remove(&pid);
+                            // A user cancel is not a failure — no "Reintentar".
+                            if err.as_ref().map(|e| !e.is_cancelled()).unwrap_or(false) {
                                 app.install_error.borrow_mut().insert(pid.clone());
                             } else {
                                 app.install_error.borrow_mut().remove(&pid);
@@ -1513,7 +1752,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     });
                     ui_refresh();
                 });
+                refresh_library_size(paths.clone()).await;
             });
+        }
+    });
+
+    win.on_cancel_install({
+        let app = app.clone();
+        move |id| {
+            if let Some(flag) = app.cancels.borrow().get(id.as_str()) {
+                flag.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+        }
+    });
+
+    win.on_cancel_update_all({
+        let app = app.clone();
+        move || {
+            // Stop the queue and abort whatever is downloading right now.
+            if let Some(flag) = app.bulk_cancel.borrow().as_ref() {
+                flag.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
+            for flag in app.cancels.borrow().values() {
+                flag.store(true, std::sync::atomic::Ordering::Relaxed);
+            }
         }
     });
 
@@ -1551,13 +1813,42 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 app.install_progress.borrow_mut().insert(p.id.clone(), 0.0);
                 app.install_error.borrow_mut().remove(&p.id);
             }
+            let bulk_flag = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+            *app.bulk_cancel.borrow_mut() = Some(bulk_flag.clone());
             ui_refresh();
             let client = app.client.clone();
             let paths = app.paths.clone();
             let cfg = store::load_config(&paths).unwrap_or_default();
             handle.spawn(async move {
                 for (i, p) in targets.iter().enumerate() {
+                    if bulk_flag.load(std::sync::atomic::Ordering::Relaxed) {
+                        // Cancelled: release everything still queued.
+                        let rest: Vec<String> = targets[i..].iter().map(|q| q.id.clone()).collect();
+                        let _ = slint::invoke_from_event_loop(move || {
+                            UI.with(|u| {
+                                if let Some((app, _)) = &*u.borrow() {
+                                    for id in &rest {
+                                        app.busy.borrow_mut().remove(id);
+                                        app.install_progress.borrow_mut().remove(id);
+                                    }
+                                }
+                            });
+                            ui_refresh();
+                        });
+                        break;
+                    }
                     let pid = p.id.clone();
+                    let cancel = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+                    {
+                        let (pidc, c) = (pid.clone(), cancel.clone());
+                        let _ = slint::invoke_from_event_loop(move || {
+                            UI.with(|u| {
+                                if let Some((app, _)) = &*u.borrow() {
+                                    app.cancels.borrow_mut().insert(pidc, c);
+                                }
+                            });
+                        });
+                    }
                     let game = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
                     let mut last = -1i32;
                     let prog_id = pid.clone();
@@ -1587,7 +1878,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             ui_refresh();
                         });
                     };
-                    let err = actions::install_project(&client, &paths, p, &cfg, on_prog).await.err();
+                    let err = actions::install_project(&client, &paths, p, &cfg, Some(cancel), on_prog)
+                        .await
+                        .err();
                     let done = (i + 1) as f32 / total as f32;
                     let _ = slint::invoke_from_event_loop(move || {
                         UI.with(|u| {
@@ -1595,7 +1888,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 app.busy.borrow_mut().remove(&pid);
                                 app.install_progress.borrow_mut().remove(&pid);
                                 app.size_cache.borrow_mut().remove(&pid);
-                                if err.is_some() {
+                                app.cancels.borrow_mut().remove(&pid);
+                                if err.as_ref().map(|e| !e.is_cancelled()).unwrap_or(false) {
                                     app.install_error.borrow_mut().insert(pid.clone());
                                 }
                                 if let Some(w) = weak.upgrade() {
@@ -1608,7 +1902,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 let _ = slint::invoke_from_event_loop(move || {
                     UI.with(|u| {
-                        if let Some((_, weak)) = &*u.borrow() {
+                        if let Some((app, weak)) = &*u.borrow() {
+                            *app.bulk_cancel.borrow_mut() = None;
                             if let Some(w) = weak.upgrade() {
                                 w.set_bulk_busy(false);
                             }
@@ -1616,6 +1911,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     });
                     ui_refresh();
                 });
+                refresh_library_size(paths.clone()).await;
             });
         }
     });
@@ -1646,10 +1942,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     win.on_uninstall({
         let app = app.clone();
+        let handle = handle.clone();
         move |id| {
             let _ = actions::uninstall_project(&app.paths, &id);
             app.size_cache.borrow_mut().remove(&id.to_string());
             app.install_error.borrow_mut().remove(&id.to_string());
+            handle.spawn(refresh_library_size(app.paths.clone()));
             ui_refresh();
         }
     });
@@ -1673,6 +1971,58 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !store::load_installed(&app.paths).unwrap_or_default().is_empty() {
         win.set_library_tab(true);
     }
+
+    // NUEVO badge: ids never seen before this session. First run records a
+    // baseline instead of flagging the whole catalog.
+    {
+        let prev = load_seen(&app.paths);
+        let current: Vec<String> = app.catalog.borrow().projects.iter().map(|p| p.id.clone()).collect();
+        *app.seen.borrow_mut() = if prev.is_empty() { current.iter().cloned().collect() } else { prev };
+        save_seen(&app.paths, &app, current);
+    }
+
+    // Card size from config.
+    apply_card_size(&win, &store::load_config(&app.paths).map(|c| c.card_size).unwrap_or_default());
+
+    win.on_set_card_size({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |s| {
+            let s = s.to_string();
+            if let Ok(mut cfg) = store::load_config(&app.paths) {
+                cfg.card_size = s.clone();
+                let _ = store::save_config(&app.paths, &cfg);
+            }
+            if let Some(w) = weak.upgrade() {
+                apply_card_size(&w, &s);
+            }
+            ui_refresh();
+        }
+    });
+
+    win.on_add_steam({
+        let app = app.clone();
+        move |id| {
+            let Some(p) = app.find(&id) else { return };
+            let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
+            let cover = p
+                .box_art
+                .as_ref()
+                .or(p.cover_url.as_ref())
+                .map(|u| thumbs::path_for(&app.paths, u))
+                .filter(|f| f.exists());
+            let msg = match freeport_core::steam::add_shortcut(&p.id, &title, cover.as_deref()) {
+                Ok(_) => "Añadido a Steam ✓ — reinicia Steam para verlo".to_string(),
+                Err(e) => format!("Steam: {e}"),
+            };
+            if let Some(st) = app.detail.borrow_mut().as_mut() {
+                st.msg = msg;
+            }
+            ui_refresh();
+        }
+    });
+
+    handle.spawn(refresh_library_size(app.paths.clone()));
 
     rebuild(&app, &win);
     spawn_missing_thumbs(&app, &handle);
@@ -1775,6 +2125,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
         UPDATE_TIMER.with(|t| *t.borrow_mut() = Some(timer));
+    }
+
+    // Refresh the catalog every 6 hours while the app stays open (new games
+    // and probe-updated tags land without a restart).
+    {
+        let weak = win.as_weak();
+        let timer = slint::Timer::default();
+        timer.start(
+            slint::TimerMode::Repeated,
+            std::time::Duration::from_secs(6 * 3600),
+            move || {
+                if let Some(w) = weak.upgrade() {
+                    if !w.get_catalog_busy() {
+                        w.invoke_refresh_catalog();
+                    }
+                }
+            },
+        );
+        CATALOG_TIMER.with(|t| *t.borrow_mut() = Some(timer));
     }
 
     // Windows-only fine polish: rounded corners, shadow and Snap Layouts.

@@ -17,6 +17,8 @@ struct CardItem {
     favorite: bool,
     play-state: int, // 0 none, 1 launching, 2 failed
     install-error: bool,
+    version: string,     // installed tag, or latest for catalog cards
+    new-version: string, // target tag when an update is available
 }
 
 component Btn inherits Rectangle {
@@ -137,9 +139,10 @@ component WinBtn inherits Rectangle {
     ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
 
-struct ChipData {
-    text: string,
-    color: color,
+struct FactRow {
+    label: string,
+    value: string,
+    accent: color,
 }
 
 struct ScreenShot {
@@ -194,7 +197,10 @@ struct DetailData {
     ra-eligible: bool,
     ra-enabled: bool,
     ra-beta: bool,
-    chips: [ChipData],
+    kind: string,        // "RECOMP" | "PORT"
+    version: string,     // installed tag
+    new-version: string, // latest tag when an update is available
+    facts: [FactRow],
     related: [CardItem],
     mods: [ModRow],
     screens: [ScreenShot],
@@ -214,6 +220,32 @@ component Tag inherits Rectangle {
     }
 }
 
+// RECOMP (amber) / PORT (blue) pill — one look everywhere.
+component KindPill inherits Rectangle {
+    in property <string> kind;
+    height: 18px;
+    width: kp-l.preferred-width;
+    border-radius: 5px;
+    background: root.kind == "RECOMP" ? #ffb23e : #3fa7e0;
+    drop-shadow-blur: 6px; drop-shadow-color: #000000aa;
+    kp-l := HorizontalLayout {
+        padding-left: 7px; padding-right: 7px;
+        Text { text: root.kind == "RECOMP" ? "⟳ RECOMP" : "⚓ PORT";
+               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
+    }
+}
+
+// Section header with an accent bar — used across the game page.
+component SectionHeader inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> meta;
+    spacing: 10px;
+    alignment: start;
+    Rectangle { width: 4px; height: 20px; border-radius: 2px; background: #ffb23e; }
+    Text { text: root.label; font-size: 17px; font-weight: 800; color: white; vertical-alignment: center; }
+    if root.meta != "": Text { text: root.meta; color: #ffffff77; font-size: 12px; vertical-alignment: center; }
+}
+
 export component MainWindow inherits Window {
     in property <[SysRow]> systems;
     in property <[[CardItem]]> rows;
@@ -223,6 +255,12 @@ export component MainWindow inherits Window {
     in-out property <bool> library-tab;
     in-out property <string> search-text;
     in-out property <string> sort-mode; // "name" | "year" | "recent"
+    // Bulk "update everything" state
+    in property <int> updates-pending;
+    in property <bool> bulk-busy;
+    in property <float> bulk-progress;
+    in property <string> bulk-label;
+    callback update-all();
     callback refresh();
     callback toggle-favorite(string);
     callback open-folder(string);
@@ -380,6 +418,36 @@ export component MainWindow inherits Window {
                     }
                 }
 
+                // Bulk update: visible while something is pending or running.
+                if root.updates-pending > 0 || root.bulk-busy: Rectangle {
+                    border-radius: 8px;
+                    background: bulk-ta.has-hover && !root.bulk-busy ? #ffd16630 : #ffd1661c;
+                    border-width: 1px;
+                    border-color: #ffd16655;
+                    animate background { duration: 130ms; easing: ease-out; }
+                    bulk-ta := TouchArea { mouse-cursor: pointer; clicked => { if (!root.bulk-busy) { root.update-all(); } } }
+                    VerticalLayout {
+                        padding: 10px;
+                        spacing: 6px;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text { text: root.bulk-busy ? "Actualizando juegos…" : "↑ Actualizar todo";
+                                   color: #ffd166; font-weight: 800; font-size: 13px;
+                                   vertical-alignment: center; horizontal-stretch: 1; }
+                            if !root.bulk-busy: Rectangle {
+                                width: 22px; height: 22px; border-radius: 11px; background: #ffd166;
+                                Text { text: "\{root.updates-pending}"; color: #0b0c10; font-size: 11px; font-weight: 900;
+                                       horizontal-alignment: center; vertical-alignment: center; }
+                            }
+                        }
+                        if root.bulk-busy: VerticalLayout {
+                            spacing: 4px;
+                            Bar { value: root.bulk-progress; fill: #ffd166; }
+                            Text { text: root.bulk-label; color: #ffffff99; font-size: 10px; overflow: elide; }
+                        }
+                    }
+                }
+
                 LineEdit {
                     placeholder-text: "Buscar juego…";
                     text <=> root.search-text;
@@ -515,26 +583,53 @@ export component MainWindow inherits Window {
                                     width: 100%; height: 100%;
                                     source: c.cover; title: c.title; hovered: cover-ta.has-hover;
                                 }
-                                // Kind badge (RECOMP / PORT): solid accent pill.
+                                // Bottom scrim so version/update badges read over any art.
                                 Rectangle {
-                                    x: 6px; y: 6px; height: 18px;
-                                    border-radius: 5px;
-                                    background: c.kind == "RECOMP" ? #ffb23e : #4de1c1;
-                                    drop-shadow-blur: 6px; drop-shadow-color: #000000aa;
-                                    HorizontalLayout {
-                                        padding-left: 7px; padding-right: 7px;
-                                        Text { text: c.kind; color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
-                                    }
+                                    y: parent.height - 56px; height: 56px;
+                                    background: @linear-gradient(180deg, #0b0c1000 0%, #0b0c10cc 100%);
                                 }
+                                KindPill { x: 6px; y: 6px; kind: c.kind; }
                                 if c.is-windows: Tag {
                                     x: 6px; y: 28px;
                                     label: "WIN"; fg: white; bg: #2b6fb3;
                                 }
-                                if c.update-available: Tag {
+                                // Version (bottom-left) — installed tag, or latest for catalog cards.
+                                if c.version != "": Tag {
                                     x: 6px; y: parent.height - 22px;
-                                    label: "UPDATE"; fg: #ffd166; bg: #000000cc;
+                                    label: c.version; fg: #ffffffcc; bg: #000000b0;
+                                }
+                                // Update available (bottom-right): amber pill with the target tag.
+                                if c.update-available: Rectangle {
+                                    x: parent.width - self.width - 6px; y: parent.height - 24px; height: 18px;
+                                    width: up-l.preferred-width;
+                                    border-radius: 5px; background: #ffd166;
+                                    up-l := HorizontalLayout {
+                                        padding-left: 6px; padding-right: 6px;
+                                        Text { text: c.new-version != "" ? "↑ \{c.new-version}" : "↑ UPDATE";
+                                               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; }
+                                    }
+                                }
+                                // Installed check (bottom-right) when up to date.
+                                if c.installed && !c.update-available: Rectangle {
+                                    x: parent.width - 24px; y: parent.height - 24px; width: 18px; height: 18px;
+                                    border-radius: 9px; background: #4de1c1;
+                                    Text { text: "✓"; color: #0b0c10; font-size: 11px; font-weight: 900;
+                                           horizontal-alignment: center; vertical-alignment: center; }
                                 }
                                 cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                                // Hover quick-play (installed games): big center button.
+                                Rectangle {
+                                    visible: c.installed && !c.busy && c.play-state != 1
+                                             && (cover-ta.has-hover || quick-ta.has-hover);
+                                    x: (parent.width - 48px) / 2; y: (parent.height - 48px) / 2;
+                                    width: 48px; height: 48px; border-radius: 24px;
+                                    background: quick-ta.has-hover ? #ffb23e : #ffb23eee;
+                                    drop-shadow-blur: 16px; drop-shadow-color: #000000cc;
+                                    Text { text: "▶"; color: #0b0c10; font-size: 20px; font-weight: 900;
+                                           horizontal-alignment: center; vertical-alignment: center; }
+                                    quick-ta := TouchArea { enabled: parent.visible; mouse-cursor: pointer;
+                                                            clicked => { root.play(c.id); } }
+                                }
                                 // Favorite star (top-right)
                                 Rectangle {
                                     x: parent.width - 28px; y: 6px; width: 22px; height: 22px;
@@ -553,7 +648,9 @@ export component MainWindow inherits Window {
                             if c.busy: VerticalLayout {
                                 height: 28px;
                                 spacing: 4px;
-                                Text { text: c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…";
+                                Text { text: c.installed
+                                           ? (c.progress > 0 ? "Actualizando \{floor(c.progress * 100)}%" : "Actualizando…")
+                                           : (c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…");
                                        color: #ffb23e; font-size: 11px; font-weight: 700;
                                        horizontal-alignment: center; }
                                 Bar { value: c.progress > 0 ? c.progress : -1; }
@@ -566,6 +663,10 @@ export component MainWindow inherits Window {
                                     fg: c.play-state == 2 ? white : #0b0c10;
                                     horizontal-stretch: 1;
                                     clicked => { if (c.play-state != 1) { root.play(c.id); } }
+                                }
+                                if c.update-available: Btn {
+                                    label: "↑"; bg: #ffd166; fg: #0b0c10;
+                                    clicked => { root.install(c.id); }
                                 }
                                 if c.needs-rom: Btn {
                                     label: c.rom-ok ? "ROM ✓" : "ROM";
@@ -601,129 +702,181 @@ export component MainWindow inherits Window {
     }
 
     // ── Game detail overlay ──────────────────────────────
-    if root.detail-visible: Rectangle {
+    if root.detail-visible: detail-root := Rectangle {
         width: 100%;
         height: 100%;
         background: #0b0c10;
         opacity: 0;
         init => { self.opacity = 1; }
-        animate opacity { duration: 170ms; easing: ease-out; }
+        animate opacity { duration: 170ms; easing: ease-out;  }
         // Absorb clicks so they don't fall through to the catalog grid behind.
         TouchArea { }
+        // Width available to wrapping text in the left body column.
+        property <length> body-w: max(160px, dscroll.visible-width - 336px);
         VerticalLayout {
             Rectangle {
                 height: 46px;
-                background: #14161d;
+                background: #101219;
                 HorizontalLayout {
                     padding: 8px;
-                    alignment: start;
+                    spacing: 8px;
                     Btn { label: "← Volver"; bg: #1c1f28; fg: white; clicked => { root.close-detail(); } }
+                    Rectangle { horizontal-stretch: 1; }
+                    if root.detail.installed && root.detail.update-available && !root.detail.busy: Btn {
+                        label: root.detail.new-version != "" ? "↑ Actualizar a \{root.detail.new-version}" : "↑ Actualizar";
+                        bg: #ffd166; fg: #0b0c10;
+                        clicked => { root.install(root.detail.id); }
+                    }
                 }
             }
             dscroll := ScrollView {
                 VerticalLayout {
-                    // Explicit width = visible area so wrapping text (Acerca /
-                    // Sobre este port) reflows instead of overflowing/overlapping.
+                    // Explicit width = visible area so wrapping text reflows
+                    // instead of overflowing/overlapping.
                     width: dscroll.visible-width;
-                    padding: 22px;
-                    spacing: 18px;
-                    HorizontalLayout {
-                        spacing: 22px;
-                        alignment: start;
-                        Rectangle {
-                            width: 180px; height: 270px; border-radius: 12px; clip: true;
-                            Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; }
-                        }
-                        VerticalLayout {
-                            spacing: 10px;
-                            Text { text: root.detail.title; font-size: 30px; font-weight: 900; color: white; wrap: word-wrap; }
-                            Text { text: root.detail.subtitle; font-size: 16px; color: #ffb23e; wrap: word-wrap; }
-                            if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
-                            HorizontalLayout {
-                                spacing: 6px;
-                                alignment: start;
-                                for ch in root.detail.chips: Rectangle {
-                                    border-radius: 12px; border-width: 1px; border-color: ch.color; background: #00000066; height: 24px;
-                                    HorizontalLayout { padding-left: 9px; padding-right: 9px;
-                                        Text { text: ch.text; color: white; font-size: 12px; vertical-alignment: center; } }
-                                }
+                    spacing: 0px;
+                    // ── Hero: the cover as ambient backdrop, content on top ──
+                    Rectangle {
+                        height: 352px;
+                        clip: true;
+                        Image { source: root.detail.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.28; }
+                        Rectangle { background: @linear-gradient(180deg, #0b0c1033 0%, #0b0c10 97%); }
+                        HorizontalLayout {
+                            padding: 22px;
+                            spacing: 24px;
+                            alignment: start;
+                            Rectangle {
+                                width: 180px; height: 270px;
+                                y: parent.height - self.height - 22px;
+                                border-radius: 12px; clip: true;
+                                border-width: 1px; border-color: #ffffff22;
+                                drop-shadow-blur: 30px; drop-shadow-color: #00000099;
+                                Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; }
                             }
-                            if root.detail.busy: VerticalLayout {
-                                spacing: 5px;
-                                width: 280px;
-                                Text { text: root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…";
-                                       color: #ffb23e; font-weight: 700; }
-                                Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 8px; }
-                            }
-                            if !root.detail.busy: HorizontalLayout {
-                                spacing: 8px;
-                                alignment: start;
-                                if root.detail.installed: Btn {
-                                    label: root.detail.play-state == 1 ? "▶ Jugando…" : (root.detail.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
-                                    bg: root.detail.play-state == 2 ? #ff5d73 : #ffb23e;
-                                    fg: root.detail.play-state == 2 ? white : #0b0c10;
-                                    clicked => { if (root.detail.play-state != 1) { root.play(root.detail.id); } }
+                            VerticalLayout {
+                                alignment: end;
+                                spacing: 9px;
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: start;
+                                    KindPill { kind: root.detail.kind; }
+                                    if root.detail.is-windows: Tag { label: "WIN · Wine/Proton"; fg: white; bg: #2b6fb3; height: 18px; }
+                                    if root.detail.installed && root.detail.version != "": Tag { label: "INSTALADO · \{root.detail.version}"; fg: #0b0c10; bg: #4de1c1; height: 18px; }
+                                    if root.detail.update-available && root.detail.new-version != "": Tag { label: "↑ NUEVA \{root.detail.new-version}"; fg: #0b0c10; bg: #ffd166; height: 18px; }
                                 }
-                                if root.detail.installed && root.detail.update-available: Btn { label: "↑ Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install(root.detail.id); } }
-                                if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
-                                if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
-                                    label: root.detail.ra-enabled
-                                        ? "🏆 RetroAchievements ✓"
-                                        : (root.detail.ra-beta ? "🏆 RetroAchievements (beta)" : "🏆 RetroAchievements");
-                                    bg: root.detail.ra-enabled ? #123430 : #1c1f28;
-                                    fg: root.detail.ra-enabled ? #4de1c1 : white;
-                                    clicked => { root.toggle-ra(root.detail.id, !root.detail.ra-enabled); }
+                                Text { text: root.detail.title; font-size: 32px; font-weight: 900; color: white; wrap: word-wrap; }
+                                Text { text: root.detail.subtitle; font-size: 15px; color: #ffb23e; wrap: word-wrap; }
+                                if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
+                                if root.detail.busy: VerticalLayout {
+                                    spacing: 5px;
+                                    width: 300px;
+                                    Text { text: root.detail.installed
+                                               ? (root.detail.progress > 0 ? "Actualizando \{floor(root.detail.progress * 100)}%" : "Actualizando…")
+                                               : (root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…");
+                                           color: #ffb23e; font-weight: 700; }
+                                    Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 8px; }
                                 }
-                                if root.detail.installed: Btn { label: "Carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
-                                if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
-                                if !root.detail.installed: Btn {
-                                    label: root.detail.install-error ? "⚠ Reintentar" : "↓ Instalar";
-                                    bg: root.detail.install-error ? #ff5d73 : #ffb23e;
-                                    fg: root.detail.install-error ? white : #0b0c10;
-                                    clicked => { root.install(root.detail.id); }
+                                if !root.detail.busy: HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: start;
+                                    if root.detail.installed: Btn {
+                                        label: root.detail.play-state == 1 ? "▶ Jugando…" : (root.detail.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
+                                        bg: root.detail.play-state == 2 ? #ff5d73 : #ffb23e;
+                                        fg: root.detail.play-state == 2 ? white : #0b0c10;
+                                        clicked => { if (root.detail.play-state != 1) { root.play(root.detail.id); } }
+                                    }
+                                    if root.detail.installed && root.detail.update-available: Btn {
+                                        label: root.detail.new-version != "" ? "↑ Actualizar a \{root.detail.new-version}" : "↑ Actualizar";
+                                        bg: #ffd166; fg: #0b0c10;
+                                        clicked => { root.install(root.detail.id); }
+                                    }
+                                    if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
+                                    if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
+                                        label: root.detail.ra-enabled
+                                            ? "🏆 RetroAchievements ✓"
+                                            : (root.detail.ra-beta ? "🏆 RetroAchievements (beta)" : "🏆 RetroAchievements");
+                                        bg: root.detail.ra-enabled ? #123430 : #1c1f28;
+                                        fg: root.detail.ra-enabled ? #4de1c1 : white;
+                                        clicked => { root.toggle-ra(root.detail.id, !root.detail.ra-enabled); }
+                                    }
+                                    if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
+                                    if !root.detail.installed: Btn {
+                                        label: root.detail.install-error ? "⚠ Reintentar" : "↓ Instalar";
+                                        bg: root.detail.install-error ? #ff5d73 : #ffb23e;
+                                        fg: root.detail.install-error ? white : #0b0c10;
+                                        clicked => { root.install(root.detail.id); }
+                                    }
                                 }
-                                if root.detail.repo-url != "": Btn { label: "↗ GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
                             }
                         }
                     }
-                    if root.detail.has-screens: ScrollView {
-                        height: 152px;
-                        HorizontalLayout {
-                            spacing: 10px;
-                            alignment: start;
-                            for s in root.detail.screens: Rectangle {
-                                width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
-                                Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
-                                sc-ta := TouchArea { mouse-cursor: pointer;
-                                    clicked => { root.viewer-image = s.img; root.viewer-visible = true; } }
+                    // ── Body: content column + facts panel ──
+                    HorizontalLayout {
+                    padding: 22px;
+                    padding-top: 16px;
+                    spacing: 22px;
+                    alignment: start;
+                    VerticalLayout {
+                    horizontal-stretch: 1;
+                    spacing: 20px;
+                    if root.detail.has-screens: VerticalLayout {
+                        spacing: 8px;
+                        SectionHeader { label: "Capturas"; }
+                        ScrollView {
+                            height: 152px;
+                            HorizontalLayout {
+                                spacing: 10px;
+                                alignment: start;
+                                for s in root.detail.screens: Rectangle {
+                                    width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
+                                    Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
+                                    sc-ta := TouchArea { mouse-cursor: pointer;
+                                        clicked => { root.viewer-image = s.img; root.viewer-visible = true; } }
+                                }
                             }
                         }
                     }
                     if root.detail.about != "": VerticalLayout {
-                        spacing: 6px;
-                        Text { text: "Acerca del juego"; font-size: 18px; font-weight: 800; color: white; }
+                        spacing: 8px;
+                        SectionHeader { label: "Acerca del juego"; }
                         Text { text: root.detail.about; color: #ffffffcc; font-size: 14px; wrap: word-wrap;
-                               width: max(120px, dscroll.visible-width - 44px); }
+                               width: detail-root.body-w; }
                     }
-                    if root.detail.port-notes != "": VerticalLayout {
-                        spacing: 6px;
-                        Text { text: "Sobre este port"; font-size: 18px; font-weight: 800; color: white; }
-                        Text { text: root.detail.port-notes; color: #ffffffaa; font-size: 14px; wrap: word-wrap;
-                               width: max(120px, dscroll.visible-width - 44px); }
+                    if root.detail.port-notes != "": Rectangle {
+                        border-radius: 12px;
+                        background: #14161d;
+                        border-width: 1px;
+                        border-color: #2b2f3a;
+                        VerticalLayout {
+                            padding: 14px;
+                            spacing: 6px;
+                            HorizontalLayout {
+                                spacing: 8px; alignment: start;
+                                Text { text: "ℹ"; color: #ffb23e; font-size: 15px; font-weight: 900; }
+                                Text { text: "Cómo funciona (ROM / instalación)"; font-size: 14px; font-weight: 800; color: white; vertical-alignment: center; }
+                            }
+                            Text { text: root.detail.port-notes; color: #ffffffbb; font-size: 13px; wrap: word-wrap;
+                                   width: detail-root.body-w - 28px; }
+                        }
                     }
                     if root.detail.changelog != "": VerticalLayout {
-                        spacing: 6px;
-                        HorizontalLayout {
-                            spacing: 10px; alignment: start;
-                            Text { text: "Novedades"; font-size: 18px; font-weight: 800; color: white; }
-                            if root.detail.last-updated != "": Text { text: root.detail.last-updated; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
+                        spacing: 8px;
+                        SectionHeader { label: "Novedades"; meta: root.detail.last-updated; }
+                        Rectangle {
+                            border-radius: 12px;
+                            background: #14161d;
+                            border-width: 1px;
+                            border-color: #2b2f3a;
+                            VerticalLayout {
+                                padding: 14px;
+                                Text { text: root.detail.changelog; color: #ffffffcc; font-size: 13px; wrap: word-wrap;
+                                       width: detail-root.body-w - 28px; }
+                            }
                         }
-                        Text { text: root.detail.changelog; color: #ffffffcc; font-size: 13px; wrap: word-wrap;
-                               width: max(120px, dscroll.visible-width - 44px); }
                     }
                     if root.detail.has-related: VerticalLayout {
                         spacing: 8px;
-                        Text { text: "Relacionados"; font-size: 18px; font-weight: 800; color: white; }
+                        SectionHeader { label: "Relacionados"; }
                         ScrollView {
                             height: 205px;
                             HorizontalLayout {
@@ -745,7 +898,7 @@ export component MainWindow inherits Window {
                     }
                     if root.detail.has-mods: VerticalLayout {
                         spacing: 8px;
-                        Text { text: "Mods"; font-size: 18px; font-weight: 800; color: white; }
+                        SectionHeader { label: "Mods"; }
                         for m in root.detail.mods: Rectangle {
                             height: 74px;
                             border-radius: 8px;
@@ -782,6 +935,32 @@ export component MainWindow inherits Window {
                             }
                         }
                     }
+                    } // end left content column
+                    // ── Facts panel (right) ──
+                    VerticalLayout {
+                        width: 270px;
+                        spacing: 10px;
+                        alignment: start;
+                        Rectangle {
+                            border-radius: 12px;
+                            background: #14161d;
+                            border-width: 1px;
+                            border-color: #2b2f3a;
+                            VerticalLayout {
+                                padding: 14px;
+                                spacing: 10px;
+                                Text { text: "FICHA TÉCNICA"; color: #ffffff66; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+                                for f in root.detail.facts: VerticalLayout {
+                                    spacing: 1px;
+                                    Text { text: f.label; color: #ffffff66; font-size: 10px; }
+                                    Text { text: f.value; color: f.accent; font-size: 13px; font-weight: 600; wrap: word-wrap; width: 242px; }
+                                }
+                            }
+                        }
+                        if root.detail.repo-url != "": Btn { label: "↗ Ver en GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
+                        if root.detail.installed: Btn { label: "◫ Abrir carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
+                    }
+                    } // end body row
                 }
             }
         }

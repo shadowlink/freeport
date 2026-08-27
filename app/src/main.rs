@@ -265,6 +265,11 @@ fn rebuild(app: &App, win: &MainWindow) {
             None => 0,
         };
         let install_err = app.install_error.borrow().contains(&p.id);
+        let latest_tag = p.cached.as_ref().and_then(|c| c.latest_tag.clone()).unwrap_or_default();
+        // Installed → its tag; catalog card → the latest published tag.
+        let version = entry
+            .and_then(|e| e.installed_tag.clone())
+            .unwrap_or_else(|| latest_tag.clone());
         sortable.push((
             is_fav,
             name_lc,
@@ -287,6 +292,8 @@ fn rebuild(app: &App, win: &MainWindow) {
                 favorite: is_fav,
                 play_state,
                 install_error: install_err,
+                version: version.into(),
+                new_version: if update { latest_tag.into() } else { "".into() },
             },
         ));
     }
@@ -315,10 +322,19 @@ fn rebuild(app: &App, win: &MainWindow) {
         "Catálogo".to_string()
     };
 
+    // Pending updates across ALL installed games (ignores tab/filter/search),
+    // so the sidebar badge is always truthful.
+    let pending = catalog
+        .projects
+        .iter()
+        .filter(|p| installed.get(&p.id).map(|e| has_update(e, &p.cached)).unwrap_or(false))
+        .count();
+
     win.set_systems(ModelRc::new(VecModel::from(sys_rows)));
     win.set_rows(ModelRc::new(VecModel::from(rows)));
     win.set_header_title(header.into());
     win.set_header_count(count);
+    win.set_updates_pending(pending as i32);
 }
 
 impl App {
@@ -359,27 +375,42 @@ fn build_detail(app: &App, win: &MainWindow) {
     let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
     let sys = catalog.systems.iter().find(|s| s.id == p.system);
     let sys_color = sys.map(|s| parse_color(&s.color)).unwrap_or(Color::from_rgb_u8(0x88, 0x88, 0x88));
-    let neutral = Color::from_rgb_u8(0x3a, 0x3f, 0x4d);
 
-    let mut chips: Vec<ChipData> = Vec::new();
+    // "Ficha técnica" side panel: structured label/value rows.
+    let white = Color::from_rgb_u8(0xff, 0xff, 0xff);
+    let latest_tag = p.cached.as_ref().and_then(|c| c.latest_tag.clone()).unwrap_or_default();
+    let installed_tag = entry.and_then(|e| e.installed_tag.clone()).unwrap_or_default();
+    let mut facts: Vec<FactRow> = Vec::new();
+    let mut fact = |label: &str, value: String, accent: Color| {
+        if !value.is_empty() {
+            facts.push(FactRow { label: label.into(), value: value.into(), accent });
+        }
+    };
     if let Some(s) = sys {
-        chips.push(ChipData { text: s.name.clone().into(), color: sys_color });
+        fact("Sistema", s.name.clone(), sys_color);
     }
-    chips.push(ChipData {
-        text: if p.kind == "recompilation" { "Recompilación" } else { "Port nativo" }.into(),
-        color: neutral,
-    });
+    fact(
+        "Tipo",
+        if p.kind == "recompilation" { "Recompilación estática" } else { "Port nativo" }.into(),
+        if p.kind == "recompilation" { parse_color("#ffb23e") } else { parse_color("#3fa7e0") },
+    );
     if let Some(y) = p.year {
-        chips.push(ChipData { text: format!("{y}").into(), color: neutral });
+        fact("Año", format!("{y}"), white);
     }
-    if let Some(d) = &p.developer {
-        chips.push(ChipData { text: d.clone().into(), color: neutral });
+    fact("Desarrollador", p.developer.clone().unwrap_or_default(), white);
+    fact("Género", p.genre.clone().unwrap_or_default(), white);
+    if !installed_tag.is_empty() {
+        fact("Versión instalada", installed_tag.clone(), parse_color("#4de1c1"));
     }
-    if let Some(g) = &p.genre {
-        chips.push(ChipData { text: g.clone().into(), color: neutral });
+    if !latest_tag.is_empty() {
+        fact(
+            "Última versión",
+            latest_tag.clone(),
+            if update { parse_color("#ffd166") } else { white },
+        );
     }
     if is_win {
-        chips.push(ChipData { text: "Windows · Wine/Proton".into(), color: parse_color("#2b6fb3") });
+        fact("Se ejecuta con", "Wine / Proton".into(), parse_color("#3fa7e0"));
     }
 
     let related: Vec<CardItem> = catalog
@@ -404,6 +435,8 @@ fn build_detail(app: &App, win: &MainWindow) {
             favorite: false,
             play_state: 0,
             install_error: false,
+            version: "".into(),
+            new_version: "".into(),
         })
         .collect();
 
@@ -547,7 +580,10 @@ fn build_detail(app: &App, win: &MainWindow) {
         ra_eligible: p.ra_supported && freeport_core::ra_mod::platform_supported(),
         ra_enabled: p.ra_supported && freeport_core::ra_mod::is_enabled(&p),
         ra_beta: p.ra_beta,
-        chips: ModelRc::new(VecModel::from(chips)),
+        kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
+        version: installed_tag.into(),
+        new_version: if update { latest_tag.into() } else { "".into() },
+        facts: ModelRc::new(VecModel::from(facts)),
         related: ModelRc::new(VecModel::from(related)),
         mods: ModelRc::new(VecModel::from(mod_rows)),
         screens: ModelRc::new(VecModel::from(screens)),
@@ -707,6 +743,8 @@ fn build_tv(app: &App, win: &MainWindow) {
                 favorite: false,
                 play_state: 0,
                 install_error: false,
+                version: "".into(),
+                new_version: "".into(),
             })
             .collect();
         bounds.push((s.name.clone(), games.iter().map(|p| p.id.clone()).collect()));
@@ -1479,6 +1517,109 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    // Bulk-update every installed game with a pending update, sequentially,
+    // driving both the per-card bars and the sidebar's global progress.
+    win.on_update_all({
+        let app = app.clone();
+        let handle = handle.clone();
+        let weak = win.as_weak();
+        move || {
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            let targets: Vec<Project> = {
+                let catalog = app.catalog.borrow();
+                let busy = app.busy.borrow();
+                catalog
+                    .projects
+                    .iter()
+                    .filter(|p| installed.get(&p.id).map(|e| has_update(e, &p.cached)).unwrap_or(false))
+                    .filter(|p| !busy.contains(&p.id))
+                    .cloned()
+                    .collect()
+            };
+            if targets.is_empty() {
+                return;
+            }
+            let total = targets.len();
+            if let Some(w) = weak.upgrade() {
+                w.set_bulk_busy(true);
+                w.set_bulk_progress(0.0);
+                w.set_bulk_label(format!("0/{total}").into());
+            }
+            // Mark everything queued so the whole batch shows as busy at once.
+            for p in &targets {
+                app.busy.borrow_mut().insert(p.id.clone());
+                app.install_progress.borrow_mut().insert(p.id.clone(), 0.0);
+                app.install_error.borrow_mut().remove(&p.id);
+            }
+            ui_refresh();
+            let client = app.client.clone();
+            let paths = app.paths.clone();
+            let cfg = store::load_config(&paths).unwrap_or_default();
+            handle.spawn(async move {
+                for (i, p) in targets.iter().enumerate() {
+                    let pid = p.id.clone();
+                    let game = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
+                    let mut last = -1i32;
+                    let prog_id = pid.clone();
+                    let on_prog = move |done: u64, total_bytes: u64| {
+                        if total_bytes == 0 {
+                            return;
+                        }
+                        let pct = ((done * 100) / total_bytes) as i32;
+                        if pct == last {
+                            return;
+                        }
+                        last = pct;
+                        let f = pct as f32 / 100.0;
+                        let overall = (i as f32 + f) / total as f32;
+                        let idc = prog_id.clone();
+                        let label = format!("{}/{} · {}", i + 1, total, game);
+                        let _ = slint::invoke_from_event_loop(move || {
+                            UI.with(|u| {
+                                if let Some((app, weak)) = &*u.borrow() {
+                                    app.install_progress.borrow_mut().insert(idc, f);
+                                    if let Some(w) = weak.upgrade() {
+                                        w.set_bulk_progress(overall);
+                                        w.set_bulk_label(label.into());
+                                    }
+                                }
+                            });
+                            ui_refresh();
+                        });
+                    };
+                    let err = actions::install_project(&client, &paths, p, &cfg, on_prog).await.err();
+                    let done = (i + 1) as f32 / total as f32;
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((app, weak)) = &*u.borrow() {
+                                app.busy.borrow_mut().remove(&pid);
+                                app.install_progress.borrow_mut().remove(&pid);
+                                app.size_cache.borrow_mut().remove(&pid);
+                                if err.is_some() {
+                                    app.install_error.borrow_mut().insert(pid.clone());
+                                }
+                                if let Some(w) = weak.upgrade() {
+                                    w.set_bulk_progress(done);
+                                }
+                            }
+                        });
+                        ui_refresh();
+                    });
+                }
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((_, weak)) = &*u.borrow() {
+                            if let Some(w) = weak.upgrade() {
+                                w.set_bulk_busy(false);
+                            }
+                        }
+                    });
+                    ui_refresh();
+                });
+            });
+        }
+    });
+
     win.on_play({
         let app = app.clone();
         move |id| {
@@ -1526,6 +1667,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     });
+
+    // Land on the library when there is one; the catalog is the storefront,
+    // but day-to-day you open the app to play what you already installed.
+    if !store::load_installed(&app.paths).unwrap_or_default().is_empty() {
+        win.set_library_tab(true);
+    }
 
     rebuild(&app, &win);
     spawn_missing_thumbs(&app, &handle);
@@ -1657,6 +1804,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         build_tv(&app, &win);
         win.set_tv_visible(true);
         let _ = win.window().set_fullscreen(true);
+    }
+
+    // Dev aid: open a game page straight away (screenshot/UI iteration).
+    if let Ok(id) = std::env::var("FREEPORT_DEBUG_DETAIL") {
+        win.invoke_open_game(id.into());
+    }
+    if std::env::var_os("FREEPORT_DEBUG_UPDATE_ALL").is_some() {
+        win.invoke_update_all();
     }
 
     println!("[freeport] plataforma {}", app.triple);

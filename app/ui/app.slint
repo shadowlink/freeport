@@ -627,54 +627,73 @@ export component MainWindow inherits Window {
                     }
                 }
             }
-            // "Seguir jugando": last-played shelf at the top of the library.
-            if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: VerticalLayout {
-                padding-left: 22px;
-                padding-right: 22px;
-                padding-bottom: 8px;
-                spacing: 8px;
-                SectionHeader { label: "Seguir jugando"; }
-                HorizontalLayout {
-                    spacing: 12px;
-                    alignment: start;
-                    for c in root.recent: Rectangle {
-                        width: 296px;
-                        height: 92px;
-                        border-radius: 12px;
-                        clip: true;
-                        background: #14161d;
-                        border-width: 1px;
-                        border-color: rc-ta.has-hover ? #ffb23e : #2b2f3a;
-                        animate border-color { duration: 150ms; easing: ease-out; }
-                        Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.18; }
-                        rc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
-                        HorizontalLayout {
-                            padding: 10px;
-                            spacing: 12px;
-                            Rectangle {
-                                width: 50px; border-radius: 6px; clip: true;
-                                Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
-                            }
-                            VerticalLayout {
-                                alignment: center;
-                                spacing: 3px;
-                                horizontal-stretch: 1;
-                                Text { text: c.title; color: white; font-size: 13px; font-weight: 700; overflow: elide; }
-                                Text { text: c.meta; color: #ffffff88; font-size: 11px; overflow: elide; }
-                            }
-                            VerticalLayout {
-                                alignment: center;
+            // "Seguir jugando": last-played shelf on its own band, visually
+            // separated from the full grid below (distinct background +
+            // divider + a header for the grid section).
+            if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: Rectangle {
+                height: 148px;
+                background: #10131c;
+                VerticalLayout {
+                    padding-left: 22px;
+                    padding-right: 22px;
+                    padding-top: 12px;
+                    padding-bottom: 14px;
+                    spacing: 10px;
+                    SectionHeader { label: "▶ Seguir jugando"; }
+                    HorizontalLayout {
+                        spacing: 12px;
+                        alignment: start;
+                        for c in root.recent: Rectangle {
+                            width: 296px;
+                            height: 92px;
+                            border-radius: 12px;
+                            clip: true;
+                            background: #191c26;
+                            border-width: 1px;
+                            border-color: rc-ta.has-hover ? #ffb23e : #343947;
+                            drop-shadow-blur: 12px;
+                            drop-shadow-color: #00000066;
+                            animate border-color { duration: 150ms; easing: ease-out; }
+                            Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.18; }
+                            rc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                            HorizontalLayout {
+                                padding: 10px;
+                                spacing: 12px;
                                 Rectangle {
-                                    width: 40px; height: 40px; border-radius: 20px;
-                                    background: rp-ta.has-hover ? #ffb23e : #ffb23e22;
-                                    Text { text: "▶"; color: rp-ta.has-hover ? #0b0c10 : #ffb23e; font-size: 15px; font-weight: 900;
-                                           horizontal-alignment: center; vertical-alignment: center; }
-                                    rp-ta := TouchArea { mouse-cursor: pointer; clicked => { root.play(c.id); } }
+                                    width: 50px; border-radius: 6px; clip: true;
+                                    Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
+                                }
+                                VerticalLayout {
+                                    alignment: center;
+                                    spacing: 3px;
+                                    horizontal-stretch: 1;
+                                    Text { text: c.title; color: white; font-size: 13px; font-weight: 700; overflow: elide; }
+                                    Text { text: c.meta; color: #ffffff88; font-size: 11px; overflow: elide; }
+                                }
+                                VerticalLayout {
+                                    alignment: center;
+                                    Rectangle {
+                                        width: 40px; height: 40px; border-radius: 20px;
+                                        background: rp-ta.has-hover ? #ffb23e : #ffb23e22;
+                                        Text { text: "▶"; color: rp-ta.has-hover ? #0b0c10 : #ffb23e; font-size: 15px; font-weight: 900;
+                                               horizontal-alignment: center; vertical-alignment: center; }
+                                        rp-ta := TouchArea { mouse-cursor: pointer; clicked => { root.play(c.id); } }
+                                    }
                                 }
                             }
                         }
                     }
                 }
+                // Divider under the band.
+                Rectangle { y: parent.height - 1px; height: 1px; background: #2b2f3a; }
+            }
+            // Header for the full grid, so both sections read as sections.
+            if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: VerticalLayout {
+                padding-left: 22px;
+                padding-right: 22px;
+                padding-top: 14px;
+                padding-bottom: 4px;
+                SectionHeader { label: "Toda la biblioteca"; }
             }
             Rectangle {
             vertical-stretch: 1;

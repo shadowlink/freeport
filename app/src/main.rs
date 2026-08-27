@@ -1661,5 +1661,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("[freeport] plataforma {}", app.triple);
     win.run()?;
-    Ok(())
+    // Dropping the tokio Runtime waits for every spawn_blocking task (e.g.
+    // extracting a multi-GB archive) and lingering downloads, which left the
+    // process hanging after the window closed. Give in-flight work a short
+    // grace period, then exit unconditionally — installs are crash-safe
+    // (.part files + reinstall wipes the app dir).
+    rt.shutdown_timeout(std::time::Duration::from_secs(2));
+    std::process::exit(0);
 }

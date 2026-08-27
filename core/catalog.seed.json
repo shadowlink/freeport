@@ -3156,6 +3156,46 @@
       "developer": "AKI Corporation / Asmik Ace",
       "genre": "Lucha libre",
       "wiki": "WCW vs. nWo: World Tour"
+    },
+    {
+      "id": "ringout-sc2",
+      "name": "Ring Out",
+      "original_game": "Soulcalibur II",
+      "system": "gc",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "jackpoison-prog",
+        "repo": "RingOut"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/SoulCalibur%20II%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar pide tu imagen de disco de Soulcalibur II (GameCube; .iso/.gcm/.nkit.iso/.rvz) y la extrae y recompila en tu máquina (varios minutos, solo la primera vez). Necesita driver Vulkan."
+      },
+      "launch": {
+        "linux": "RingOut",
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "latest_tag": "v1.3",
+        "published_at": "2026-08-26T00:00:52Z"
+      },
+      "year": 2003,
+      "developer": "Namco",
+      "genre": "Lucha",
+      "wiki": "Soulcalibur II"
     }
   ]
 }

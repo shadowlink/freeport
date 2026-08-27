@@ -41,13 +41,29 @@ pub async fn refresh_catalog(
 }
 
 /// Fetches the latest release's changelog for a project: (tag, published_at, body).
+///
+/// Reads the public `releases.atom` feed first — it carries the notes and is
+/// exempt from the 60 req/hour anonymous API limit, which browsing game pages
+/// used to burn through (one API call per page). The API is only a fallback.
 pub async fn fetch_changelog(
     client: &reqwest::Client,
     paths: &Paths,
     project: &Project,
 ) -> AppResult<(String, Option<String>, String)> {
+    let slug = project.repo.slug();
+    if let Ok(entries) = github::fetch_changelogs_noapi(client, &slug).await {
+        // The catalog's probe already picked the channel's tag; fall back to
+        // the newest entry when the cached tag isn't in the feed (or missing).
+        let cached_tag = project.cached.as_ref().and_then(|c| c.latest_tag.as_deref());
+        let entry = cached_tag
+            .and_then(|t| entries.iter().find(|(tag, _, _)| tag == t))
+            .or_else(|| entries.first());
+        if let Some((tag, updated, body)) = entry {
+            return Ok((tag.clone(), updated.clone(), body.clone()));
+        }
+    }
     let token = store::load_config(paths).ok().and_then(|c| c.github_token);
-    let releases = github::fetch_releases(client, &project.repo.slug(), token.as_deref()).await?;
+    let releases = github::fetch_releases(client, &slug, token.as_deref()).await?;
     let rel = github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
         .ok_or_else(|| AppError::msg("sin release"))?;
     Ok((rel.tag_name.clone(), rel.published_at.clone(), rel.body.clone().unwrap_or_default()))
@@ -129,6 +145,36 @@ fn resolve_runner(cfg: &Config, id: &str) -> Option<String> {
     list_runners().first().map(|r| r.id.clone())
 }
 
+/// Resolves the release to install. Tries the quota-free path first: the
+/// catalog's daily probe already resolved the channel's tag (`cached.latest_tag`),
+/// and GitHub's public asset pages list its downloads without touching
+/// api.github.com — anonymous API calls are capped at 60/hour per IP, which is
+/// what used to make installs fail with 403 after browsing a while. The REST
+/// API remains as fallback (no cached tag, stale tag, or layout changes).
+async fn resolve_release(
+    client: &reqwest::Client,
+    project: &Project,
+    token: Option<&str>,
+    rule: &str,
+) -> AppResult<github::Release> {
+    let slug = project.repo.slug();
+    if let Some(cached) = project.cached.as_ref() {
+        if let Some(tag) = cached.latest_tag.as_deref() {
+            if let Ok(mut rel) = github::fetch_release_by_tag_noapi(client, &slug, tag).await {
+                if github::pick_asset(&rel, rule).is_ok() {
+                    // The scraped page has no date; the probe's does, and it is
+                    // this very release — keeps date-based update detection alive.
+                    rel.published_at = cached.published_at.clone();
+                    return Ok(rel);
+                }
+            }
+        }
+    }
+    let releases = github::fetch_releases(client, &slug, token).await?;
+    github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
+        .ok_or_else(|| AppError::msg("no se encontró una release adecuada"))
+}
+
 /// Downloads + extracts the right release asset for `project` and records it.
 pub async fn install_project(
     client: &reqwest::Client,
@@ -157,9 +203,7 @@ pub async fn install_project(
     };
     let rule = project.asset_rules.get(&install_triple).unwrap();
 
-    let releases = github::fetch_releases(client, &project.repo.slug(), token).await?;
-    let release = github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
-        .ok_or_else(|| AppError::msg("no se encontró una release adecuada"))?;
+    let release = resolve_release(client, project, token, rule).await?;
     let asset = github::pick_asset(&release, rule)?;
 
     let app_dir = paths.app_dir(&project.id);

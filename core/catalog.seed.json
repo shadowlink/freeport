@@ -2214,7 +2214,7 @@
         "owner": "alondero",
         "repo": "automobililamborghini-recomp"
       },
-      "release_channel": "stable",
+      "release_channel": "rolling",
       "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Automobili%20Lamborghini%20(USA).png",
       "logo_url": null,
       "asset_rules": {
@@ -2237,14 +2237,15 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.1",
-        "published_at": "2026-08-25T17:50:35Z"
+        "latest_tag": "v0.5.0",
+        "published_at": "2026-07-25T14:43:27Z"
       },
       "year": 1997,
       "developer": "Titus",
       "genre": "Carreras",
       "wiki": "Automobili Lamborghini (video game)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/1c7e02e71df12a6cdae7888b9785b38f.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/1c7e02e71df12a6cdae7888b9785b38f.png",
+      "rolling_tag": "v0.5.0"
     },
     {
       "id": "condemned2-recomp",

@@ -526,7 +526,7 @@
       "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy/Named_Boxarts/Pokemon%20-%20Red%20Version%20%28USA%2C%20Europe%29%20%28SGB%20Enhanced%29.png",
       "logo_url": null,
       "asset_rules": {
-        "linux-x86_64": "(?i)-linux\\.zip$",
+        "linux-x86_64": "(?i)-linux-x86_64\\.AppImage$",
         "windows-x86_64": "(?i)-windows\\.zip$",
         "macos-x86_64": "(?i)-macos\\.zip$"
       },
@@ -547,8 +547,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.26",
-        "published_at": "2026-08-25T20:20:39Z"
+        "latest_tag": "v0.2.31",
+        "published_at": "2026-08-27T12:11:43Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1100,8 +1100,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_c73fdfb",
-        "published_at": "2026-08-25T02:34:54Z"
+        "latest_tag": "nightly_c621fe7",
+        "published_at": "2026-08-27T06:02:58Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -2059,9 +2059,11 @@
         "windows": null
       },
       "cached": {
-        "platforms": [],
-        "latest_tag": "v0.1.2",
-        "published_at": "2026-08-05T17:47:37Z"
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.1-issue3-diagnostics.1",
+        "published_at": "2026-08-27T05:54:03Z"
       },
       "year": 1999,
       "developer": "Sony Computer Entertainment",
@@ -2238,7 +2240,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.5.0",
-        "published_at": "2026-07-25T14:43:27Z"
+        "published_at": "2026-07-24T07:37:24Z"
       },
       "year": 1997,
       "developer": "Titus",
@@ -2746,7 +2748,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v2.0.0",
-        "published_at": "2025-05-25T03:33:23Z"
+        "published_at": "2025-05-25T03:43:32Z"
       },
       "year": 1997,
       "developer": "Nintendo",
@@ -2787,7 +2789,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.6.2-alpha",
-        "published_at": "2026-08-27T04:53:11Z"
+        "published_at": "2026-08-27T05:00:26Z"
       },
       "year": 2006,
       "developer": "Nintendo (NST)",
@@ -2829,7 +2831,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.12.3-alpha",
-        "published_at": "2026-08-27T00:12:20Z"
+        "published_at": "2026-08-27T00:12:26Z"
       },
       "year": 1997,
       "developer": "Whoopee Camp",
@@ -2869,7 +2871,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.3.8",
-        "published_at": "2026-08-27T00:29:02Z"
+        "published_at": "2026-08-27T00:29:30Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -2951,7 +2953,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v26.03.28.0-stable",
-        "published_at": "2026-03-28T00:00:00Z"
+        "published_at": "2026-03-28T15:37:07Z"
       },
       "year": 1994,
       "developer": "Sega",
@@ -2991,7 +2993,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.1.1",
-        "published_at": "2026-07-22T00:37:52Z"
+        "published_at": "2026-07-22T00:45:59Z"
       },
       "year": 2000,
       "developer": "AKI Corporation / Asmik Ace",
@@ -3031,7 +3033,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.1.0",
-        "published_at": "2026-07-15T01:15:49Z"
+        "published_at": "2026-07-15T01:33:06Z"
       },
       "year": 1999,
       "developer": "AKI Corporation / Asmik Ace",
@@ -3071,7 +3073,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.1.0",
-        "published_at": "2026-07-15T00:24:17Z"
+        "published_at": "2026-07-15T00:31:17Z"
       },
       "year": 1997,
       "developer": "AKI Corporation / Asmik Ace",
@@ -3111,7 +3113,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.1.1",
-        "published_at": "2026-07-18T14:54:51Z"
+        "published_at": "2026-07-18T15:01:48Z"
       },
       "year": 1998,
       "developer": "AKI Corporation / Asmik Ace",
@@ -3151,7 +3153,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.1.2",
-        "published_at": "2026-07-08T12:17:51Z"
+        "published_at": "2026-07-08T22:53:06Z"
       },
       "year": 1997,
       "developer": "AKI Corporation / Asmik Ace",
@@ -3191,7 +3193,7 @@
           "linux-x86_64"
         ],
         "latest_tag": "v1.3",
-        "published_at": "2026-08-26T00:00:52Z"
+        "published_at": "2026-08-26T00:01:48Z"
       },
       "year": 2003,
       "developer": "Namco",
@@ -3231,7 +3233,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "beta1",
-        "published_at": "2026-07-05T08:43:30Z"
+        "published_at": "2026-07-02T08:30:49Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3271,7 +3273,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.2.0",
-        "published_at": "2026-08-26T03:39:27Z"
+        "published_at": "2026-08-26T03:40:46Z"
       },
       "year": 2001,
       "developer": "Capcom / M4",
@@ -3311,7 +3313,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v2.0",
-        "published_at": "2026-07-31T20:36:55Z"
+        "published_at": "2026-08-26T00:07:14Z"
       },
       "year": 1998,
       "developer": "Namco",
@@ -3353,7 +3355,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.2.15",
-        "published_at": "2026-08-26T05:23:22Z"
+        "published_at": "2026-08-26T05:23:28Z"
       },
       "year": 1998,
       "developer": "Capcom",
@@ -3395,7 +3397,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v2.0.0",
-        "published_at": "2026-08-22T15:17:50Z"
+        "published_at": "2026-08-22T15:20:42Z"
       },
       "year": 1996,
       "developer": "Konami",
@@ -3435,7 +3437,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "1.2",
-        "published_at": "2025-11-25T02:25:54Z"
+        "published_at": "2025-11-25T02:48:22Z"
       },
       "year": 2011,
       "developer": "Glu Mobile",

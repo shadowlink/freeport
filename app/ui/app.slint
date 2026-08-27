@@ -448,7 +448,10 @@ export component MainWindow inherits Window {
                 }
 
                 // Bulk update: visible while something is pending or running.
+                // Fixed heights — without them the sidebar layout stretches
+                // this block to swallow the spare space (giant amber box).
                 if root.updates-pending > 0 || root.bulk-busy: Rectangle {
+                    height: root.bulk-busy ? 88px : (root.bulk-label != "" ? 62px : 42px);
                     border-radius: 8px;
                     background: bulk-ta.has-hover && !root.bulk-busy ? #ffd16630 : #ffd1661c;
                     border-width: 1px;
@@ -484,6 +487,11 @@ export component MainWindow inherits Window {
                                     bc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.cancel-update-all(); } }
                                 }
                             }
+                        }
+                        // Post-run summary (e.g. "2 al día · 1 con error").
+                        if !root.bulk-busy && root.bulk-label != "": Text {
+                            text: root.bulk-label; color: #ffffff99; font-size: 10px;
+                            wrap: word-wrap;
                         }
                     }
                 }

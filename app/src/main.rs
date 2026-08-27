@@ -1820,6 +1820,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let paths = app.paths.clone();
             let cfg = store::load_config(&paths).unwrap_or_default();
             handle.spawn(async move {
+                let mut done_ok = 0usize;
+                let mut failed = 0usize;
                 for (i, p) in targets.iter().enumerate() {
                     if bulk_flag.load(std::sync::atomic::Ordering::Relaxed) {
                         // Cancelled: release everything still queued.
@@ -1881,6 +1883,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     let err = actions::install_project(&client, &paths, p, &cfg, Some(cancel), on_prog)
                         .await
                         .err();
+                    if let Some(e) = &err {
+                        eprintln!("[bulk] {} falló: {e}", pid);
+                    }
+                    match &err {
+                        None => done_ok += 1,
+                        Some(e) if !e.is_cancelled() => failed += 1,
+                        _ => {}
+                    }
                     let done = (i + 1) as f32 / total as f32;
                     let _ = slint::invoke_from_event_loop(move || {
                         UI.with(|u| {
@@ -1900,12 +1910,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         ui_refresh();
                     });
                 }
+                // Summary stays visible under the button when something failed
+                // (silent per-card ⚠ alone was easy to miss).
+                let summary = if failed > 0 {
+                    format!("{done_ok} al día · {failed} con error — reintenta desde la tarjeta")
+                } else {
+                    String::new()
+                };
                 let _ = slint::invoke_from_event_loop(move || {
                     UI.with(|u| {
                         if let Some((app, weak)) = &*u.borrow() {
                             *app.bulk_cancel.borrow_mut() = None;
                             if let Some(w) = weak.upgrade() {
                                 w.set_bulk_busy(false);
+                                w.set_bulk_label(summary.into());
                             }
                         }
                     });

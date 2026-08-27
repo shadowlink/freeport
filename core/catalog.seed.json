@@ -3197,6 +3197,46 @@
       "developer": "Namco",
       "genre": "Lucha",
       "wiki": "Soulcalibur II"
+    },
+    {
+      "id": "silenthill-pc",
+      "name": "Silent Hill PC Port",
+      "original_game": "Silent Hill",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "SlickAmogus",
+        "repo": "silent-hill-decomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Silent%20Hill%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)shpc.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher te pedirá tu imagen de disco de Silent Hill (PS1; sirven USA, PAL y NTSC-J, se autodetecta). Port completo jugable de principio a fin, con RetroAchievements y Discord Rich Presence integrados."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "beta1",
+        "published_at": "2026-07-05T08:43:30Z"
+      },
+      "year": 1999,
+      "developer": "Konami",
+      "genre": "Survival horror",
+      "wiki": "Silent Hill (video game)"
     }
   ]
 }

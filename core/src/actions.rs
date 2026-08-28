@@ -145,6 +145,29 @@ fn resolve_runner(cfg: &Config, id: &str) -> Option<String> {
     list_runners().first().map(|r| r.id.clone())
 }
 
+/// Picks which platform's asset to install: (triple, runs-through-wine).
+/// A rule alone is not enough — the catalog's probed `cached.platforms` must
+/// confirm the release actually ships that binary (a rule for a platform the
+/// project hasn't published yet would otherwise win and fail at asset-pick,
+/// e.g. an .appimage rule while releases are still Windows-only).
+fn choose_install_triple(project: &Project, triple: &str, show_windows: bool) -> Option<(String, bool)> {
+    let shipped = |t: &str| match project.cached.as_ref() {
+        Some(c) if !c.platforms.is_empty() => c.platforms.iter().any(|x| x == t),
+        _ => true, // no probe data — trust the rule
+    };
+    if project.asset_rules.contains_key(triple) && shipped(triple) {
+        return Some((triple.to_string(), false));
+    }
+    if !triple.starts_with("windows")
+        && show_windows
+        && project.asset_rules.contains_key("windows-x86_64")
+        && shipped("windows-x86_64")
+    {
+        return Some(("windows-x86_64".to_string(), true));
+    }
+    None
+}
+
 /// Resolves the release to install. Tries the quota-free path first: the
 /// catalog's daily probe already resolved the channel's tag (`cached.latest_tag`),
 /// and GitHub's public asset pages list its downloads without touching
@@ -193,21 +216,10 @@ pub async fn install_project(
     let triple = platform::current_triple();
     let token = cfg.github_token.as_deref();
 
-    let native_ok = project.asset_rules.contains_key(&triple);
-    let is_windows_install = !native_ok
-        && !triple.starts_with("windows")
-        && cfg.show_windows
-        && project.asset_rules.contains_key("windows-x86_64");
-    let install_triple = if native_ok {
-        triple.clone()
-    } else if is_windows_install {
-        "windows-x86_64".to_string()
-    } else {
-        return Err(AppError::msg(format!(
-            "{} no publica binario para {triple}",
-            project.name
-        )));
-    };
+    let (install_triple, is_windows_install) = choose_install_triple(project, &triple, cfg.show_windows)
+        .ok_or_else(|| {
+            AppError::msg(format!("{} no publica binario para {triple}", project.name))
+        })?;
     let rule = project.asset_rules.get(&install_triple).unwrap();
 
     let release = resolve_release(client, project, token, rule).await?;
@@ -581,4 +593,88 @@ pub fn uninstall_mod(paths: &Paths, project: &Project, full_name: &str) -> AppRe
         m.remove(full_name);
     }
     store::save_mod_state(paths, &mstate)
+}
+
+#[cfg(test)]
+mod choose_triple_tests {
+    use super::*;
+    use crate::model::{Cached, Project};
+
+    fn proj(rules: &[(&str, &str)], platforms: &[&str]) -> Project {
+        let mut p: Project = serde_json::from_value(serde_json::json!({
+            "id": "test", "name": "Test", "original_game": "Test", "system": "n64",
+            "type": "recompilation",
+            "repo": {"host": "github", "owner": "o", "repo": "r"},
+        }))
+        .expect("proyecto mínimo");
+        for (k, v) in rules {
+            p.asset_rules.insert((*k).into(), (*v).into());
+        }
+        p.cached = Some(Cached {
+            platforms: platforms.iter().map(|s| s.to_string()).collect(),
+            latest_tag: Some("v1".into()),
+            published_at: None,
+        });
+        p
+    }
+
+    #[test]
+    fn speculative_native_rule_falls_back_to_windows() {
+        // MPH case: linux rule exists but the release only ships Windows.
+        let p = proj(
+            &[("linux-x86_64", "appimage$"), ("windows-x86_64", "zip$")],
+            &["windows-x86_64"],
+        );
+        assert_eq!(
+            choose_install_triple(&p, "linux-x86_64", true),
+            Some(("windows-x86_64".into(), true))
+        );
+        // Windows games hidden → nothing to install.
+        assert_eq!(choose_install_triple(&p, "linux-x86_64", false), None);
+    }
+
+    #[test]
+    fn native_wins_when_actually_shipped() {
+        let p = proj(
+            &[("linux-x86_64", "appimage$"), ("windows-x86_64", "zip$")],
+            &["linux-x86_64", "windows-x86_64"],
+        );
+        assert_eq!(
+            choose_install_triple(&p, "linux-x86_64", true),
+            Some(("linux-x86_64".into(), false))
+        );
+    }
+
+    #[test]
+    fn no_probe_data_trusts_the_rule() {
+        let mut p = proj(&[("linux-x86_64", "zip$")], &[]);
+        p.cached = None;
+        assert_eq!(
+            choose_install_triple(&p, "linux-x86_64", false),
+            Some(("linux-x86_64".into(), false))
+        );
+    }
+}
+
+#[cfg(test)]
+mod live_install_tests {
+    use super::*;
+
+    /// Live e2e for the MPH bug: Windows-only game on Linux with show_windows,
+    /// after removing the speculative linux rule. Installs for real.
+    #[tokio::test]
+    #[ignore]
+    async fn installs_mph_via_proton_path() {
+        let paths = Paths::resolve().unwrap();
+        let catalog = store::load_catalog(&paths).unwrap();
+        let p = catalog.projects.iter().find(|p| p.id == "mph-recomp").unwrap().clone();
+        let mut cfg = store::load_config(&paths).unwrap_or_default();
+        cfg.show_windows = true;
+        let client = reqwest::Client::new();
+        let entry = install_project(&client, &paths, &p, &cfg, None, |_, _| {}).await.expect("install");
+        println!("instalado {} windows={} en {}", entry.installed_tag.unwrap_or_default(), entry.windows, entry.install_path);
+        assert!(entry.windows);
+        let bin = install::find_launch_binary(Path::new(&entry.install_path), p.launch.get("windows").and_then(|v| v.clone()).as_deref(), true).expect("exe");
+        println!("exe: {}", bin.display());
+    }
 }

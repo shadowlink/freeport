@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-27",
+  "updated_at": "2026-08-29",
   "source": "probed",
   "systems": [
     {
@@ -547,8 +547,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.31",
-        "published_at": "2026-08-27T12:11:43Z"
+        "latest_tag": "v0.2.33",
+        "published_at": "2026-08-28T16:51:01Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -837,8 +837,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.4.4",
-        "published_at": "2026-08-21T23:02:13Z"
+        "latest_tag": "v1.4.5",
+        "published_at": "2026-08-27T23:17:33Z"
       },
       "year": 1997,
       "developer": "Konami",
@@ -2062,8 +2062,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.1-issue3-diagnostics.1",
-        "published_at": "2026-08-27T05:54:03Z"
+        "latest_tag": "v0.2.1",
+        "published_at": "2026-08-27T20:36:10Z"
       },
       "year": 1999,
       "developer": "Sony Computer Entertainment",
@@ -2788,7 +2788,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.6.4-alpha",
-        "published_at": "2026-08-28T06:26:49Z"
+        "published_at": "2026-08-28T06:30:51Z"
       },
       "year": 2006,
       "developer": "Nintendo (NST)",
@@ -2869,8 +2869,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.8",
-        "published_at": "2026-08-27T00:29:30Z"
+        "latest_tag": "v0.3.9",
+        "published_at": "2026-08-27T21:42:02Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3191,8 +3191,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "v1.3",
-        "published_at": "2026-08-26T00:01:48Z"
+        "latest_tag": "v1.4",
+        "published_at": "2026-08-28T00:40:58Z"
       },
       "year": 2003,
       "developer": "Namco",
@@ -3311,8 +3311,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v2.0",
-        "published_at": "2026-08-26T00:07:14Z"
+        "latest_tag": "v2.1",
+        "published_at": "2026-08-27T20:30:52Z"
       },
       "year": 1998,
       "developer": "Namco",
@@ -3442,6 +3442,214 @@
       "developer": "Glu Mobile",
       "genre": "Estrategia",
       "wiki": "Samurai vs. Zombies Defense"
+    },
+    {
+      "id": "reblue-bluedragon",
+      "name": "reblue",
+      "original_game": "Blue Dragon",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "zolaware",
+        "repo": "reblue"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/f7/Blue_Dragon_Box_Art.jpeg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)win-amd64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente en el primer arranque: necesita las imágenes de los TRES DVD de tu Blue Dragon (Xbox 360); las verifica una a una y copia los datos del juego. Solo se hace una vez."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-08-27T20:11:19Z"
+      },
+      "year": 2006,
+      "developer": "Mistwalker / Artoon",
+      "genre": "RPG",
+      "wiki": "Blue Dragon (video game)"
+    },
+    {
+      "id": "opentie",
+      "name": "OpenTIE",
+      "original_game": "Star Wars: TIE Fighter",
+      "system": "pc",
+      "type": "port",
+      "repo": {
+        "host": "github",
+        "owner": "elyosh",
+        "repo": "OpenTIE"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/DOS/Named_Boxarts/Star%20Wars%20-%20TIE%20Fighter%20%28Collector%27s%20CD-ROM%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64.*\\.tar\\.xz$",
+        "windows-x86_64": "(?i)windows-x86_64.*\\.zip$",
+        "macos-x86_64": "(?i)macos.*\\.dmg$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los datos de tu copia de TIE Fighter (Collector’s CD-ROM de 1995 y/o versión Windows de 1998, p. ej. de GOG); OpenTIE te pedirá localizarlos. Con ambas ediciones combina lo mejor de cada una."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.5",
+        "published_at": "2026-08-24T19:12:21Z"
+      },
+      "year": 1994,
+      "developer": "Totally Games",
+      "genre": "Simulador de combate espacial",
+      "wiki": "Star Wars: TIE Fighter"
+    },
+    {
+      "id": "xmen-ma2-pc",
+      "name": "X-Men MA2 PC",
+      "original_game": "X-Men: Mutant Academy 2",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "xmen-mutant-academy-2-pc"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/X-Men%20-%20Mutant%20Academy%202%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)portable\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita el disco de tu X-Men: Mutant Academy 2 (PS1, USA, SLUS-01382) en .bin/.cue; el port lo pedirá para generar el juego. Audio aún en pruebas."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "XMenMA2.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0",
+        "published_at": "2026-08-22T17:58:47Z"
+      },
+      "year": 2001,
+      "developer": "Paradox Development",
+      "genre": "Lucha",
+      "wiki": "X-Men: Mutant Academy 2"
+    },
+    {
+      "id": "strider2-recomp",
+      "name": "Strider 2 Recompiled",
+      "original_game": "Strider 2",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "strider973",
+        "repo": "STRIDER-2-Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Strider%202%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Launcher al arrancar: «Open *.CUE» y selecciona el .cue de tu Strider 2 (PS1, SLUS-01163). El primer arranque genera el juego desde tu disco (OpenBIOS incluida)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "strider2-0.1.1",
+        "published_at": "2026-08-27T19:52:19Z"
+      },
+      "year": 2000,
+      "developer": "Capcom",
+      "genre": "Acción",
+      "wiki": "Strider 2 (1999 video game)"
+    },
+    {
+      "id": "twistedmetal4-recomp",
+      "name": "Twisted Metal 4 Recomp",
+      "original_game": "Twisted Metal 4",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "TwistedMetal4Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Twisted%20Metal%204%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu Twisted Metal 4 (PS1); el juego se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.29",
+        "published_at": "2026-08-26T05:20:40Z"
+      },
+      "year": 1999,
+      "developer": "989 Studios",
+      "genre": "Combate vehicular",
+      "wiki": "Twisted Metal 4"
     }
   ]
 }

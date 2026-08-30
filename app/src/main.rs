@@ -95,30 +95,47 @@ struct DetailState {
     msg: String,
 }
 
-/// Catalog ids recorded as already-seen (persisted across sessions).
+/// How long a catalog addition counts as "new" (badge + showcase strip).
+const NEW_WINDOW_SECS: i64 = 7 * 86400;
+
+/// Catalog ids → epoch when first seen (persisted across sessions).
 fn seen_file(paths: &Paths) -> std::path::PathBuf {
     paths.data_dir.join("seen_catalog.json")
 }
 
-fn load_seen(paths: &Paths) -> HashSet<String> {
-    std::fs::read_to_string(seen_file(paths))
-        .ok()
-        .and_then(|s| serde_json::from_str::<Vec<String>>(&s).ok())
-        .map(|v| v.into_iter().collect())
+fn load_seen(paths: &Paths) -> std::collections::HashMap<String, i64> {
+    let Ok(txt) = std::fs::read_to_string(seen_file(paths)) else {
+        return Default::default();
+    };
+    if let Ok(m) = serde_json::from_str::<std::collections::HashMap<String, i64>>(&txt) {
+        return m;
+    }
+    // Legacy format: plain id list → treat as long-known (epoch 0).
+    serde_json::from_str::<Vec<String>>(&txt)
+        .map(|v| v.into_iter().map(|id| (id, 0)).collect())
         .unwrap_or_default()
 }
 
-/// Persists seen ∪ current so next session's NUEVO badges start from here.
-fn save_seen(paths: &Paths, app: &App, current: Vec<String>) {
-    let mut union: HashSet<String> = load_seen(paths);
-    let empty = union.is_empty();
-    union.extend(current);
-    if empty {
-        union.extend(app.seen.borrow().iter().cloned());
+/// Stamps first-seen times: ids not in the file get "now" (they stay NEW for
+/// [`NEW_WINDOW_SECS`]); a first-ever run records everything as old baseline.
+fn save_seen(paths: &Paths, current: &[String]) {
+    let mut m = load_seen(paths);
+    let baseline = m.is_empty();
+    let now = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
+    for id in current {
+        m.entry(id.clone()).or_insert(if baseline { 0 } else { now });
     }
-    let list: Vec<&String> = union.iter().collect();
-    if let Ok(json) = serde_json::to_string(&list) {
+    if let Ok(json) = serde_json::to_string(&m) {
         let _ = std::fs::write(seen_file(paths), json);
+    }
+}
+
+/// Whether a catalog entry still counts as a fresh addition.
+fn is_new_id(seen: &std::collections::HashMap<String, i64>, id: &str, now: i64) -> bool {
+    match seen.get(id) {
+        None => !seen.is_empty(), // appeared mid-session (post-baseline)
+        Some(0) => false,
+        Some(t) => now - t < NEW_WINDOW_SECS,
     }
 }
 
@@ -149,8 +166,8 @@ struct App {
     launching: RefCell<std::collections::HashMap<String, bool>>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
-    /// Catalog ids already seen in previous sessions (drives the NUEVO badge).
-    seen: RefCell<HashSet<String>>,
+    /// Catalog ids → first-seen epoch (drives NUEVO badge + newcomers strip).
+    seen: RefCell<std::collections::HashMap<String, i64>>,
     /// RetroAchievements progress per project id + badge art by URL.
     ra_cache: RefCell<std::collections::HashMap<String, ra::RaProgress>>,
     ra_badges: RefCell<std::collections::HashMap<String, Image>>,
@@ -241,6 +258,7 @@ fn rebuild(app: &App, win: &MainWindow) {
     let filter_plat = win.get_filter_plat().to_string();
     let filter_genre = win.get_filter_genre().to_string();
     let seen = app.seen.borrow();
+    let now_secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
     let busy = app.busy.borrow();
     let catalog = app.catalog.borrow();
     let cfg = store::load_config(&app.paths).unwrap_or_default();
@@ -348,7 +366,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 version: version.into(),
                 new_version: if update { latest_tag.into() } else { "".into() },
                 meta: if last > 0 { format!("Jugado {}", fmt_ago(last)).into() } else { "".into() },
-                is_new: !seen.is_empty() && !seen.contains(&p.id),
+                is_new: is_new_id(&seen, &p.id, now_secs),
             },
         ));
     }
@@ -394,6 +412,46 @@ fn rebuild(app: &App, win: &MainWindow) {
         .filter(|p| installed.get(&p.id).map(|e| has_update(e, &p.cached)).unwrap_or(false))
         .count();
 
+    // "Nuevas incorporaciones": catalog additions from the last week, newest
+    // first (appended at the end of the catalog file), for the showcase strip.
+    let mut newcomers: Vec<CardItem> = Vec::new();
+    for p in catalog.projects.iter().rev() {
+        if newcomers.len() >= 8 {
+            break;
+        }
+        let (visible, is_win) = app.visibility(p, &installed, show_windows);
+        if !visible || !is_new_id(&seen, &p.id, now_secs) {
+            continue;
+        }
+        let sys_name = catalog.systems.iter().find(|s| s.id == p.system).map(|s| s.name.clone()).unwrap_or_default();
+        let meta = match p.year {
+            Some(y) => format!("{sys_name} · {y}"),
+            None => sys_name,
+        };
+        newcomers.push(CardItem {
+            id: p.id.clone().into(),
+            title: (if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() }).into(),
+            subtitle: p.name.clone().into(),
+            cover: app.cover(p),
+            installed: installed.contains_key(&p.id),
+            is_windows: is_win,
+            update_available: false,
+            needs_rom: false,
+            rom_ok: false,
+            busy: false,
+            progress: 0.0,
+            kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
+            sys_color: Color::from_rgb_u8(0x88, 0x88, 0x88),
+            favorite: false,
+            play_state: 0,
+            install_error: false,
+            version: "".into(),
+            new_version: "".into(),
+            meta: meta.into(),
+            is_new: true,
+        });
+    }
+
     // Genre filter options: every distinct curated genre.
     let mut genres: Vec<String> = catalog.projects.iter().filter_map(|p| p.genre.clone()).collect();
     genres.sort();
@@ -407,6 +465,7 @@ fn rebuild(app: &App, win: &MainWindow) {
     win.set_header_count(count);
     win.set_updates_pending(pending as i32);
     win.set_recent(ModelRc::new(VecModel::from(recent)));
+    win.set_newcomers(ModelRc::new(VecModel::from(newcomers)));
     win.set_genre_labels(ModelRc::new(VecModel::from(genre_labels)));
 }
 
@@ -1070,7 +1129,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
         install_error: RefCell::new(HashSet::new()),
-        seen: RefCell::new(HashSet::new()),
+        seen: RefCell::new(std::collections::HashMap::new()),
         ra_cache: RefCell::new(std::collections::HashMap::new()),
         ra_badges: RefCell::new(std::collections::HashMap::new()),
         cancels: RefCell::new(std::collections::HashMap::new()),
@@ -1320,7 +1379,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     // next session, not never.
                                     let ids: Vec<String> =
                                         app.catalog.borrow().projects.iter().map(|p| p.id.clone()).collect();
-                                    save_seen(&app.paths, app, ids);
+                                    save_seen(&app.paths, &ids);
+                                    *app.seen.borrow_mut() = load_seen(&app.paths);
                                     "Catálogo actualizado ✓"
                                 }
                                 Err(_) => "No se pudo actualizar",
@@ -1989,14 +2049,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !store::load_installed(&app.paths).unwrap_or_default().is_empty() {
         win.set_library_tab(true);
     }
+    if std::env::var_os("FREEPORT_DEBUG_CATALOG").is_some() {
+        win.set_library_tab(false); // dev aid: land on the catalog tab
+    }
 
     // NUEVO badge: ids never seen before this session. First run records a
     // baseline instead of flagging the whole catalog.
     {
-        let prev = load_seen(&app.paths);
         let current: Vec<String> = app.catalog.borrow().projects.iter().map(|p| p.id.clone()).collect();
-        *app.seen.borrow_mut() = if prev.is_empty() { current.iter().cloned().collect() } else { prev };
-        save_seen(&app.paths, &app, current);
+        save_seen(&app.paths, &current);
+        // In-memory snapshot AFTER stamping, so this session's additions carry
+        // their fresh timestamp (7-day NEW window) instead of being unknown.
+        *app.seen.borrow_mut() = load_seen(&app.paths);
     }
 
     // Card size from config.

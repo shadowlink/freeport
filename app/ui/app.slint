@@ -249,9 +249,10 @@ component KindPill inherits Rectangle {
 component SectionHeader inherits HorizontalLayout {
     in property <string> label;
     in property <string> meta;
+    in property <color> accent: #ffb23e;
     spacing: 10px;
     alignment: start;
-    Rectangle { width: 4px; height: 20px; border-radius: 2px; background: #ffb23e; }
+    Rectangle { width: 4px; height: 20px; border-radius: 2px; background: root.accent; }
     Text { text: root.label; font-size: 17px; font-weight: 800; color: white; vertical-alignment: center; }
     if root.meta != "": Text { text: root.meta; color: #ffffff77; font-size: 12px; vertical-alignment: center; }
 }
@@ -273,6 +274,8 @@ export component MainWindow inherits Window {
     callback update-all();
     // "Seguir jugando" strip (library tab)
     in property <[CardItem]> recent;
+    // "Nuevas incorporaciones" strip (catalog tab): games added in the last week.
+    in property <[CardItem]> newcomers;
     // Catalog filters
     in-out property <string> filter-kind; // "" | "recompilation" | "native-port"
     in-out property <string> filter-plat; // "" | "native" | "windows"
@@ -626,6 +629,71 @@ export component MainWindow inherits Window {
                         }
                     }
                 }
+            }
+            // "Nuevas incorporaciones": what landed in the catalog this week,
+            // showcased on its own band at the top of the catalog tab.
+            if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: Rectangle {
+                height: 158px;
+                background: #10131c;
+                VerticalLayout {
+                    padding-left: 22px;
+                    padding-right: 22px;
+                    padding-top: 12px;
+                    padding-bottom: 12px;
+                    spacing: 10px;
+                    SectionHeader { label: "✦ Nuevas incorporaciones"; accent: #7de17d; }
+                    ScrollView {
+                        height: 96px;
+                        HorizontalLayout {
+                            spacing: 12px;
+                            alignment: start;
+                            for c in root.newcomers: Rectangle {
+                                width: 252px;
+                                height: 92px;
+                                border-radius: 12px;
+                                clip: true;
+                                background: #191c26;
+                                border-width: 1px;
+                                border-color: nc-ta.has-hover ? #7de17d : #343947;
+                                drop-shadow-blur: 12px;
+                                drop-shadow-color: #00000066;
+                                animate border-color { duration: 150ms; easing: ease-out; }
+                                Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.16; }
+                                nc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                                HorizontalLayout {
+                                    padding: 10px;
+                                    spacing: 12px;
+                                    Rectangle {
+                                        width: 50px; border-radius: 6px; clip: true;
+                                        Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
+                                    }
+                                    VerticalLayout {
+                                        alignment: center;
+                                        spacing: 3px;
+                                        horizontal-stretch: 1;
+                                        Text { text: c.title; color: white; font-size: 13px; font-weight: 700; overflow: elide; }
+                                        Text { text: c.meta; color: #ffffff88; font-size: 11px; overflow: elide; }
+                                        HorizontalLayout {
+                                            spacing: 4px;
+                                            alignment: start;
+                                            if c.installed: Tag { label: "INSTALADO"; fg: #0b0c10; bg: #4de1c1; }
+                                            if !c.installed: Tag { label: "NUEVO"; fg: #0b0c10; bg: #7de17d; }
+                                            if c.is-windows: Tag { label: "WIN"; fg: white; bg: #2b6fb3; }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Rectangle { y: parent.height - 1px; height: 1px; background: #2b2f3a; }
+            }
+            if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: VerticalLayout {
+                padding-left: 22px;
+                padding-right: 22px;
+                padding-top: 14px;
+                padding-bottom: 4px;
+                SectionHeader { label: "Todo el catálogo"; }
             }
             // "Seguir jugando": last-played shelf on its own band, visually
             // separated from the full grid below (distinct background +

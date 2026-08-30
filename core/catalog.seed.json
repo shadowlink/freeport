@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-29",
+  "updated_at": "2026-08-30",
   "source": "probed",
   "systems": [
     {
@@ -547,8 +547,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.33",
-        "published_at": "2026-08-28T16:51:01Z"
+        "latest_tag": "v0.2.37",
+        "published_at": "2026-08-29T11:26:17Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1100,8 +1100,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_c621fe7",
-        "published_at": "2026-08-27T06:02:58Z"
+        "latest_tag": "nightly_7e8f961",
+        "published_at": "2026-08-29T06:49:54Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -2787,8 +2787,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.4-alpha",
-        "published_at": "2026-08-28T06:30:51Z"
+        "latest_tag": "v0.6.6-alpha",
+        "published_at": "2026-08-29T03:24:25Z"
       },
       "year": 2006,
       "developer": "Nintendo (NST)",
@@ -2869,8 +2869,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.9",
-        "published_at": "2026-08-27T21:42:02Z"
+        "latest_tag": "v0.4.1",
+        "published_at": "2026-08-29T08:21:01Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3478,7 +3478,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v1.0.0",
-        "published_at": "2026-08-27T20:11:19Z"
+        "published_at": "2026-08-27T20:32:00Z"
       },
       "year": 2006,
       "developer": "Mistwalker / Artoon",
@@ -3522,7 +3522,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.0.5",
-        "published_at": "2026-08-24T19:12:21Z"
+        "published_at": "2026-08-25T06:30:50Z"
       },
       "year": 1994,
       "developer": "Totally Games",
@@ -3562,7 +3562,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "v1.0",
-        "published_at": "2026-08-22T17:58:47Z"
+        "published_at": "2026-08-22T18:03:38Z"
       },
       "year": 2001,
       "developer": "Paradox Development",
@@ -3602,7 +3602,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "strider2-0.1.1",
-        "published_at": "2026-08-27T19:52:19Z"
+        "published_at": "2026-08-27T20:01:44Z"
       },
       "year": 2000,
       "developer": "Capcom",
@@ -3644,12 +3644,55 @@
           "windows-x86_64"
         ],
         "latest_tag": "v0.3.29",
-        "published_at": "2026-08-26T05:20:40Z"
+        "published_at": "2026-08-26T05:20:46Z"
       },
       "year": 1999,
       "developer": "989 Studios",
       "genre": "Combate vehicular",
       "wiki": "Twisted Metal 4"
+    },
+    {
+      "id": "dk64-recomp",
+      "name": "DK64 Recompiled",
+      "original_game": "Donkey Kong 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Rainchus",
+        "repo": "Donkey-Kong-64-Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Donkey%20Kong%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64",
+        "windows-x86_64": "(?i)windows"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Donkey Kong 64 (US) al arrancar, como los demás recomps de N64Recomp. Requiere GPU con Vulkan y CPU con AVX."
+      },
+      "launch": {
+        "linux": "DK64Recompiled",
+        "windows": "DK64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.0.1",
+        "published_at": "2026-08-29T22:01:44Z"
+      },
+      "year": 1999,
+      "developer": "Rare",
+      "genre": "Plataformas",
+      "wiki": "Donkey Kong 64"
     }
   ]
 }

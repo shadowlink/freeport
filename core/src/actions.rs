@@ -678,3 +678,28 @@ mod live_install_tests {
         println!("exe: {}", bin.display());
     }
 }
+
+#[cfg(test)]
+mod live_dk64_test {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore]
+    async fn installs_dk64() {
+        let paths = Paths::resolve().unwrap();
+        let catalog = store::load_catalog(&paths).unwrap();
+        let p = catalog.projects.iter().find(|p| p.id == "dk64-recomp").unwrap().clone();
+        let cfg = store::load_config(&paths).unwrap_or_default();
+        let client = reqwest::Client::new();
+        match install_project(&client, &paths, &p, &cfg, None, |_, _| {}).await {
+            Ok(e) => {
+                println!("instalado {} en {}", e.installed_tag.unwrap_or_default(), e.install_path);
+                match install::find_launch_binary(Path::new(&e.install_path), Some("DK64Recompiled"), false) {
+                    Ok(b) => println!("binario: {}", b.display()),
+                    Err(err) => println!("SIN BINARIO: {err}"),
+                }
+            }
+            Err(e) => println!("INSTALL ERROR: {e}"),
+        }
+    }
+}

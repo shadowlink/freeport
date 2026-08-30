@@ -95,6 +95,14 @@ pub async fn extract_archive(archive: PathBuf, dest_dir: PathBuf) -> AppResult<(
 
 fn extract_sync(archive: &Path, dest_dir: &Path) -> AppResult<()> {
     extract_one(archive, dest_dir)?;
+    // The downloaded archive usually lives inside dest_dir. Drop it BEFORE the
+    // nested-unwrap scan: otherwise the scan sees two archives (the source and
+    // the nested payload) and bails as "ambiguous" — which is exactly how
+    // zip→tar.gz releases (Zelda64Recomp, DK64Recompiled…) ended up installed
+    // as an unextracted tarball with no launch binary.
+    if archive.starts_with(dest_dir) {
+        let _ = std::fs::remove_file(archive);
+    }
     // Some projects wrap the payload in a second archive (e.g. Zelda64Recomp's
     // Linux `.zip` contains a single `.tar.gz` that holds the actual binary).
     // Unwrap a lone nested archive up to a few levels deep.
@@ -499,6 +507,42 @@ mod tests {
             let auto = find_launch_binary(&dest, None, false).unwrap();
             assert_eq!(auto.file_name().unwrap(), "TheGame");
         }
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn nested_unwrap_with_source_archive_inside_dest() {
+        // Real install shape: the downloaded zip is INSIDE the dest dir while
+        // extraction runs (regression: the unwrap scan saw two archives and
+        // bailed, leaving DK64/Zelda64-style installs as a raw tarball).
+        let root = scratch("nested-in-dest");
+        let dest = root.join("out");
+        std::fs::create_dir_all(&dest).unwrap();
+        let inner_tar = root.join("DK64Recompiled.tar.gz");
+        {
+            let f = std::fs::File::create(&inner_tar).unwrap();
+            let enc = flate2::write::GzEncoder::new(f, flate2::Compression::fast());
+            let mut builder = tar::Builder::new(enc);
+            let data = vec![7u8; 2048];
+            let mut header = tar::Header::new_gnu();
+            header.set_size(data.len() as u64);
+            header.set_mode(0o755);
+            builder.append_data(&mut header, "DK64Recompiled", &data[..]).unwrap();
+            builder.into_inner().unwrap().finish().unwrap();
+        }
+        let outer_zip = dest.join("release.zip"); // downloaded into dest
+        {
+            let f = std::fs::File::create(&outer_zip).unwrap();
+            let mut zip = zip::ZipWriter::new(f);
+            let opts = zip::write::SimpleFileOptions::default();
+            zip.start_file("DK64Recompiled.tar.gz", opts).unwrap();
+            zip.write_all(&std::fs::read(&inner_tar).unwrap()).unwrap();
+            zip.finish().unwrap();
+        }
+        extract_sync(&outer_zip, &dest).unwrap();
+        assert!(!dest.join("DK64Recompiled.tar.gz").exists(), "tarball sin desanidar");
+        let bin = find_launch_binary(&dest, None, false).unwrap();
+        assert_eq!(bin.file_name().unwrap(), "DK64Recompiled");
         let _ = std::fs::remove_dir_all(&root);
     }
 

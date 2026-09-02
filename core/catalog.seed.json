@@ -547,8 +547,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.37",
-        "published_at": "2026-08-29T11:26:17Z"
+        "latest_tag": "v0.2.48",
+        "published_at": "2026-09-02T00:23:07Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1100,8 +1100,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_7e8f961",
-        "published_at": "2026-08-29T06:49:54Z"
+        "latest_tag": "nightly_d8c23f7",
+        "published_at": "2026-09-01T23:38:30Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -2576,8 +2576,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.16",
-        "published_at": "2026-08-10T21:38:05Z"
+        "latest_tag": "v0.0.17",
+        "published_at": "2026-08-31T21:08:14Z"
       },
       "year": 1999,
       "developer": "Totally Games",
@@ -2619,8 +2619,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.1",
-        "published_at": "2026-08-11T04:21:49Z"
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-08-30T01:46:09Z"
       },
       "year": 1998,
       "developer": "Nintendo",
@@ -2787,8 +2787,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.6-alpha",
-        "published_at": "2026-08-29T03:24:25Z"
+        "latest_tag": "v0.6.9-alpha",
+        "published_at": "2026-09-02T05:54:38Z"
       },
       "year": 2006,
       "developer": "Nintendo (NST)",
@@ -2869,8 +2869,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.4.1",
-        "published_at": "2026-08-29T08:21:01Z"
+        "latest_tag": "v0.5.2",
+        "published_at": "2026-09-02T08:10:32Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3271,8 +3271,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.0",
-        "published_at": "2026-08-26T03:40:46Z"
+        "latest_tag": "v0.3.1",
+        "published_at": "2026-08-29T19:18:38Z"
       },
       "year": 2001,
       "developer": "Capcom / M4",
@@ -3395,8 +3395,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v2.0.0",
-        "published_at": "2026-08-22T15:20:42Z"
+        "latest_tag": "v2.1.0",
+        "published_at": "2026-08-31T01:08:42Z"
       },
       "year": 1996,
       "developer": "Konami",
@@ -3483,7 +3483,10 @@
       "year": 2006,
       "developer": "Mistwalker / Artoon",
       "genre": "RPG",
-      "wiki": "Blue Dragon (video game)"
+      "wiki": "Blue Dragon (video game)",
+      "launch_env": {
+        "SDL_VIDEODRIVER": "x11"
+      }
     },
     {
       "id": "opentie",
@@ -3598,11 +3601,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "strider2-0.1.1",
-        "published_at": "2026-08-27T20:01:44Z"
+        "platforms": [],
+        "latest_tag": "v0.1.2",
+        "published_at": "2026-08-29T16:05:34Z"
       },
       "year": 2000,
       "developer": "Capcom",
@@ -3683,11 +3684,10 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "1.0.1",
-        "published_at": "2026-08-29T22:01:44Z"
+        "latest_tag": "1.0.2",
+        "published_at": "2026-09-02T02:37:41Z"
       },
       "year": 1999,
       "developer": "Rare",

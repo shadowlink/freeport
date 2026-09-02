@@ -71,6 +71,10 @@ pub struct Project {
     /// "beta" in the UI).
     #[serde(default)]
     pub ra_beta: bool,
+    /// Extra environment for launching this game (e.g. SDL_VIDEODRIVER=x11
+    /// for ports whose UI freezes on native Wayland).
+    #[serde(default)]
+    pub launch_env: HashMap<String, String>,
     /// platform triple -> regex used to pick the matching release asset.
     #[serde(default)]
     pub asset_rules: HashMap<String, String>,

@@ -420,9 +420,9 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
             AppError::msg("no hay ningún runner de Windows. Instala Wine o umu-launcher (Proton).")
         })?;
         let prefix = install_dir.join(".wineprefix");
-        launch::launch_windows_with(&bin, &runner, &prefix)?
+        launch::launch_windows_with(&bin, &runner, &prefix, &project.launch_env)?
     } else {
-        launch::launch_binary(&bin)?
+        launch::launch_binary(&bin, &project.launch_env)?
     };
     let pid = child.id();
 
@@ -701,5 +701,29 @@ mod live_dk64_test {
             }
             Err(e) => println!("INSTALL ERROR: {e}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod live_reblue_launch {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore]
+    async fn launches_reblue_under_x11() {
+        let paths = Paths::resolve().unwrap();
+        let catalog = store::load_catalog(&paths).unwrap();
+        let p = catalog.projects.iter().find(|p| p.id == "reblue-bluedragon").unwrap().clone();
+        assert_eq!(p.launch_env.get("SDL_VIDEODRIVER").map(|s| s.as_str()), Some("x11"));
+        let pid = launch_project(&paths, &p).expect("launch");
+        tokio::time::sleep(std::time::Duration::from_secs(6)).await;
+        let log = std::fs::read_to_string(
+            Path::new(&store::load_installed(&paths).unwrap()["reblue-bluedragon"].install_path)
+                .join("dd-launch.log"),
+        )
+        .unwrap_or_default();
+        let _ = std::process::Command::new("kill").arg(pid.to_string()).status();
+        println!("driver line: {:?}", log.lines().find(|l| l.contains("video driver")));
+        assert!(log.contains("SDL video driver: x11"), "log: {log}");
     }
 }

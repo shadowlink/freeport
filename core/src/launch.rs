@@ -66,7 +66,7 @@ fn log_to(dir: &Path) -> (Stdio, Stdio) {
 
 /// Spawns the game binary detached, with its working directory set to the
 /// install folder (most ports look for assets/ROM relative to the executable).
-pub fn launch_binary(binary: &Path) -> AppResult<Child> {
+pub fn launch_binary(binary: &Path, envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
     if !binary.exists() {
         return Err(AppError::msg(format!(
             "el ejecutable no existe: {}",
@@ -94,6 +94,9 @@ pub fn launch_binary(binary: &Path) -> AppResult<Child> {
     let mut cmd = Command::new(binary);
     cmd.current_dir(cwd).stdout(out).stderr(err);
     sanitize_env(&mut cmd);
+    for (k, v) in envs {
+        cmd.env(k, v);
+    }
     let child = cmd
         .spawn()
         .map_err(|e| AppError::msg(format!("no se pudo lanzar el juego: {e}")))?;
@@ -106,7 +109,7 @@ pub fn launch_binary(binary: &Path) -> AppResult<Child> {
 /// - "umu:<path>"      → umu-run with a specific Proton at <path>
 /// - "proton:<path>"   → raw Proton at <path>
 /// `prefix` is a per-game Wine/Proton prefix so saves persist between runs.
-pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path) -> AppResult<Child> {
+pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path, envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
     if !exe.exists() {
         return Err(AppError::msg(format!(
             "el ejecutable no existe: {}",

@@ -92,6 +92,12 @@
       "name": "NES",
       "short": "NES",
       "color": "#c84c4c"
+    },
+    {
+      "id": "psp",
+      "name": "PSP",
+      "short": "PSP",
+      "color": "#8f6fd0"
     }
   ],
   "projects": [
@@ -5506,6 +5512,128 @@
       "developer": "Nintendo",
       "genre": "Plataformas",
       "wiki": "Super Mario Bros."
+    },
+    {
+      "id": "goldeneye-recomp",
+      "name": "GoldenEye Recomp",
+      "original_game": "GoldenEye 007",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "SunJaycy",
+        "repo": "GoldenEye-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/GoldenEye%20007%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)GoldenEye-Recomp-Win\\.rar$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Recomp del port XBLA de GoldenEye 007 (el remaster de Xbox 360 de 2007): necesitas los archivos de juego de esa versión, aportados por ti. Requiere Vulkan."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "GoldenEye.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "Goldeneye1.2.4",
+        "published_at": "2026-06-18T18:25:32Z"
+      },
+      "year": 1997,
+      "developer": "Rare",
+      "genre": "Shooter en primera persona",
+      "wiki": "GoldenEye 007 (1997 video game)"
+    },
+    {
+      "id": "acx-recomp",
+      "name": "ACX Recompilation",
+      "original_game": "Ace Combat X: Skies of Deception",
+      "system": "psp",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "sal063",
+        "repo": "Ace-Combat-X-Recompilation"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%20Portable/Named_Boxarts/Ace%20Combat%20X%20-%20Skies%20of%20Deception%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)release\\.rar$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los datos de tu ISO de Ace Combat X (PSP): extráelos con las herramientas incluidas (tools/isoextract.py) siguiendo las instrucciones del repositorio."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "pspreco-sdl3.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "V1.5-release",
+        "published_at": "2026-08-28T18:35:56Z"
+      },
+      "year": 2006,
+      "developer": "Project Aces",
+      "genre": "Combate aéreo",
+      "wiki": "Ace Combat X: Skies of Deception"
+    },
+    {
+      "id": "battleship-ssb64",
+      "name": "BattleShip",
+      "original_game": "Super Smash Bros.",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "JRickey",
+        "repo": "BattleShip"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Super%20Smash%20Bros.%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)JP-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)JP-windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Port nativo (libultraship) del decomp de Super Smash Bros. Las builds publicadas son de la versión JAPONESA: usa tu ROM de Nintendo All-Star! Dairantou Smash Brothers (Japan); se copia junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.6",
+        "published_at": "2026-08-12T03:00:43Z"
+      },
+      "year": 1999,
+      "developer": "HAL Laboratory",
+      "genre": "Lucha",
+      "wiki": "Super Smash Bros. (video game)"
     }
   ]
 }

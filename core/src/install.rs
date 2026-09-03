@@ -129,6 +129,7 @@ pub fn is_archive(name: &str) -> bool {
         || n.ends_with(".txz")
         || n.ends_with(".deb")
         || n.ends_with(".7z")
+        || n.ends_with(".rar")
 }
 
 fn is_archive_name(name: &str) -> bool {
@@ -258,11 +259,30 @@ fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
         sevenz_rust::decompress_file(archive, dest_dir)
             .map_err(|e| AppError::msg(format!("error al descomprimir 7z: {e}")))?;
         Ok(())
+    } else if name.ends_with(".rar") {
+        extract_rar(archive, dest_dir)
     } else {
         Err(AppError::msg(format!(
-            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar.gz, .tar.xz, .deb, .7z)"
+            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar.gz, .tar.xz, .deb, .7z, .rar)"
         )))
     }
+}
+
+/// Unpacks a `.rar` (v4/v5) via the vendored unrar library.
+fn extract_rar(archive: &Path, dest_dir: &Path) -> AppResult<()> {
+    let mut arc = unrar::Archive::new(archive)
+        .open_for_processing()
+        .map_err(|e| AppError::msg(format!("rar inválido: {e}")))?;
+    while let Some(header) = arc.read_header().map_err(|e| AppError::msg(format!("rar: {e}")))? {
+        arc = if header.entry().is_file() {
+            header
+                .extract_with_base(dest_dir)
+                .map_err(|e| AppError::msg(format!("rar: {e}")))?
+        } else {
+            header.skip().map_err(|e| AppError::msg(format!("rar: {e}")))?
+        };
+    }
+    Ok(())
 }
 
 /// SHA-256 of a file, streamed, as lowercase hex.
@@ -797,5 +817,28 @@ mod sevenz_tests {
         assert_eq!(std::fs::read(out.join("game.bin")).unwrap(), b"payload");
         assert!(is_archive("Samurai.Vs.Zombies.PC.7z"));
         let _ = std::fs::remove_dir_all(&tmp);
+    }
+}
+
+#[cfg(test)]
+mod rar_tests {
+    use super::*;
+
+    /// Live: extracts the real GoldenEye/ACX release rars (downloaded locally).
+    #[test]
+    #[ignore]
+    fn extracts_real_release_rars() {
+        let s = Path::new("/tmp/claude-1000/-home-lizerg/72be0228-8fd4-4fe0-a2b5-aa0d545da30f/scratchpad");
+        for (rar, expect) in [
+            ("goldeneye.rar", "GoldenEye-Recomp-Win/GoldenEye.exe"),
+            ("acx.rar", "release/pspreco-sdl3.exe"),
+        ] {
+            let dest = s.join(format!("rar-out-{rar}"));
+            let _ = std::fs::remove_dir_all(&dest);
+            extract_sync(&s.join(rar), &dest).unwrap();
+            assert!(dest.join(expect).exists(), "{expect}");
+            let bin = find_launch_binary(&dest, None, true).unwrap();
+            println!("{rar} → {}", bin.display());
+        }
     }
 }

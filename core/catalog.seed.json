@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-30",
+  "updated_at": "2026-09-03",
   "source": "probed",
   "systems": [
     {
@@ -80,6 +80,18 @@
       "name": "Nintendo DS",
       "short": "NDS",
       "color": "#95a3b8"
+    },
+    {
+      "id": "ps2",
+      "name": "PlayStation 2",
+      "short": "PS2",
+      "color": "#5b7fd4"
+    },
+    {
+      "id": "nes",
+      "name": "NES",
+      "short": "NES",
+      "color": "#c84c4c"
     }
   ],
   "projects": [
@@ -3693,6 +3705,1807 @@
       "developer": "Rare",
       "genre": "Plataformas",
       "wiki": "Donkey Kong 64"
+    },
+    {
+      "id": "tenchu-sa-recomp",
+      "name": "Tenchu SA Recomp",
+      "original_game": "Tenchu: Stealth Assassins",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Heromachine",
+        "repo": "Tenchu-SA-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Tenchu%20-%20Stealth%20Assassins%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "Acquire",
+      "genre": "Sigilo",
+      "wiki": "Tenchu: Stealth Assassins"
+    },
+    {
+      "id": "rage-racer-pc",
+      "name": "Rage Racer PC",
+      "original_game": "Rage Racer",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "khasinski",
+        "repo": "rage-racer-pc"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Rage%20Racer%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.zip$",
+        "windows-x86_64": "(?i)windows-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "0.6.3-alpha",
+        "published_at": null
+      },
+      "year": 1996,
+      "developer": "Namco",
+      "genre": "Carreras",
+      "wiki": "Rage Racer"
+    },
+    {
+      "id": "einhander-recomp",
+      "name": "Einhänder Recompiled",
+      "original_game": "Einhänder",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "strider973",
+        "repo": "Einhander-Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Einhaender%20%28Japan%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.3",
+        "published_at": null
+      },
+      "year": 1997,
+      "developer": "Square",
+      "genre": "Matamarcianos",
+      "wiki": "Einhänder"
+    },
+    {
+      "id": "klonoa-dtp-recomp",
+      "name": "Klonoa DtP Recomp",
+      "original_game": "Klonoa: Door to Phantomile",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Klonoa-Door-to-Phantomile"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Klonoa%20-%20Door%20to%20Phantomile%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.3",
+        "published_at": null
+      },
+      "year": 1997,
+      "developer": "Namco",
+      "genre": "Plataformas",
+      "wiki": "Klonoa: Door to Phantomile"
+    },
+    {
+      "id": "mvc-recomp",
+      "name": "MvC Recomp",
+      "original_game": "Marvel vs. Capcom: Clash of Super Heroes",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Marvel-vs.-Capcom-Clash-of-Super-Heroes-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Marvel%20vs.%20Capcom%20-%20Clash%20of%20Super%20Heroes%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.18",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "Capcom",
+      "genre": "Lucha",
+      "wiki": "Marvel vs. Capcom: Clash of Super Heroes"
+    },
+    {
+      "id": "teraskasi-recomp",
+      "name": "Teräs Käsi Recomp",
+      "original_game": "Star Wars: Masters of Teräs Käsi",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "MastersOfTerasKasiRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Star%20Wars%20-%20Masters%20of%20Teras%20Kasi%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.16",
+        "published_at": null
+      },
+      "year": 1997,
+      "developer": "LucasArts",
+      "genre": "Lucha",
+      "wiki": "Star Wars: Masters of Teräs Käsi"
+    },
+    {
+      "id": "metalslugx-recomp",
+      "name": "Metal Slug X Recomp",
+      "original_game": "Metal Slug X",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Metal-Slug-X-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Metal%20Slug%20X%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.20",
+        "published_at": null
+      },
+      "year": 1999,
+      "developer": "SNK",
+      "genre": "Run and gun",
+      "wiki": "Metal Slug X"
+    },
+    {
+      "id": "rampage-tt-recomp",
+      "name": "Rampage TT Recomp",
+      "original_game": "Rampage Through Time",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Rampage---Through-Time-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Rampage%20-%20Through%20Time%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.22",
+        "published_at": null
+      },
+      "year": 2000,
+      "developer": "Avalanche Software",
+      "genre": "Acción",
+      "wiki": "Rampage Through Time"
+    },
+    {
+      "id": "jpb-recomp",
+      "name": "Jedi Power Battles Recomp",
+      "original_game": "Star Wars Episode I: Jedi Power Battles",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Star-wars---Episode-I---Jedi-Power-Battles-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Star%20Wars%20-%20Episode%20I%20-%20Jedi%20Power%20Battles%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.2",
+        "published_at": null
+      },
+      "year": 2000,
+      "developer": "LucasArts",
+      "genre": "Acción",
+      "wiki": "Star Wars Episode I: Jedi Power Battles"
+    },
+    {
+      "id": "bomberman-fr-recomp",
+      "name": "Bomberman FR Recomp",
+      "original_game": "Bomberman Fantasy Race",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Bomberman-Fantasy-Race-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Bomberman%20Fantasy%20Race%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.2",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "Hudson Soft",
+      "genre": "Carreras",
+      "wiki": "Bomberman Fantasy Race"
+    },
+    {
+      "id": "bomberman-world-recomp",
+      "name": "Bomberman World Recomp",
+      "original_game": "Bomberman World",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "Bomberman-World-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Bomberman%20World%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.20",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "Hudson Soft",
+      "genre": "Acción",
+      "wiki": "Bomberman World"
+    },
+    {
+      "id": "bomberman-pe-recomp",
+      "name": "Bomberman PE Recomp",
+      "original_game": "Bomberman Party Edition",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "TechnicallyComputers",
+        "repo": "BombermanPartyEditionRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Bomberman%20-%20Party%20Edition%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x64\\.zip$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.17",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "Hudson Soft",
+      "genre": "Acción",
+      "wiki": "Bomberman Party Edition"
+    },
+    {
+      "id": "tomba2-recomp",
+      "name": "Tomba! 2 Recomp",
+      "original_game": "Tomba! 2: The Evil Swine Return",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "Tomba2Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Tomba%21%202%20-%20The%20Evil%20Swine%20Return%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.9",
+        "published_at": null
+      },
+      "year": 1999,
+      "developer": "Whoopee Camp",
+      "genre": "Plataformas",
+      "wiki": "Tomba! 2: The Evil Swine Return"
+    },
+    {
+      "id": "legaia-recomp",
+      "name": "Legend of Legaia Recomp",
+      "original_game": "Legend of Legaia",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "SamSteProjects",
+        "repo": "legend-of-legaia-recomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Legend%20of%20Legaia%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.7-diagnostic-playtest",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "Contrail",
+      "genre": "RPG",
+      "wiki": "Legend of Legaia"
+    },
+    {
+      "id": "syphonfilter2-recomp",
+      "name": "Syphon Filter 2 Recompiled",
+      "original_game": "Syphon Filter 2",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Alexbeav",
+        "repo": "syphon-filter-2-recompiled"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Syphon%20Filter%202%20%28USA%29%20%28Disc%201%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional). Pantalla ancha 16:9 y cámara con ratón."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.2-alpha",
+        "published_at": null
+      },
+      "year": 2000,
+      "developer": "Eidetic",
+      "genre": "Acción/Sigilo",
+      "wiki": "Syphon Filter 2"
+    },
+    {
+      "id": "rechan-stuntmaster",
+      "name": "ReChan",
+      "original_game": "Jackie Chan Stuntmaster",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "SilverwireGames",
+        "repo": "ReChan"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Jackie%20Chan%20Stuntmaster%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Reimplementación nativa; necesita los datos de tu disco de Jackie Chan Stuntmaster (PS1)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.1",
+        "published_at": null
+      },
+      "year": 2000,
+      "developer": "Radical Entertainment",
+      "genre": "Beat 'em up",
+      "wiki": "Jackie Chan Stuntmaster"
+    },
+    {
+      "id": "mmx6-recomp",
+      "name": "Mega Man X6 Recomp",
+      "original_game": "Mega Man X6",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "MegaManX6Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Mega%20Man%20X6%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu juego (PS1); se genera desde tu copia (OpenBIOS incluida, la retail opcional)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.9",
+        "published_at": null
+      },
+      "year": 2001,
+      "developer": "Capcom",
+      "genre": "Plataformas",
+      "wiki": "Mega Man X6"
+    },
+    {
+      "id": "wipeout-phantom",
+      "name": "WipEout Phantom Edition",
+      "original_game": "Wipeout",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "wipeout-phantom-edition",
+        "repo": "wipeout-phantom-edition"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/WipEout%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)wipeout-x64-release\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Port nativo reescrito; necesita los datos de tu copia de WipEout (PS1) — sigue las instrucciones del primer arranque."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.2.256",
+        "published_at": null
+      },
+      "year": 1995,
+      "developer": "Psygnosis",
+      "genre": "Carreras",
+      "wiki": "Wipeout (video game)"
+    },
+    {
+      "id": "pgr4-recomp",
+      "name": "PGR4 Recomp",
+      "original_game": "Project Gotham Racing 4",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "beatrixzy",
+        "repo": "PGR4-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)PGR4-Recomp.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.2.1",
+        "published_at": null
+      },
+      "year": 2007,
+      "developer": "Bizarre Creations",
+      "genre": "Carreras",
+      "wiki": "Project Gotham Racing 4"
+    },
+    {
+      "id": "eternalsonata-reprise",
+      "name": "Eternal Sonata Reprise",
+      "original_game": "Eternal Sonata",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "birabittoh",
+        "repo": "EternalSonataReprise"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1.3",
+        "published_at": null
+      },
+      "year": 2007,
+      "developer": "tri-Crescendo",
+      "genre": "RPG",
+      "wiki": "Eternal Sonata"
+    },
+    {
+      "id": "exit1-recomp",
+      "name": "EXIT Recomp",
+      "original_game": "Exit",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "FluffyQuack",
+        "repo": "ReXGlue-EXIT"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)EXIT1-Recomp\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.9.1",
+        "published_at": null
+      },
+      "year": 2007,
+      "developer": "Taito",
+      "genre": "Puzzle/Plataformas",
+      "wiki": "Exit (video game)"
+    },
+    {
+      "id": "exit2-recomp",
+      "name": "EXIT 2 Recomp",
+      "original_game": "Exit 2",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "FluffyQuack",
+        "repo": "ReXGlue-EXIT"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)EXIT2-Recomp\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.9.1",
+        "published_at": null
+      },
+      "year": 2007,
+      "developer": "Taito",
+      "genre": "Puzzle/Plataformas",
+      "wiki": "Exit (video game)"
+    },
+    {
+      "id": "redahm",
+      "name": "reDAHM",
+      "original_game": "Destroy All Humans! Path of the Furon",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "masterspike52",
+        "repo": "reDAHM"
+      },
+      "release_channel": "rolling",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)redahm-win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "new",
+        "published_at": null
+      },
+      "year": 2008,
+      "developer": "Sandblast Games",
+      "genre": "Acción",
+      "wiki": "Destroy All Humans! Path of the Furon",
+      "rolling_tag": "new"
+    },
+    {
+      "id": "rewor-ghwor",
+      "name": "re:WoR",
+      "original_game": "Guitar Hero: Warriors of Rock",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "ronniecloud",
+        "repo": "re-wor"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)re-wor.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1.0",
+        "published_at": null
+      },
+      "year": 2010,
+      "developer": "Neversoft",
+      "genre": "Ritmo",
+      "wiki": "Guitar Hero: Warriors of Rock"
+    },
+    {
+      "id": "downpour-recomp",
+      "name": "Downpour Recomp",
+      "original_game": "Silent Hill: Downpour",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "LittleBitUA",
+        "repo": "DownpourRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)DownpourRecomp.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1.8",
+        "published_at": null
+      },
+      "year": 2012,
+      "developer": "Vatra Games",
+      "genre": "Survival horror",
+      "wiki": "Silent Hill: Downpour"
+    },
+    {
+      "id": "ufc3-recomp",
+      "name": "UFC 3 Recomp",
+      "original_game": "UFC Undisputed 3",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "paulogaab21",
+        "repo": "ufc3recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.2",
+        "published_at": null
+      },
+      "year": 2012,
+      "developer": "Yuke's",
+      "genre": "Lucha",
+      "wiki": "UFC Undisputed 3"
+    },
+    {
+      "id": "restuff-inparadise",
+      "name": "reStuff in Paradise",
+      "original_game": "Naughty Bear: Panic in Paradise",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "MaxDeadBear",
+        "repo": "restuff_inParadise"
+      },
+      "release_channel": "rolling",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "release",
+        "published_at": null
+      },
+      "year": 2012,
+      "developer": "Behaviour Interactive",
+      "genre": "Acción",
+      "wiki": "Naughty Bear: Panic in Paradise",
+      "rolling_tag": "release"
+    },
+    {
+      "id": "ac6-recomp",
+      "name": "AC6 Recomp",
+      "original_game": "Ace Combat 6: Fires of Liberation",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "sal063",
+        "repo": "AC6_recomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": null,
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)ac6recomp.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los archivos de tu copia del juego (Xbox 360)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0-beta.2",
+        "published_at": null
+      },
+      "year": 2007,
+      "developer": "Project Aces",
+      "genre": "Combate aéreo",
+      "wiki": "Ace Combat 6: Fires of Liberation"
+    },
+    {
+      "id": "sssv-recomp",
+      "name": "SSSV Recompiled",
+      "original_game": "Space Station Silicon Valley",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Cellenseres",
+        "repo": "SSSV_Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/SpaceStation%20Silicon%20Valley%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)_linux\\.tar\\.gz$",
+        "windows-x86_64": "(?i)_windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Space Station Silicon Valley (N64) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.0",
+        "published_at": null
+      },
+      "year": 1998,
+      "developer": "DMA Design",
+      "genre": "Plataformas/Puzzle",
+      "wiki": "Space Station Silicon Valley"
+    },
+    {
+      "id": "vpw2-recomp",
+      "name": "VPW2 Recompiled",
+      "original_game": "Virtual Pro Wrestling 2",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "jessetbh",
+        "repo": "VPW2Recomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Virtual%20Pro%20Wrestling%202%20-%20Oudou%20Keishou%20%28Japan%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ROM japonesa de Virtual Pro Wrestling 2 (los assets se cargan directamente de la ROM)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": null
+      },
+      "year": 2000,
+      "developer": "AKI Corporation",
+      "genre": "Lucha libre",
+      "wiki": "Virtual Pro Wrestling 2: Ōdō Keishō"
+    },
+    {
+      "id": "papermario-recut",
+      "name": "Paper Mario ReCut",
+      "original_game": "Paper Mario",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "SMCGames",
+        "repo": "Paper-Mario-ReCut"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Paper%20Mario%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)PaperMarioReCut.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher te pedirá tu ROM de Paper Mario (U) y la valida por hash. RT64 + texturas reemplazables."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.2",
+        "published_at": null
+      },
+      "year": 2000,
+      "developer": "Intelligent Systems",
+      "genre": "RPG",
+      "wiki": "Paper Mario (video game)"
+    },
+    {
+      "id": "troublemakers-recomp",
+      "name": "Trouble Makers Recomp",
+      "original_game": "Mischief Makers",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "ThiagoLira",
+        "repo": "trouble-makers-pc-recomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Mischief%20Makers%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)TroubleMakers-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)Windows-X64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Mischief Makers / Trouble Makers (N64) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.8.1",
+        "published_at": null
+      },
+      "year": 1997,
+      "developer": "Treasure",
+      "genre": "Plataformas",
+      "wiki": "Mischief Makers"
+    },
+    {
+      "id": "mmxsnes-recomp",
+      "name": "Mega Man X Recomp",
+      "original_game": "Mega Man X",
+      "system": "snes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "MegaManXSNESRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/Mega%20Man%20X%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux.*\\.AppImage$",
+        "windows-x86_64": "(?i)windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Mega Man X (SNES) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.4.3",
+        "published_at": null
+      },
+      "year": 1993,
+      "developer": "Capcom",
+      "genre": "Plataformas",
+      "wiki": "Mega Man X (video game)"
+    },
+    {
+      "id": "smw-recomp",
+      "name": "Super Mario World Recomp",
+      "original_game": "Super Mario World",
+      "system": "snes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "SuperMarioWorldRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/Super%20Mario%20World%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux.*\\.AppImage$",
+        "windows-x86_64": "(?i)windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Super Mario World (SNES) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.11.1",
+        "published_at": null
+      },
+      "year": 1990,
+      "developer": "Nintendo",
+      "genre": "Plataformas",
+      "wiki": "Super Mario World"
+    },
+    {
+      "id": "emerald-recomp",
+      "name": "Emerald Recomp",
+      "original_game": "Pokémon Esmeralda",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "EmeraldRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Pokemon%20-%20Emerald%20Version%20%28USA%2C%20Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)EmeraldRecomp-windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Pokémon Emerald (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.4",
+        "published_at": null
+      },
+      "year": 2004,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon Emerald"
+    },
+    {
+      "id": "firered-recomp",
+      "name": "FireRed Recomp",
+      "original_game": "Pokémon Rojo Fuego",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "FireRedLeafGreenRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Pokemon%20-%20FireRed%20Version%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)FireRedRecomp-windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Pokémon FireRed (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.3",
+        "published_at": null
+      },
+      "year": 2004,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon FireRed and LeafGreen"
+    },
+    {
+      "id": "leafgreen-recomp",
+      "name": "LeafGreen Recomp",
+      "original_game": "Pokémon Verde Hoja",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "FireRedLeafGreenRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Pokemon%20-%20LeafGreen%20Version%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)LeafGreenRecomp-windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Pokémon LeafGreen (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.3",
+        "published_at": null
+      },
+      "year": 2004,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon FireRed and LeafGreen"
+    },
+    {
+      "id": "ruby-recomp",
+      "name": "Ruby Recomp",
+      "original_game": "Pokémon Rubí",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "RubySapphireRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Pokemon%20-%20Ruby%20Version%20%28USA%2C%20Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)RubyRecomp-windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Pokémon Ruby (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.4",
+        "published_at": null
+      },
+      "year": 2002,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon Ruby and Sapphire"
+    },
+    {
+      "id": "sapphire-recomp",
+      "name": "Sapphire Recomp",
+      "original_game": "Pokémon Zafiro",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "RubySapphireRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Pokemon%20-%20Sapphire%20Version%20%28USA%2C%20Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)SapphireRecomp-windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Pokémon Sapphire (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.4",
+        "published_at": null
+      },
+      "year": 2002,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon Ruby and Sapphire"
+    },
+    {
+      "id": "acgc-pc",
+      "name": "ACGC PC Port",
+      "original_game": "Animal Crossing",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "flyngmt",
+        "repo": "ACGC-PC-Port"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Animal%20Crossing%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)ACGC-PC-Port.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": "rom",
+        "notes": "Selecciona tu imagen de disco de Animal Crossing (GameCube; ISO, GCM o CISO); se copia a la subcarpeta rom/ y el juego lee los assets directamente de ella."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.9.3-playtest",
+        "published_at": null
+      },
+      "year": 2001,
+      "developer": "Nintendo",
+      "genre": "Simulación social",
+      "wiki": "Animal Crossing (video game)"
+    },
+    {
+      "id": "marioparty4-pc",
+      "name": "Mario Party 4 (partyboard)",
+      "original_game": "Mario Party 4",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "mariopartyrd",
+        "repo": "marioparty4"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Mario%20Party%204%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)_x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Port alfa del decomp de Mario Party 4; necesita los datos de tu copia (GameCube). Consulta el repo para el estado actual."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "partyboard_0.2.0",
+        "published_at": null
+      },
+      "year": 2002,
+      "developer": "Hudson Soft",
+      "genre": "Party",
+      "wiki": "Mario Party 4"
+    },
+    {
+      "id": "mikupan-fatalframe",
+      "name": "MikuPan",
+      "original_game": "Fatal Frame",
+      "system": "ps2",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Mikompilation",
+        "repo": "MikuPan"
+      },
+      "release_channel": "rolling",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Fatal%20Frame%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)_linux_nightly\\.zip$",
+        "windows-x86_64": "(?i)_windows_nightly\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Port PC del decomp Himuro; necesita los datos de tu copia de Fatal Frame / Project Zero (PS2). Build nightly."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "nightly",
+        "published_at": null
+      },
+      "year": 2001,
+      "developer": "Tecmo",
+      "genre": "Survival horror",
+      "wiki": "Fatal Frame (video game)",
+      "rolling_tag": "nightly"
+    },
+    {
+      "id": "opengoal-jak",
+      "name": "OpenGOAL",
+      "original_game": "Jak & Daxter: The Precursor Legacy",
+      "system": "ps2",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "open-goal",
+        "repo": "launcher"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Jak%20and%20Daxter%20-%20The%20Precursor%20Legacy%20%28Europe%29%20%28En%2CJa%2CFr%2CDe%2CEs%2CIt%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)amd64\\.AppImage$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher de OpenGOAL te pedirá el ISO de tu Jak & Daxter (PS2) y lo instala; también soporta Jak II. 100%% del juego en código nativo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "latest_tag": "v2.10.4",
+        "published_at": null
+      },
+      "year": 2001,
+      "developer": "Naughty Dog",
+      "genre": "Plataformas",
+      "wiki": "Jak and Daxter: The Precursor Legacy"
+    },
+    {
+      "id": "smb-remastered",
+      "name": "SMB Remastered",
+      "original_game": "Super Mario Bros.",
+      "system": "nes",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "JHDev2006",
+        "repo": "Super-Mario-Bros.-Remastered-Public"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Super%20Mario%20Bros.%20%28World%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux\\.zip$",
+        "windows-x86_64": "(?i)windows\\.zip$"
+      },
+      "rom": {
+        "required": false,
+        "mode": "none",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Remake fan gratuito (Godot) — no necesita ROM."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.1-rc5",
+        "published_at": null
+      },
+      "year": 1985,
+      "developer": "Nintendo",
+      "genre": "Plataformas",
+      "wiki": "Super Mario Bros."
     }
   ]
 }

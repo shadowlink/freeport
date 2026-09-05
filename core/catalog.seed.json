@@ -5675,6 +5675,46 @@
       "developer": "Arika",
       "genre": "Lucha",
       "wiki": "Street Fighter EX2"
+    },
+    {
+      "id": "mksc-recomp",
+      "name": "MKSC Recomp",
+      "original_game": "Mario Kart: Super Circuit",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "MarioKartSuperCircuitRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Mario%20Kart%20-%20Super%20Circuit%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)windows-x64.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Mario Kart: Super Circuit (GBA) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.3",
+        "published_at": "2026-08-31T17:50:18Z"
+      },
+      "year": 2001,
+      "developer": "Intelligent Systems",
+      "genre": "Carreras",
+      "wiki": "Mario Kart: Super Circuit"
     }
   ]
 }

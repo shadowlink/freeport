@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-06",
+  "updated_at": "2026-09-08",
   "source": "probed",
   "systems": [
     {
@@ -1118,8 +1118,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_c65696f",
-        "published_at": "2026-09-05T06:43:29Z"
+        "latest_tag": "nightly_db8b292",
+        "published_at": "2026-09-06T20:34:03Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -1613,8 +1613,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "2.0.0",
-        "published_at": "2026-05-29T16:16:46Z"
+        "latest_tag": "3.0.0",
+        "published_at": "2026-09-07T04:57:17Z"
       },
       "year": 1996,
       "developer": "Nintendo",
@@ -2887,8 +2887,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.5.4",
-        "published_at": "2026-09-06T02:24:06Z"
+        "latest_tag": "v0.5.5",
+        "published_at": "2026-09-07T05:44:35Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -5016,8 +5016,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.8.1",
-        "published_at": "2026-08-22T23:22:58Z"
+        "latest_tag": "v0.8.2",
+        "published_at": "2026-09-06T16:38:47Z"
       },
       "year": 1997,
       "developer": "Treasure",
@@ -5750,12 +5750,66 @@
           "linux-x86_64"
         ],
         "latest_tag": "0.1",
-        "published_at": "2026-09-06T09:06:03Z"
+        "published_at": "2026-09-06T09:54:16Z"
       },
       "year": 2001,
       "developer": "Nintendo",
       "genre": "Estrategia en tiempo real",
       "wiki": "Pikmin (video game)"
+    },
+    {
+      "id": "openpete-spyro",
+      "name": "OpenPete",
+      "original_game": "Spyro the Dragon",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "web",
+        "owner": "openpete.com",
+        "repo": "openpete"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Spyro%20the%20Dragon%20%28USA%29.png",
+      "logo_url": null,
+      "direct": {
+        "version": "v0.2.0",
+        "page": "https://openpete.com/",
+        "downloads": {
+          "linux-x86_64": "https://dl.openpete.com/OpenPete-v0.2.0-x86_64.AppImage",
+          "windows-x86_64": "https://dl.openpete.com/openpete-v0.2.0.zip"
+        },
+        "sha256": {
+          "OpenPete-v0.2.0-x86_64.AppImage": "53c6bb693b1626c9077f06831ab93e8589a1ca86e4ccbe087f5a7cf4f4230056",
+          "openpete-v0.2.0.zip": "6fd18f4bdd6c0279247e965d913c7a98b017229a1fd9fe534ff054401e62cc10"
+        }
+      },
+      "asset_rules": {
+        "linux-x86_64": "(?i)x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)openpete.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el primer arranque pide tu imagen de disco de Spyro the Dragon NTSC-U (SCUS-94228); la copia a library/ y compila el juego desde ella. Recomp estático + decomp matching con renderer propio: framerate libre, widescreen, texturas HD, save states/rewind y mods. Requiere Vulkan 1.2."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.0",
+        "published_at": "2026-09-04T00:00:00Z"
+      },
+      "year": 1998,
+      "developer": "Insomniac Games",
+      "genre": "Plataformas",
+      "wiki": "Spyro the Dragon (video game)"
     }
   ]
 }

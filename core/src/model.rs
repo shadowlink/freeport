@@ -75,6 +75,11 @@ pub struct Project {
     /// for ports whose UI freezes on native Wayland).
     #[serde(default)]
     pub launch_env: HashMap<String, String>,
+    /// Direct-download source for projects not released on GitHub (e.g.
+    /// self-hosted sites like openpete.com). When present it takes the place
+    /// of GitHub Releases entirely.
+    #[serde(default)]
+    pub direct: Option<DirectSource>,
     /// platform triple -> regex used to pick the matching release asset.
     #[serde(default)]
     pub asset_rules: HashMap<String, String>,
@@ -85,6 +90,23 @@ pub struct Project {
     pub launch: HashMap<String, Option<String>>,
     #[serde(default)]
     pub cached: Option<Cached>,
+}
+
+/// Self-hosted download source: fixed per-platform URLs plus optional
+/// published SHA-256 checksums (keyed by file name).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DirectSource {
+    /// Version label (plays the role of the release tag).
+    pub version: String,
+    /// platform triple -> download URL.
+    #[serde(default)]
+    pub downloads: HashMap<String, String>,
+    /// Project homepage (shown where a GitHub link would go).
+    #[serde(default)]
+    pub page: Option<String>,
+    /// file name -> expected SHA-256 (lowercase hex).
+    #[serde(default)]
+    pub sha256: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

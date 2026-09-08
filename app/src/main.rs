@@ -712,7 +712,13 @@ fn build_detail(app: &App, win: &MainWindow) {
         play_state: match app.launching.borrow().get(&p.id) { Some(false) => 1, Some(true) => 2, None => 0 },
         install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
-        repo_url: format!("https://github.com/{}", p.repo.slug()).into(),
+        repo_url: if p.repo.host == "github" {
+            format!("https://github.com/{}", p.repo.slug())
+        } else {
+            p.direct.as_ref().and_then(|d| d.page.clone()).unwrap_or_default()
+        }
+        .into(),
+        repo_label: if p.repo.host == "github" { "↗ Ver en GitHub" } else { "↗ Web oficial" }.into(),
         last_updated: {
             let cl = app.changelog_cache.borrow();
             let (tag, date) = cl.get(&p.id).map(|(t, d, _)| (t.clone(), d.clone())).unwrap_or_else(|| {

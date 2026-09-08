@@ -51,6 +51,9 @@ pub async fn fetch_changelog(
     project: &Project,
 ) -> AppResult<(String, Option<String>, String)> {
     let slug = project.repo.slug();
+    if project.repo.host != "github" {
+        return Err(AppError::msg("sin changelog (proyecto sin releases de GitHub)"));
+    }
     if let Ok(entries) = github::fetch_changelogs_noapi(client, &slug).await {
         // The catalog's probe already picked the channel's tag; fall back to
         // the newest entry when the cached tag isn't in the feed (or missing).
@@ -180,6 +183,27 @@ async fn resolve_release(
     token: Option<&str>,
     rule: &str,
 ) -> AppResult<github::Release> {
+    // Self-hosted projects: the catalog carries fixed URLs; GitHub never enters.
+    if let Some(direct) = project.direct.as_ref() {
+        let assets = direct
+            .downloads
+            .values()
+            .map(|url| github::Asset {
+                name: url.rsplit('/').next().unwrap_or("download").to_string(),
+                browser_download_url: url.clone(),
+                size: 0,
+            })
+            .collect();
+        return Ok(github::Release {
+            tag_name: direct.version.clone(),
+            name: None,
+            published_at: project.cached.as_ref().and_then(|c| c.published_at.clone()),
+            body: None,
+            prerelease: false,
+            draft: false,
+            assets,
+        });
+    }
     let slug = project.repo.slug();
     if let Some(cached) = project.cached.as_ref() {
         if let Some(tag) = cached.latest_tag.as_deref() {
@@ -232,7 +256,12 @@ pub async fn install_project(
     }
     std::fs::create_dir_all(&staging)?;
 
-    let result = stage_install(client, &release, &asset, &staging, cancel, &mut on_progress).await;
+    let catalog_sha = project
+        .direct
+        .as_ref()
+        .and_then(|d| d.sha256.get(&asset.name).map(|s| s.to_lowercase()));
+    let result =
+        stage_install(client, &release, &asset, &staging, catalog_sha, cancel, &mut on_progress).await;
     if let Err(e) = result {
         let _ = std::fs::remove_dir_all(&staging);
         return Err(e);
@@ -287,6 +316,7 @@ async fn stage_install(
     release: &github::Release,
     asset: &github::Asset,
     staging: &Path,
+    catalog_sha: Option<String>,
     cancel: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
     on_progress: &mut impl FnMut(u64, u64),
 ) -> AppResult<()> {
@@ -300,7 +330,20 @@ async fn stage_install(
     )
     .await?;
 
-    // Integrity: many releases ship a SHA256SUMS(.txt) next to the binaries.
+    // Integrity: the catalog may pin a hash directly (direct-download projects
+    // publishing checksums on their site)…
+    if let Some(expected) = catalog_sha {
+        let got = install::file_sha256(&archive)?;
+        if got != expected {
+            return Err(AppError::msg(format!(
+                "la descarga de {} no supera la verificación SHA-256 (esperado {}…, obtenido {}…)",
+                asset.name,
+                &expected[..12.min(expected.len())],
+                &got[..12]
+            )));
+        }
+    }
+    // …and many GitHub releases ship a SHA256SUMS(.txt) next to the binaries.
     if let Some(sums) = release.assets.iter().find(|a| {
         let n = a.name.to_lowercase();
         n == "sha256sums" || n == "sha256sums.txt" || n == format!("{}.sha256", asset.name.to_lowercase())
@@ -725,5 +768,28 @@ mod live_reblue_launch {
         let _ = std::process::Command::new("kill").arg(pid.to_string()).status();
         println!("driver line: {:?}", log.lines().find(|l| l.contains("video driver")));
         assert!(log.contains("SDL video driver: x11"), "log: {log}");
+    }
+}
+
+#[cfg(test)]
+mod live_openpete_test {
+    use super::*;
+
+    /// e2e for direct-download projects: OpenPete (self-hosted, sha256 pinned).
+    #[tokio::test]
+    #[ignore]
+    async fn installs_openpete_direct() {
+        let paths = Paths::resolve().unwrap();
+        let catalog = store::load_catalog(&paths).unwrap();
+        let p = catalog.projects.iter().find(|p| p.id == "openpete-spyro").unwrap().clone();
+        assert!(p.direct.is_some());
+        let cfg = store::load_config(&paths).unwrap_or_default();
+        let client = reqwest::Client::new();
+        let entry = install_project(&client, &paths, &p, &cfg, None, |_, _| {}).await.expect("install");
+        println!("instalado {} en {}", entry.installed_tag.clone().unwrap_or_default(), entry.install_path);
+        assert_eq!(entry.installed_tag.as_deref(), Some("v0.2.0"));
+        let bin = install::find_launch_binary(Path::new(&entry.install_path), None, false).expect("bin");
+        println!("binario: {}", bin.display());
+        assert!(bin.to_string_lossy().ends_with(".AppImage"));
     }
 }

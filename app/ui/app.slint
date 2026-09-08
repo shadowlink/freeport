@@ -209,6 +209,7 @@ struct DetailData {
     version: string,     // installed tag
     new-version: string, // latest tag when an update is available
     facts: [FactRow],
+    repo-label: string,      // "↗ Ver en GitHub" | "↗ Web oficial"
     ra-summary: string,      // "12/97 logros · 80/749 pts" (empty = no section)
     badge-rows: [[RaBadge]],
     related: [CardItem],
@@ -1199,7 +1200,7 @@ export component MainWindow inherits Window {
                                 }
                             }
                         }
-                        if root.detail.repo-url != "": Btn { label: "↗ Ver en GitHub"; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
+                        if root.detail.repo-url != "": Btn { label: root.detail.repo-label; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
                         if root.detail.installed: Btn { label: "◫ Abrir carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
                         if root.detail.installed: Btn { label: "🕹 Añadir a Steam"; bg: #1c1f28; fg: white; clicked => { root.add-steam(root.detail.id); } }
                         if root.detail-msg != "": Text { text: root.detail-msg; color: #ffd166; font-size: 11px; wrap: word-wrap; width: 270px; }

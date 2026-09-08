@@ -5850,6 +5850,169 @@
       "developer": "Naughty Dog",
       "genre": "Carreras",
       "wiki": "Crash Team Racing"
+    },
+    {
+      "id": "roadrash64-recomp",
+      "name": "Road Rash 64 Recompiled",
+      "original_game": "Road Rash 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "linkssy2",
+        "repo": "RoadRash64Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Road%20Rash%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)Win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ROM de Road Rash 64 USA v1.0; el launcher te la pedirá. 60fps, widescreen, LOD máximo y música personalizada."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-07T06:52:06Z"
+      },
+      "year": 1999,
+      "developer": "Pacific Coast Power & Light",
+      "genre": "Carreras",
+      "wiki": "Road Rash 64"
+    },
+    {
+      "id": "jetmoto-recomp",
+      "name": "JetMoto",
+      "original_game": "Jet Moto",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "Jet-Moto-Anthology"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "jetmoto-v1.2.0",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Jet%20Moto%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)JetMoto-win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu Jet Moto (PS1, SCUS-94309); se genera desde tu copia (RecompOne, OpenBIOS incluida)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "jetmoto-v1.2.0",
+        "published_at": "2026-08-28T01:29:37Z"
+      },
+      "year": 1996,
+      "developer": "SingleTrac",
+      "genre": "Carreras",
+      "wiki": "Jet Moto (video game)"
+    },
+    {
+      "id": "jetmoto2-recomp",
+      "name": "JetMoto2",
+      "original_game": "Jet Moto 2",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "Jet-Moto-Anthology"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "jetmoto2-v1.2.0",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Jet%20Moto%202%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)JetMoto2-win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu Jet Moto 2 (PS1, SCUS-94167); se genera desde tu copia (RecompOne, OpenBIOS incluida)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "jetmoto2-v1.2.0",
+        "published_at": "2026-08-28T01:29:37Z"
+      },
+      "year": 1997,
+      "developer": "SingleTrac",
+      "genre": "Carreras",
+      "wiki": "Jet Moto 2"
+    },
+    {
+      "id": "jetmoto3-recomp",
+      "name": "JetMoto3",
+      "original_game": "Jet Moto 3",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "Jet-Moto-Anthology"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "jetmoto3-v1.1.0",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Jet%20Moto%203%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)JetMoto3-win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Asistente al arrancar: selecciona la imagen de disco de tu Jet Moto 3 (PS1, SCUS-94555); se genera desde tu copia (RecompOne, OpenBIOS incluida)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "jetmoto3-v1.1.0",
+        "published_at": "2026-08-28T01:29:37Z"
+      },
+      "year": 1999,
+      "developer": "SingleTrac",
+      "genre": "Carreras",
+      "wiki": "Jet Moto 3"
     }
   ]
 }

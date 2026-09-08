@@ -98,6 +98,12 @@
       "name": "PSP",
       "short": "PSP",
       "color": "#8f6fd0"
+    },
+    {
+      "id": "3ds",
+      "name": "Nintendo 3DS",
+      "short": "3DS",
+      "color": "#d04848"
     }
   ],
   "projects": [
@@ -6013,6 +6019,46 @@
       "developer": "SingleTrac",
       "genre": "Carreras",
       "wiki": "Jet Moto 3"
+    },
+    {
+      "id": "triaevum-oot3d",
+      "name": "TriAevum",
+      "original_game": "The Legend of Zelda: Ocarina of Time 3D",
+      "system": "3ds",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "coccofresco",
+        "repo": "TriAevum"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%203DS/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20Ocarina%20of%20Time%203D%20%28Europe%29%20%28En%2CFr%2CDe%2CEs%2CIt%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)Windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Ejecuta el setup (TriAevumForge) y selecciona tu ROM descifrada .3ds/.cci de Ocarina of Time 3D EUROPEA original (CTR-P-AQEP, NO Rev 1); verifica el contenido y prepara el juego. UI de una sola pantalla, widescreen. Requiere Vulkan."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "TriAevumForge.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.6.0-alpha.1",
+        "published_at": "2026-09-07T20:37:58Z"
+      },
+      "year": 2011,
+      "developer": "Grezzo / Nintendo",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: Ocarina of Time 3D"
     }
   ]
 }

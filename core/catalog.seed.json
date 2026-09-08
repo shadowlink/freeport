@@ -5810,6 +5810,46 @@
       "developer": "Insomniac Games",
       "genre": "Plataformas",
       "wiki": "Spyro the Dragon (video game)"
+    },
+    {
+      "id": "ctr-high-octane",
+      "name": "CTR High Octane",
+      "original_game": "Crash Team Racing",
+      "system": "psx",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Rinnegatamante",
+        "repo": "Crash-Team-Racing-High-Octane"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/CTR%20-%20Crash%20Team%20Racing%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)win\\.x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Setup manual: crea una carpeta assets/ junto al ejecutable y extrae de tu disco NTSC-U de CTR estos archivos: BIGFILE.BIG, SOUNDS/KART.HWL, TEST.STR y XA/ENG.XNF. Sourceport avanzado de Rinnegatamante (decomp CTR-tools, SDL3 estático)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v.1.3.1",
+        "published_at": "2026-09-06T22:16:34Z"
+      },
+      "year": 1999,
+      "developer": "Naughty Dog",
+      "genre": "Carreras",
+      "wiki": "Crash Team Racing"
     }
   ]
 }

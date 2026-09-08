@@ -6059,6 +6059,48 @@
       "developer": "Grezzo / Nintendo",
       "genre": "Acción-aventura",
       "wiki": "The Legend of Zelda: Ocarina of Time 3D"
+    },
+    {
+      "id": "snap64-recomp",
+      "name": "Snap64 Recomp",
+      "original_game": "Pokémon Snap",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "JackandBeans",
+        "repo": "Snap64Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Pokemon%20Snap%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux-x86_64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Pokémon Snap (N64, US) al arrancar."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.1",
+        "published_at": "2026-09-07T20:33:49Z"
+      },
+      "year": 1999,
+      "developer": "HAL Laboratory / Pax Softnica",
+      "genre": "Fotografía sobre raíles",
+      "wiki": "Pokémon Snap"
     }
   ]
 }

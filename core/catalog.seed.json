@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-08",
+  "updated_at": "2026-09-11",
   "source": "probed",
   "systems": [
     {
@@ -6101,6 +6101,53 @@
       "developer": "HAL Laboratory / Pax Softnica",
       "genre": "Fotografía sobre raíles",
       "wiki": "Pokémon Snap"
+    },
+    {
+      "id": "perfect-dark-dabs-mod",
+      "name": "Perfect Dark (Dab's Mod)",
+      "original_game": "Perfect Dark",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "DabDavis",
+        "repo": "perfect-dark-dabs-mod"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Perfect%20Dark%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^pd-dabs-mod-x86_64-linux\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^pd-dabs-mod-x86_64-windows\\.zip$",
+        "macos-x86_64": "(?i)^pd-dabs-mod-x86_64-osx\\.tar\\.xz$",
+        "macos-aarch64": "(?i)^pd-dabs-mod-arm64-osx\\.tar\\.xz$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "pd.ntsc-final.z64",
+        "subdir": "data",
+        "notes": "Selecciona tu ROM de Perfect Dark (USA) (Rev 1) — NTSC-U «ntsc-final» / US v1.1; se copia a la carpeta del juego. Este fork NO admite ROMs PAL ni JPN."
+      },
+      "launch": {
+        "linux": "pd.x86_64",
+        "windows": "pd.x86_64.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-aarch64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v3.3.3",
+        "published_at": "2026-09-11T02:20:13Z"
+      },
+      "year": 2000,
+      "developer": "Rare",
+      "genre": "Disparos en primera persona",
+      "wiki": "Perfect Dark",
+      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png"
     }
   ]
 }

@@ -104,6 +104,12 @@
       "name": "Nintendo 3DS",
       "short": "3DS",
       "color": "#d04848"
+    },
+    {
+      "id": "dc",
+      "name": "Dreamcast",
+      "short": "DC",
+      "color": "#f05100"
     }
   ],
   "projects": [
@@ -6233,6 +6239,218 @@
       "developer": "Next Level Games",
       "genre": "Deportes",
       "wiki": "Super Mario Strikers"
+    },
+    {
+      "id": "aerogauge-recomp",
+      "name": "AeroGauge: Recompiled",
+      "original_game": "AeroGauge",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "alondero",
+        "repo": "aerogauge-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/AeroGauge%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^aerogauge-recomp-linux-x64\\.zip$",
+        "windows-x86_64": "(?i)^aerogauge-recomp-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de AeroGauge (N64, USA) al arrancar. Mismo runtime que Automobili Lamborghini Recomp; audio y HUD aún en desarrollo."
+      },
+      "launch": {
+        "linux": "aerogauge_modern",
+        "windows": "aerogauge_modern.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.1",
+        "published_at": "2026-09-12T23:21:52Z"
+      },
+      "year": 1997,
+      "developer": "ASCII Corporation",
+      "genre": "Carreras",
+      "wiki": "AeroGauge"
+    },
+    {
+      "id": "spacechannel5-pc",
+      "name": "Space Channel 5 (port nativo)",
+      "original_game": "Space Channel 5",
+      "system": "dc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "ZoomiesZaggy",
+        "repo": "Space-Channel-5"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%20Dreamcast/Named_Boxarts/Space%20Channel%205%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^SpaceChannel5-.*-Linux-X64\\.tar\\.gz$",
+        "linux-aarch64": "(?i)^SpaceChannel5-.*-Linux-ARM64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^SpaceChannel5-.*-Windows-X64\\.zip$",
+        "macos-aarch64": "(?i)^SpaceChannel5-.*-macOS-ARM64\\.zip$",
+        "macos-x86_64": "(?i)^SpaceChannel5-.*-macOS-X64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, el launcher te pide tu GDI de Space Channel 5 (Dreamcast, USA) con todas sus pistas; valida e importa lo necesario y sigue leyendo música y vídeo del disco al jugar. Preview: Linux aún poco probado."
+      },
+      "launch": {
+        "linux": "SpaceChannel5",
+        "windows": "SpaceChannel5.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-aarch64",
+          "linux-x86_64",
+          "macos-aarch64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0-preview.1",
+        "published_at": "2026-09-13T04:08:33Z"
+      },
+      "year": 1999,
+      "developer": "United Game Artists",
+      "genre": "Ritmo",
+      "wiki": "Space Channel 5"
+    },
+    {
+      "id": "spiderman-ps1-recomp",
+      "name": "OpenSpidey: Spider-Man",
+      "original_game": "Spider-Man",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "OpenSpideyPS1"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "sm1-v1.0",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Spider-Man%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Spider-Man-\\d+\\.\\d+-Windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar: selecciona tu BIN/CUE o ISO de Spider-Man (PS1, USA, SLUS-00875); se extraen los assets en la primera ejecución (RecompOne). Incluye 34 trajes como mods."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "SpiderMan.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "sm1-v1.0",
+        "published_at": "2026-09-14T00:09:07Z"
+      },
+      "year": 2000,
+      "developer": "Neversoft",
+      "genre": "Acción-aventura",
+      "wiki": "Spider-Man (2000 video game)"
+    },
+    {
+      "id": "spiderman2-ps1-recomp",
+      "name": "OpenSpidey: Spider-Man 2",
+      "original_game": "Spider-Man 2: Enter Electro",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "OpenSpideyPS1"
+      },
+      "release_channel": "rolling",
+      "rolling_tag": "sm2-v1.0",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Spider-Man%202%20-%20Enter%20-%20Electro%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Spider-Man-2-\\d+\\.\\d+-Windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar: selecciona tu BIN/CUE o ISO de Spider-Man 2: Enter Electro (PS1, USA, SLUS-01378); se extraen los assets en la primera ejecución (RecompOne). Incluye 35 trajes como mods."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "SpiderMan2.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "sm2-v1.0",
+        "published_at": "2026-09-14T00:09:31Z"
+      },
+      "year": 2001,
+      "developer": "Vicarious Visions",
+      "genre": "Acción-aventura",
+      "wiki": "Spider-Man 2: Enter Electro"
+    },
+    {
+      "id": "lostodyssey-recomp",
+      "name": "Lost Odyssey Recomp",
+      "original_game": "Lost Odyssey",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "freefrank",
+        "repo": "LostOdysseyRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/0/09/Lost_Odyssey_cover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^LostOdysseyRecomp-windows-x64-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, el importador te pide los datos de tu copia de Lost Odyssey (Xbox 360): carpeta extraída, default.xex, ISO XDVDFS o contenedor GOD. Hace falta el Disco 1; ediciones USA/Europa o Europa/Asia. Discos 2-4 con InstallGame.exe. Experimental."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "LostOdysseyRecomp.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.5.11",
+        "published_at": "2026-09-14T02:09:50Z"
+      },
+      "year": 2007,
+      "developer": "Mistwalker / feelplus",
+      "genre": "RPG",
+      "wiki": "Lost Odyssey"
     }
   ]
 }

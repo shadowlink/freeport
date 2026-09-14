@@ -75,6 +75,7 @@ fn fmt_ago(epoch: i64) -> String {
 const LOGOS: &[(&str, &[u8])] = &[
     ("3ds", include_bytes!("../assets/logos/3ds.svg")),
     ("amiga", include_bytes!("../assets/logos/amiga.svg")),
+    ("dc", include_bytes!("../assets/logos/dc.svg")),
     ("gb", include_bytes!("../assets/logos/gb.svg")),
     ("gba", include_bytes!("../assets/logos/gba.svg")),
     ("gc", include_bytes!("../assets/logos/gc.svg")),

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-11",
+  "updated_at": "2026-09-14",
   "source": "probed",
   "systems": [
     {
@@ -571,8 +571,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.58",
-        "published_at": "2026-09-11T00:14:59Z"
+        "latest_tag": "v0.2.59",
+        "published_at": "2026-09-12T12:26:49Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -2086,8 +2086,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "shared-staging-20260903",
-        "published_at": "2026-09-03T17:12:42Z"
+        "latest_tag": "v0.3.0",
+        "published_at": "2026-09-12T03:40:33Z"
       },
       "year": 1999,
       "developer": "Sony Computer Entertainment",
@@ -2133,8 +2133,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.9.2",
-        "published_at": "2026-09-11T00:28:02Z"
+        "latest_tag": "v0.9.3",
+        "published_at": "2026-09-12T21:49:18Z"
       },
       "year": 2004,
       "developer": "Nintendo / Capcom",
@@ -2850,11 +2850,10 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.12.3-alpha",
-        "published_at": "2026-08-27T00:12:26Z"
+        "latest_tag": "v0.13.0-alpha",
+        "published_at": "2026-09-12T02:37:05Z"
       },
       "year": 1997,
       "developer": "Whoopee Camp",
@@ -2893,8 +2892,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.5.9",
-        "published_at": "2026-09-09T07:30:08Z"
+        "latest_tag": "v0.6.0",
+        "published_at": "2026-09-11T21:04:03Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3215,8 +3214,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "v1.5.2",
-        "published_at": "2026-09-04T17:03:06Z"
+        "latest_tag": "v1.6.1",
+        "published_at": "2026-09-13T03:52:10Z"
       },
       "year": 2003,
       "developer": "Namco",
@@ -3501,8 +3500,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.0",
-        "published_at": "2026-08-27T20:32:00Z"
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-09-11T21:02:33Z"
       },
       "year": 2006,
       "developer": "Mistwalker / Artoon",
@@ -3548,8 +3547,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.5",
-        "published_at": "2026-08-25T06:30:50Z"
+        "latest_tag": "v0.0.6",
+        "published_at": "2026-09-12T19:39:45Z"
       },
       "year": 1994,
       "developer": "Totally Games",
@@ -4252,8 +4251,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "shared-staging-20260903",
-        "published_at": "2026-09-03T17:12:24Z"
+        "latest_tag": "v0.0.10",
+        "published_at": "2026-09-12T00:22:22Z"
       },
       "year": 1999,
       "developer": "Whoopee Camp",
@@ -4416,8 +4415,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.10",
-        "published_at": "2026-09-07T20:21:35Z"
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-09-12T04:20:02Z"
       },
       "year": 2001,
       "developer": "Capcom",
@@ -5753,8 +5752,8 @@
       },
       "cached": {
         "platforms": [],
-        "latest_tag": "0.4.5",
-        "published_at": "2026-09-10T21:26:49Z"
+        "latest_tag": "0.5",
+        "published_at": "2026-09-13T09:22:41Z"
       },
       "year": 2001,
       "developer": "Nintendo",
@@ -6050,8 +6049,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.0-alpha.1c",
-        "published_at": "2026-09-08T15:37:27Z"
+        "latest_tag": "v0.6.0-alpha.2c",
+        "published_at": "2026-09-12T16:58:08Z"
       },
       "year": 2011,
       "developer": "Grezzo / Nintendo",
@@ -6092,8 +6091,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.3",
-        "published_at": "2026-09-10T00:09:04Z"
+        "latest_tag": "v1.0.5",
+        "published_at": "2026-09-13T02:10:33Z"
       },
       "year": 1999,
       "developer": "HAL Laboratory / Pax Softnica",
@@ -6138,14 +6137,102 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v3.3.3",
-        "published_at": "2026-09-11T02:20:13Z"
+        "latest_tag": "v3.5.0",
+        "published_at": "2026-09-13T03:40:22Z"
       },
       "year": 2000,
       "developer": "Rare",
       "genre": "Disparos en primera persona",
       "wiki": "Perfect Dark",
       "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png"
+    },
+    {
+      "id": "melee-pc",
+      "name": "Melee PC",
+      "original_game": "Super Smash Bros. Melee",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "999sian",
+        "repo": "melee-pc"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Smash%20Bros.%20Melee%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^melee-linux-x86_64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^Melee-Windows-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar se abre un launcher para elegir tu imagen de disco de Melee (ISO/GCM/CISO/RVZ); la verifica por SHA-1 contra Redump. Solo NTSC-U v1.02 (GALE01). Port en beta."
+      },
+      "launch": {
+        "linux": "melee",
+        "windows": "melee.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0-beta",
+        "published_at": "2026-09-14T04:32:32Z"
+      },
+      "year": 2001,
+      "developer": "HAL Laboratory",
+      "genre": "Lucha",
+      "wiki": "Super Smash Bros. Melee"
+    },
+    {
+      "id": "strikers-pc",
+      "name": "Strikers (port nativo)",
+      "original_game": "Super Mario Strikers",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "new-coke",
+        "repo": "strikers"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Mario%20Strikers%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^strikers-linux-x86_64\\.tar\\.gz$",
+        "linux-aarch64": "(?i)^strikers-linux-arm64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^strikers-windows-x86_64\\.zip$",
+        "macos-aarch64": "(?i)^strikers-macos-arm64\\.tar\\.gz$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu imagen de disco de Super Mario Strikers (ISO/GCM/CISO/GCZ o carpeta extraída; US, EU o JP). Indica su ruta en la app strikers-settings incluida (o en strikers.ini)."
+      },
+      "launch": {
+        "linux": "strikers",
+        "windows": "strikers.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-aarch64",
+          "linux-x86_64",
+          "macos-aarch64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1.1",
+        "published_at": "2026-09-13T20:41:03Z"
+      },
+      "year": 2005,
+      "developer": "Next Level Games",
+      "genre": "Deportes",
+      "wiki": "Super Mario Strikers"
     }
   ]
 }

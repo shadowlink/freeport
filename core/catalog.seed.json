@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-14",
+  "updated_at": "2026-09-17",
   "source": "probed",
   "systems": [
     {
@@ -577,8 +577,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.59",
-        "published_at": "2026-09-12T12:26:49Z"
+        "latest_tag": "v0.2.61",
+        "published_at": "2026-09-16T14:14:20Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1130,8 +1130,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_9319edc",
-        "published_at": "2026-09-11T01:46:00Z"
+        "latest_tag": "nightly_195de49",
+        "published_at": "2026-09-17T03:00:34Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -2006,8 +2006,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.5.2",
-        "published_at": "2026-08-25T10:50:14Z"
+        "latest_tag": "v1.7.0",
+        "published_at": "2026-09-11T17:50:01Z"
       },
       "year": 1997,
       "developer": "Rare",
@@ -2734,8 +2734,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "1.9",
-        "published_at": "2026-09-09T18:33:20Z"
+        "latest_tag": "1.9.3",
+        "published_at": "2026-09-15T22:19:09Z"
       },
       "year": 1996,
       "developer": "Naughty Dog",
@@ -2898,8 +2898,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.0",
-        "published_at": "2026-09-11T21:04:03Z"
+        "latest_tag": "v0.6.1",
+        "published_at": "2026-09-13T16:09:00Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3300,8 +3300,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.4.0",
-        "published_at": "2026-09-08T17:28:40Z"
+        "latest_tag": "v0.4.1",
+        "published_at": "2026-09-16T17:45:50Z"
       },
       "year": 2001,
       "developer": "Capcom / M4",
@@ -3797,8 +3797,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "0.6.6-alpha",
-        "published_at": "2026-09-09T22:57:11Z"
+        "latest_tag": "0.6.7-alpha",
+        "published_at": "2026-09-15T23:47:16Z"
       },
       "year": 1996,
       "developer": "Namco",
@@ -4337,8 +4337,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.2-alpha",
-        "published_at": "2026-08-07T15:19:24Z"
+        "latest_tag": "v0.1.3-alpha",
+        "published_at": "2026-09-15T16:09:34Z"
       },
       "year": 2000,
       "developer": "Eidetic",
@@ -5151,8 +5151,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.4",
-        "published_at": "2026-08-29T19:03:48Z"
+        "latest_tag": "v0.0.5",
+        "published_at": "2026-09-14T07:19:11Z"
       },
       "year": 2004,
       "developer": "Game Freak",
@@ -5474,8 +5474,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "v2.10.4",
-        "published_at": "2026-05-14T19:40:01Z"
+        "latest_tag": "v2.11.1",
+        "published_at": "2026-09-13T20:16:03Z"
       },
       "year": 2001,
       "developer": "Naughty Dog",
@@ -5758,8 +5758,8 @@
       },
       "cached": {
         "platforms": [],
-        "latest_tag": "0.5",
-        "published_at": "2026-09-13T09:22:41Z"
+        "latest_tag": "0.6",
+        "published_at": "2026-09-15T22:34:38Z"
       },
       "year": 2001,
       "developer": "Nintendo",
@@ -5852,8 +5852,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v.1.3.1",
-        "published_at": "2026-09-06T22:16:40Z"
+        "latest_tag": "v.1.4.1",
+        "published_at": "2026-09-15T09:42:31Z"
       },
       "year": 1999,
       "developer": "Naughty Dog",
@@ -6097,8 +6097,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.5",
-        "published_at": "2026-09-13T02:10:33Z"
+        "latest_tag": "v1.0.8",
+        "published_at": "2026-09-15T02:38:01Z"
       },
       "year": 1999,
       "developer": "HAL Laboratory / Pax Softnica",
@@ -6143,8 +6143,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v3.5.0",
-        "published_at": "2026-09-13T03:40:22Z"
+        "latest_tag": "v3.7.0",
+        "published_at": "2026-09-15T06:47:22Z"
       },
       "year": 2000,
       "developer": "Rare",
@@ -6186,8 +6186,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.0-beta",
-        "published_at": "2026-09-14T04:32:32Z"
+        "latest_tag": "v0.1.5-beta",
+        "published_at": "2026-09-16T01:51:52Z"
       },
       "year": 2001,
       "developer": "HAL Laboratory",
@@ -6232,8 +6232,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.1.1",
-        "published_at": "2026-09-13T20:41:03Z"
+        "latest_tag": "v1.1.5",
+        "published_at": "2026-09-14T19:53:42Z"
       },
       "year": 2005,
       "developer": "Next Level Games",
@@ -6444,13 +6444,302 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.5.11",
-        "published_at": "2026-09-14T02:09:50Z"
+        "latest_tag": "v0.5.14",
+        "published_at": "2026-09-16T07:18:53Z"
       },
       "year": 2007,
       "developer": "Mistwalker / feelplus",
       "genre": "RPG",
       "wiki": "Lost Odyssey"
+    },
+    {
+      "id": "racewave46",
+      "name": "RaceWave46",
+      "original_game": "Wave Race 64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "DomazinUS",
+        "repo": "RaceWave46"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Wave%20Race%2064%20-%20Kawasaki%20Jet%20Ski%20%28USA%29%20%28Rev%201%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^RaceWave46-Windows-x64-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, elige «Select USA ROM» e importa tu ROM de Wave Race 64 (USA, Rev 1). Los datos importados, partidas y fantasmas quedan en la carpeta .runtime de la instalación."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "WaveRace64Recompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-16T19:07:29Z"
+      },
+      "year": 1996,
+      "developer": "Nintendo EAD",
+      "genre": "Carreras",
+      "wiki": "Wave Race 64"
+    },
+    {
+      "id": "paperboat-pm64",
+      "name": "PaperBoat",
+      "original_game": "Paper Mario",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "HarbourMasters",
+        "repo": "PaperBoat"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Paper%20Mario%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^Paperboat-.*-Linux\\.zip$",
+        "windows-x86_64": "(?i)^Paperboat-.*-Win64\\.zip$",
+        "macos-x86_64": "(?i)^Paperboat-.*-Mac\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Paper Mario (US); se copia a la carpeta del juego y el port la detecta al arrancar (como Ship of Harkinian). Comprueba tu dump en https://paperboat.equipment/. Release alfa."
+      },
+      "launch": {
+        "linux": "Paperboat.AppImage",
+        "windows": "Paperboat.exe"
+      },
+      "mods": null,
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.0.0",
+        "published_at": "2026-09-17T01:19:09Z"
+      },
+      "year": 2000,
+      "developer": "Intelligent Systems",
+      "genre": "RPG",
+      "wiki": "Paper Mario (video game)"
+    },
+    {
+      "id": "mmx2snes-recomp",
+      "name": "Mega Man X2 Recomp",
+      "original_game": "Mega Man X2",
+      "system": "snes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "MegaManX2Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/Mega%20Man%20X2%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)linux.*\\.AppImage$",
+        "windows-x86_64": "(?i)windows.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El juego te pedirá tu ROM de Mega Man X2 (SNES, USA) al arrancar. Emula el chip Cx4 a nivel de instrucción; no necesita firmware."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.1",
+        "published_at": "2026-08-06T01:59:11Z"
+      },
+      "year": 1994,
+      "developer": "Capcom",
+      "genre": "Plataformas",
+      "wiki": "Mega Man X2"
+    },
+    {
+      "id": "beetle-adventure-racing-recomp",
+      "name": "Beetle Adventure Racing Recomp",
+      "original_game": "Beetle Adventure Racing!",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "danielgomesvieira2000",
+        "repo": "beetle-adventure-racing-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Beetle%20Adventure%20Racing%21%20%28USA%29%20%28En%2CFr%2CDe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^beetle-adventure-racing-recomp-.*-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher integrado te pedirá tu ROM de Beetle Adventure Racing! (N64, USA) al arrancar. Alfa: jugable, con asperezas; la build Linux aún no arranca."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "beetle-adventure-racing-recomp.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.0-alpha",
+        "published_at": "2026-09-17T14:53:51Z"
+      },
+      "year": 1999,
+      "developer": "Paradigm Entertainment",
+      "genre": "Carreras",
+      "wiki": "Beetle Adventure Racing!"
+    },
+    {
+      "id": "busters-hidden-treasure-pc",
+      "name": "Buster's Hidden Treasure PC",
+      "original_game": "Tiny Toon Adventures: Buster's Hidden Treasure",
+      "system": "genesis",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Darhkfox",
+        "repo": "busters-hidden-treasure-pc"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%20Mega%20Drive%20-%20Genesis/Named_Boxarts/Tiny%20Toon%20Adventures%20-%20Buster%27s%20Hidden%20Treasure%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Busters-Hidden-Treasure-PC\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Tiny Toon Adventures: Buster's Hidden Treasure (Mega Drive, USA; .bin/.md/.gen); se copia junto al ejecutable y el juego la detecta solo. Otras regiones o hacks se rechazan."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "Buster's Hidden Treasure.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1",
+        "published_at": "2026-09-16T17:56:23Z"
+      },
+      "year": 1993,
+      "developer": "Konami",
+      "genre": "Plataformas",
+      "wiki": "Tiny Toon Adventures: Buster's Hidden Treasure"
+    },
+    {
+      "id": "issd-native",
+      "name": "ISSD Native",
+      "original_game": "International Superstar Soccer Deluxe",
+      "system": "snes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "sergiomanzur",
+        "repo": "issd-native"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/International%20Superstar%20Soccer%20Deluxe%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^ISSDNative-.*-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar sin ROM configurada se abre un selector: elige tu ROM de International Superstar Soccer Deluxe (SNES, USA, .sfc sin cabecera). Beta."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "ISSDNative.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0-beta.1",
+        "published_at": "2026-09-16T19:02:24Z"
+      },
+      "year": 1995,
+      "developer": "Konami",
+      "genre": "Deportes",
+      "wiki": "International Superstar Soccer Deluxe"
+    },
+    {
+      "id": "goldeneye-pc-port",
+      "name": "GoldenEye PC Port",
+      "original_game": "GoldenEye 007",
+      "system": "n64",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "jkdansereau",
+        "repo": "goldeneye-pc-port"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/GoldenEye%20007%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^goldeneye-pc-port-.*-linux-x86_64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^goldeneye-pc-port-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "ge007.ntsc-final.z64",
+        "subdir": "data",
+        "notes": "Selecciona tu ROM de GoldenEye 007 (N64, NTSC-U); se copia a data/ con el nombre exacto. El primer arranque tarda unos segundos generando los assets. Port del decomp del N64 (no del XBLA)."
+      },
+      "launch": {
+        "linux": "ge007.x86_64",
+        "windows": "ge007.x86_64.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.2",
+        "published_at": "2026-09-16T13:30:57Z"
+      },
+      "year": 1997,
+      "developer": "Rare",
+      "genre": "Disparos en primera persona",
+      "wiki": "GoldenEye 007 (1997 video game)"
     }
   ]
 }

@@ -1152,8 +1152,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_195de49",
-        "published_at": "2026-09-17T03:00:34Z"
+        "latest_tag": "nightly_776845b",
+        "published_at": "2026-09-18T05:36:17Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -2793,8 +2793,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "1.9.3",
-        "published_at": "2026-09-15T22:19:09Z"
+        "latest_tag": "1.9.4",
+        "published_at": "2026-09-18T01:30:47Z"
       },
       "year": 1996,
       "developer": "Naughty Dog",
@@ -3291,8 +3291,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "v1.6.1",
-        "published_at": "2026-09-13T03:52:10Z"
+        "latest_tag": "v1.6.2",
+        "published_at": "2026-09-17T22:23:47Z"
       },
       "year": 2003,
       "developer": "Namco",
@@ -6285,8 +6285,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v3.7.0",
-        "published_at": "2026-09-15T06:47:22Z"
+        "latest_tag": "v3.8.0",
+        "published_at": "2026-09-17T12:02:57Z"
       },
       "year": 2000,
       "developer": "Rare",
@@ -6329,8 +6329,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.5-beta",
-        "published_at": "2026-09-16T01:51:52Z"
+        "latest_tag": "v0.1.7-beta",
+        "published_at": "2026-09-17T22:32:59Z"
       },
       "year": 2001,
       "developer": "HAL Laboratory",
@@ -6376,8 +6376,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.1.5",
-        "published_at": "2026-09-14T19:53:42Z"
+        "latest_tag": "v1.2.0",
+        "published_at": "2026-09-17T11:06:42Z"
       },
       "year": 2005,
       "developer": "Next Level Games",
@@ -6468,8 +6468,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.0-preview.1",
-        "published_at": "2026-09-13T04:08:33Z"
+        "latest_tag": "v0.1.0-preview.2",
+        "published_at": "2026-09-17T20:35:54Z"
       },
       "year": 1999,
       "developer": "United Game Artists",
@@ -6593,8 +6593,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.5.14",
-        "published_at": "2026-09-16T07:18:53Z"
+        "latest_tag": "v0.5.20",
+        "published_at": "2026-09-17T20:09:32Z"
       },
       "year": 2007,
       "developer": "Mistwalker / feelplus",
@@ -6680,8 +6680,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "1.0.0",
-        "published_at": "2026-09-17T01:19:09Z"
+        "latest_tag": "1.0.1",
+        "published_at": "2026-09-17T22:42:33Z"
       },
       "year": 2000,
       "developer": "Intelligent Systems",

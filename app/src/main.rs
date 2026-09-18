@@ -216,9 +216,19 @@ fn parse_color(hex: &str) -> Color {
 }
 
 fn supports(p: &Project, triple: &str) -> bool {
-    match &p.cached {
-        Some(c) if !c.platforms.is_empty() => c.platforms.iter().any(|x| x == triple),
-        _ => p.asset_rules.contains_key(triple),
+    p.supports(triple)
+}
+
+/// Human label for an asset triple ("linux-x86_64" → "Linux").
+fn platform_label(triple: &str) -> &'static str {
+    if triple.starts_with("linux") {
+        "Linux"
+    } else if triple.starts_with("windows") {
+        "Windows"
+    } else if triple.starts_with("macos") {
+        "macOS"
+    } else {
+        "Otro"
     }
 }
 
@@ -270,14 +280,24 @@ fn rebuild(app: &App, win: &MainWindow) {
     let show_windows = cfg.show_windows;
     let favs: std::collections::HashSet<&str> = cfg.favorites.iter().map(|s| s.as_str()).collect();
 
+    // Sidebar counts: games (grouped versions) in the catalog, installs in the library.
     let mut sys_rows: Vec<SysRow> = Vec::new();
     for s in &catalog.systems {
-        let count = catalog
+        let mut keys: HashSet<&str> = HashSet::new();
+        let mut count = 0usize;
+        for p in catalog
             .projects
             .iter()
             .filter(|p| p.system == s.id && app.visibility(p, &installed, show_windows).0)
             .filter(|p| !library || installed.contains_key(&p.id))
-            .count();
+        {
+            if library {
+                count += 1;
+            } else {
+                keys.insert(p.game_key());
+            }
+        }
+        let count = if library { count } else { keys.len() };
         if count == 0 {
             continue;
         }
@@ -292,24 +312,24 @@ fn rebuild(app: &App, win: &MainWindow) {
         });
     }
 
-    // (favorite, name_lc, year, last_played_epoch, card) for sorting.
-    let mut sortable: Vec<(bool, String, i64, i64, CardItem)> = Vec::new();
-    for p in &catalog.projects {
+    // Every filter that decides whether a project shows up in the current view.
+    // Returns Some(is_windows) when it passes.
+    let passes = |p: &Project| -> Option<bool> {
         let (visible, is_win) = app.visibility(p, &installed, show_windows);
         if !visible
             || (library && !installed.contains_key(&p.id))
             || (!active.is_empty() && p.system != active)
         {
-            continue;
+            return None;
         }
         if !filter_kind.is_empty() && p.kind != filter_kind {
-            continue;
+            return None;
         }
         if (filter_plat == "native" && is_win) || (filter_plat == "windows" && !is_win) {
-            continue;
+            return None;
         }
         if !filter_genre.is_empty() && p.genre.as_deref() != Some(filter_genre.as_str()) {
-            continue;
+            return None;
         }
         if !query.is_empty() {
             let sys_name = catalog.systems.iter().find(|s| s.id == p.system).map(|s| s.name.as_str()).unwrap_or("");
@@ -319,9 +339,48 @@ fn rebuild(app: &App, win: &MainWindow) {
             )
             .to_lowercase();
             if !hay.contains(&query) {
-                continue;
+                return None;
             }
         }
+        Some(is_win)
+    };
+
+    // Catalog: one card per GAME (versions of the same game fold into one card,
+    // see core::groups). Library: one card per install, so every installed
+    // version is launchable directly.
+    let card_groups: Vec<freeport_core::groups::GameGroup> = if library {
+        catalog
+            .projects
+            .iter()
+            .filter(|p| passes(p).is_some())
+            .map(|p| freeport_core::groups::GameGroup { key: p.id.clone(), primary: 0, members: vec![p] })
+            .collect()
+    } else {
+        freeport_core::groups::group_visible(&catalog.projects, &app.triple, |p| passes(p).is_some())
+    };
+
+    // (favorite, name_lc, year, last_played_epoch, card) for sorting.
+    let mut sortable: Vec<(bool, String, i64, i64, CardItem)> = Vec::new();
+    for g in &card_groups {
+        // The card speaks for the whole group but acts on ONE project: the
+        // installed version played most recently, else the group's primary.
+        let last_played = |id: &str| -> i64 {
+            installed.get(id).and_then(|e| e.last_played.as_ref()).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0)
+        };
+        let p: &Project = g
+            .members
+            .iter()
+            .copied()
+            .filter(|m| installed.contains_key(&m.id))
+            .max_by_key(|m| last_played(&m.id))
+            .unwrap_or_else(|| g.primary());
+        let is_win = passes(p).unwrap_or(false);
+        let any_installed = g.members.iter().any(|m| installed.contains_key(&m.id));
+        let any_update =
+            g.members.iter().any(|m| installed.get(&m.id).map(|e| has_update(e, &m.cached)).unwrap_or(false));
+        let any_busy = g.members.iter().any(|m| busy.contains(&m.id));
+        let any_fav = g.members.iter().any(|m| favs.contains(m.id.as_str()));
+        let any_new = g.members.iter().any(|m| is_new_id(&seen, &m.id, now_secs));
         let entry = installed.get(&p.id);
         let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
         let sys_color = catalog
@@ -331,9 +390,8 @@ fn rebuild(app: &App, win: &MainWindow) {
             .map(|s| parse_color(&s.color))
             .unwrap_or(Color::from_rgb_u8(0x88, 0x88, 0x88));
         let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
-        let is_fav = favs.contains(p.id.as_str());
         let year = p.year.unwrap_or(0) as i64;
-        let last = entry.and_then(|e| e.last_played.as_ref()).and_then(|s| s.parse::<i64>().ok()).unwrap_or(0);
+        let last = last_played(&p.id);
         let name_lc = title.to_lowercase();
         let play_state = match app.launching.borrow().get(&p.id) {
             Some(false) => 1, // launching
@@ -347,7 +405,7 @@ fn rebuild(app: &App, win: &MainWindow) {
             .and_then(|e| e.installed_tag.clone())
             .unwrap_or_else(|| latest_tag.clone());
         sortable.push((
-            is_fav,
+            any_fav,
             name_lc,
             year,
             last,
@@ -356,22 +414,23 @@ fn rebuild(app: &App, win: &MainWindow) {
                 title: title.into(),
                 subtitle: p.name.clone().into(),
                 cover: app.cover(p),
-                installed: entry.is_some(),
+                installed: any_installed,
                 is_windows: is_win,
-                update_available: update,
+                update_available: any_update,
                 needs_rom: p.rom.mode == "copy",
                 rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
-                busy: busy.contains(&p.id),
+                busy: any_busy,
                 progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
                 kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
                 sys_color,
-                favorite: is_fav,
+                favorite: any_fav,
                 play_state,
                 install_error: install_err,
                 version: version.into(),
                 new_version: if update { latest_tag.into() } else { "".into() },
                 meta: if last > 0 { format!("Jugado {}", fmt_ago(last)).into() } else { "".into() },
-                is_new: is_new_id(&seen, &p.id, now_secs),
+                is_new: any_new,
+                versions: g.members.len() as i32,
             },
         ));
     }
@@ -454,6 +513,7 @@ fn rebuild(app: &App, win: &MainWindow) {
             new_version: "".into(),
             meta: meta.into(),
             is_new: true,
+                    versions: 1,
         });
     }
 
@@ -553,7 +613,12 @@ fn build_detail(app: &App, win: &MainWindow) {
     let related: Vec<CardItem> = catalog
         .projects
         .iter()
-        .filter(|r| r.id != p.id && r.system == p.system && app.visibility(r, &installed, show_windows).0)
+        .filter(|r| {
+            r.id != p.id
+                && r.system == p.system
+                && r.game_key() != p.game_key() // other versions live in the selector
+                && app.visibility(r, &installed, show_windows).0
+        })
         .take(12)
         .map(|r| CardItem {
             id: r.id.clone().into(),
@@ -576,6 +641,33 @@ fn build_detail(app: &App, win: &MainWindow) {
             new_version: "".into(),
             meta: "".into(),
             is_new: false,
+                    versions: 1,
+        })
+        .collect();
+
+    // Versions of the same game (this one included), for the hero selector.
+    let versions: Vec<VersionRow> = catalog
+        .projects
+        .iter()
+        .filter(|r| r.game_key() == p.game_key() && (r.id == p.id || app.visibility(r, &installed, show_windows).0))
+        .map(|r| {
+            let (_, rwin) = app.visibility(r, &installed, show_windows);
+            let mut plats: Vec<&str> = r
+                .cached
+                .as_ref()
+                .map(|c| c.platforms.iter().map(|t| platform_label(t)).collect())
+                .unwrap_or_default();
+            plats.dedup();
+            VersionRow {
+                id: r.id.clone().into(),
+                name: r.name.clone().into(),
+                kind: if r.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
+                is_windows: rwin,
+                installed: installed.contains_key(&r.id),
+                active: r.id == p.id,
+                platforms: plats.join(" · ").into(),
+                meta: r.cached.as_ref().and_then(|c| c.latest_tag.clone()).unwrap_or_default().into(),
+            }
         })
         .collect();
 
@@ -743,6 +835,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         about: state.wiki.as_ref().map(|w| w.extract.clone()).unwrap_or_default().into(),
         port_notes: p.rom.notes.clone().into(),
         has_related: !related.is_empty(),
+        has_versions: versions.len() > 1,
         has_mods: !mod_rows.is_empty(),
         has_screens: !screens.is_empty(),
         ra_eligible: p.ra_supported && freeport_core::ra_mod::platform_supported(),
@@ -755,6 +848,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         ra_summary: ra_summary.into(),
         badge_rows: ModelRc::new(VecModel::from(badge_rows)),
         related: ModelRc::new(VecModel::from(related)),
+        versions: ModelRc::new(VecModel::from(versions)),
         mods: ModelRc::new(VecModel::from(mod_rows)),
         screens: ModelRc::new(VecModel::from(screens)),
     };
@@ -922,6 +1016,7 @@ fn build_tv(app: &App, win: &MainWindow) {
                     new_version: if update { latest.into() } else { "".into() },
                     meta: "".into(),
                     is_new: false,
+                    versions: 1,
                 }
             })
             .collect();
@@ -2062,6 +2157,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if std::env::var_os("FREEPORT_DEBUG_CATALOG").is_some() {
         win.set_library_tab(false); // dev aid: land on the catalog tab
+    }
+    if let Some(id) = std::env::var("FREEPORT_DEBUG_OPEN").ok().filter(|s| !s.is_empty()) {
+        win.invoke_open_game(id.into()); // dev aid: open a game page at startup
     }
 
     // NUEVO badge: ids never seen before this session. First run records a

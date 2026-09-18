@@ -21,6 +21,19 @@ struct CardItem {
     new-version: string, // target tag when an update is available
     meta: string,        // extra line for the "Seguir jugando" strip ("hace 2h")
     is-new: bool,        // recently added to the catalog
+    versions: int,       // projects folded into this card (1 = plain project)
+}
+
+// One version of a game in the detail page's selector.
+struct VersionRow {
+    id: string,
+    name: string,
+    kind: string,        // "RECOMP" | "PORT"
+    is-windows: bool,
+    installed: bool,
+    active: bool,        // the version currently shown
+    platforms: string,   // "Linux · Windows"
+    meta: string,        // latest tag
 }
 
 component Btn inherits Rectangle {
@@ -200,6 +213,7 @@ struct DetailData {
     about: string,
     port-notes: string,
     has-related: bool,
+    has-versions: bool,
     has-mods: bool,
     has-screens: bool,
     ra-eligible: bool,
@@ -213,6 +227,7 @@ struct DetailData {
     ra-summary: string,      // "12/97 logros · 80/749 pts" (empty = no section)
     badge-rows: [[RaBadge]],
     related: [CardItem],
+    versions: [VersionRow],
     mods: [ModRow],
     screens: [ScreenShot],
 }
@@ -244,6 +259,48 @@ component KindPill inherits Rectangle {
         Text { text: root.kind == "RECOMP" ? "⟳ RECOMP" : "⚓ PORT";
                color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
     }
+}
+
+// "⧉ 2 VERSIONES" pill: a catalog card that folds several ports of one game.
+component VersionsPill inherits Rectangle {
+    in property <int> count;
+    height: 18px;
+    width: vp-l.preferred-width;
+    border-radius: 5px;
+    background: #b48cff;
+    drop-shadow-blur: 6px; drop-shadow-color: #000000aa;
+    vp-l := HorizontalLayout {
+        padding-left: 7px; padding-right: 7px;
+        Text { text: "⧉ \{root.count} VERSIONES";
+               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
+    }
+}
+
+// Version selector chip (detail hero): name + kind/platforms, amber when active.
+component VersionChip inherits Rectangle {
+    in property <VersionRow> ver;
+    callback clicked;
+    height: 36px;
+    width: vc-l.preferred-width;
+    border-radius: 8px;
+    background: root.ver.active ? #ffb23e22 : (vc-ta.has-hover ? #ffffff14 : #ffffff0a);
+    border-width: 1px;
+    border-color: root.ver.active ? #ffb23e : #ffffff22;
+    animate background, border-color { duration: 150ms; }
+    vc-l := HorizontalLayout {
+        padding-left: 10px; padding-right: 10px; spacing: 8px;
+        VerticalLayout {
+            alignment: center; spacing: 1px;
+            Text { text: root.ver.name; color: root.ver.active ? #ffb23e : white; font-size: 12px; font-weight: 800; }
+            Text { text: (root.ver.kind == "RECOMP" ? "⟳ Recomp" : "⚓ Port")
+                         + (root.ver.platforms != "" ? " · " + root.ver.platforms : "")
+                         + (root.ver.is-windows ? " · Wine/Proton" : "")
+                         + (root.ver.meta != "" ? " · " + root.ver.meta : "");
+                   color: #ffffff88; font-size: 9px; }
+        }
+        if root.ver.installed: Text { text: "✓"; color: #4de1c1; font-size: 13px; font-weight: 900; vertical-alignment: center; }
+    }
+    vc-ta := TouchArea { mouse-cursor: root.ver.active ? MouseCursor.default : MouseCursor.pointer; clicked => { root.clicked(); } }
 }
 
 // Section header with an accent bar — used across the game page.
@@ -796,7 +853,8 @@ export component MainWindow inherits Window {
                                     y: parent.height - 56px; height: 56px;
                                     background: @linear-gradient(180deg, #0b0c1000 0%, #0b0c10cc 100%);
                                 }
-                                KindPill { x: 6px; y: 6px; kind: c.kind; }
+                                if c.versions <= 1: KindPill { x: 6px; y: 6px; kind: c.kind; }
+                                if c.versions > 1: VersionsPill { x: 6px; y: 6px; count: c.versions; }
                                 if c.is-windows: Tag {
                                     x: 6px; y: 28px;
                                     label: "WIN"; fg: white; bg: #2b6fb3;
@@ -983,6 +1041,16 @@ export component MainWindow inherits Window {
                                 }
                                 Text { text: root.detail.title; font-size: 32px; font-weight: 900; color: white; wrap: word-wrap; }
                                 Text { text: root.detail.subtitle; font-size: 15px; color: #ffb23e; wrap: word-wrap; }
+                                if root.detail.has-versions: HorizontalLayout {
+                                    spacing: 6px;
+                                    alignment: start;
+                                    Text { text: "VERSIONES"; color: #ffffff66; font-size: 10px; font-weight: 800;
+                                           vertical-alignment: center; letter-spacing: 0.6px; }
+                                    for v in root.detail.versions: VersionChip {
+                                        ver: v;
+                                        clicked => { if !v.active { root.open-game(v.id); } }
+                                    }
+                                }
                                 if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
                                 if root.detail.busy: HorizontalLayout {
                                     spacing: 10px;

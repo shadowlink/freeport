@@ -6,6 +6,7 @@ pub mod discord;
 pub mod error;
 pub mod gamepad;
 pub mod github;
+pub mod groups;
 pub mod install;
 pub mod launch;
 pub mod mods;

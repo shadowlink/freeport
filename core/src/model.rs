@@ -32,6 +32,13 @@ pub struct Project {
     pub name: String,
     #[serde(default)]
     pub original_game: String,
+    /// Groups several projects of the SAME game (e.g. Zelda64Recomp + 2Ship)
+    /// into one card; see `crate::groups`. Falls back to `id` when absent.
+    #[serde(default)]
+    pub game_id: Option<String>,
+    /// Version shown by default inside its group (optional, catalog-curated).
+    #[serde(default)]
+    pub preferred: bool,
     pub system: String,
     /// "recompilation" | "native-port"
     #[serde(rename = "type", default)]
@@ -115,6 +122,25 @@ pub struct ModSource {
     pub source: String,
     /// Thunderstore community slug, e.g. "zelda-64-recompiled".
     pub community: String,
+}
+
+impl Project {
+    /// Key that groups versions of the same game (`game_id`, else `id`).
+    pub fn game_key(&self) -> &str {
+        match &self.game_id {
+            Some(g) if !g.is_empty() => g,
+            _ => &self.id,
+        }
+    }
+
+    /// Whether this project ships a build for `triple` (per `cached.platforms`,
+    /// falling back to `asset_rules` when the CI has not probed it yet).
+    pub fn supports(&self, triple: &str) -> bool {
+        match &self.cached {
+            Some(c) if !c.platforms.is_empty() => c.platforms.iter().any(|x| x == triple),
+            _ => self.asset_rules.contains_key(triple),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

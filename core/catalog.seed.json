@@ -117,6 +117,7 @@
       "id": "zelda64-recomp-mm",
       "name": "Majora's Mask (Recompiled)",
       "original_game": "The Legend of Zelda: Majora's Mask",
+      "game_id": "the-legend-of-zelda-majoras-mask",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -171,6 +172,7 @@
       "id": "ship-of-harkinian",
       "name": "Ship of Harkinian",
       "original_game": "The Legend of Zelda: Ocarina of Time",
+      "game_id": "the-legend-of-zelda-ocarina-of-time",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -220,6 +222,7 @@
       "id": "2ship2harkinian",
       "name": "2 Ship 2 Harkinian",
       "original_game": "The Legend of Zelda: Majora's Mask",
+      "game_id": "the-legend-of-zelda-majoras-mask",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -269,6 +272,7 @@
       "id": "spaghettikart-mk64",
       "name": "Spaghetti Kart",
       "original_game": "Mario Kart 64",
+      "game_id": "mario-kart-64",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -320,6 +324,7 @@
       "id": "perfect-dark-pc",
       "name": "Perfect Dark (PC Port)",
       "original_game": "Perfect Dark",
+      "game_id": "perfect-dark",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -368,6 +373,7 @@
       "id": "sm64coopdx",
       "name": "Super Mario 64: Co-op Deluxe",
       "original_game": "Super Mario 64",
+      "game_id": "super-mario-64",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -413,6 +419,7 @@
       "id": "redriver2",
       "name": "REDRIVER2",
       "original_game": "Driver 2",
+      "game_id": "driver-2",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -456,6 +463,7 @@
       "id": "sonic-cd-decomp",
       "name": "Sonic CD (Decompilation)",
       "original_game": "Sonic CD",
+      "game_id": "sonic-cd",
       "system": "segacd",
       "type": "native-port",
       "repo": {
@@ -501,6 +509,7 @@
       "id": "sonic-1-2-decomp",
       "name": "Sonic 1 & 2 (2013) — Decompilation",
       "original_game": "Sonic the Hedgehog",
+      "game_id": "sonic-the-hedgehog",
       "system": "genesis",
       "type": "native-port",
       "repo": {
@@ -545,6 +554,7 @@
       "id": "gen1recomp",
       "name": "Gen1Recomp",
       "original_game": "Pokémon Red / Blue",
+      "game_id": "pokemon-red-blue",
       "system": "gb",
       "type": "native-port",
       "repo": {
@@ -590,6 +600,7 @@
       "id": "banjo-recomp",
       "name": "Banjo-Kazooie (Recompiled)",
       "original_game": "Banjo-Kazooie",
+      "game_id": "banjo-kazooie",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -642,6 +653,7 @@
       "id": "dino-recomp",
       "name": "Dinosaur Planet (Recompiled)",
       "original_game": "Dinosaur Planet",
+      "game_id": "dinosaur-planet",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -690,6 +702,7 @@
       "id": "goemon64-recomp",
       "name": "Mystical Ninja Goemon (Recompiled)",
       "original_game": "Mystical Ninja Starring Goemon",
+      "game_id": "mystical-ninja-starring-goemon",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -737,6 +750,7 @@
       "id": "megaman64-recomp",
       "name": "Mega Man 64 (Recompiled)",
       "original_game": "Mega Man 64",
+      "game_id": "mega-man-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -790,6 +804,7 @@
       "id": "skate3-recomp",
       "name": "Skate 3 (Recompiled)",
       "original_game": "Skate 3",
+      "game_id": "skate-3",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -835,6 +850,7 @@
       "id": "nocturne-recomp",
       "name": "Castlevania: SOTN (Recompiled)",
       "original_game": "Castlevania: Symphony of the Night",
+      "game_id": "castlevania-symphony-of-the-night",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -880,6 +896,7 @@
       "id": "severed-chains-lod",
       "name": "Severed Chains",
       "original_game": "The Legend of Dragoon",
+      "game_id": "the-legend-of-dragoon",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -926,6 +943,7 @@
       "id": "trx-tombraider",
       "name": "TRX (Tomb Raider I & II)",
       "original_game": "Tomb Raider",
+      "game_id": "tomb-raider",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -970,6 +988,7 @@
       "id": "sonic-mania-decomp",
       "name": "Sonic Mania (Decompilation)",
       "original_game": "Sonic Mania",
+      "game_id": "sonic-mania",
       "system": "pc",
       "type": "native-port",
       "repo": {
@@ -1014,6 +1033,7 @@
       "id": "dethrace-carmageddon",
       "name": "Dethrace",
       "original_game": "Carmageddon",
+      "game_id": "carmageddon",
       "system": "pc",
       "type": "native-port",
       "repo": {
@@ -1057,6 +1077,7 @@
       "id": "runescape-classic",
       "name": "rsc-c (RuneScape Classic)",
       "original_game": "RuneScape Classic (2003)",
+      "game_id": "runescape-classic-2003",
       "system": "pc",
       "type": "native-port",
       "repo": {
@@ -1100,6 +1121,7 @@
       "id": "opentdu",
       "name": "OpenTestDriveUnlimited",
       "original_game": "Test Drive Unlimited",
+      "game_id": "test-drive-unlimited",
       "system": "x360",
       "type": "native-port",
       "repo": {
@@ -1143,6 +1165,7 @@
       "id": "ambermoon-net",
       "name": "Ambermoon.net",
       "original_game": "Ambermoon",
+      "game_id": "ambermoon",
       "system": "amiga",
       "type": "native-port",
       "repo": {
@@ -1186,6 +1209,7 @@
       "id": "devilutionx-diablo",
       "name": "DevilutionX",
       "original_game": "Diablo",
+      "game_id": "diablo",
       "system": "pc",
       "type": "native-port",
       "repo": {
@@ -1229,6 +1253,7 @@
       "id": "alive-oddworld",
       "name": "A.L.I.V.E. (Oddworld)",
       "original_game": "Oddworld: Abe's Oddysee",
+      "game_id": "oddworld-abes-oddysee",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -1272,6 +1297,7 @@
       "id": "psydoom",
       "name": "PsyDoom",
       "original_game": "Doom (PlayStation)",
+      "game_id": "doom-playstation",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -1317,6 +1343,7 @@
       "id": "dusklight-tp",
       "name": "Dusklight",
       "original_game": "The Legend of Zelda: Twilight Princess",
+      "game_id": "the-legend-of-zelda-twilight-princess",
       "system": "gc",
       "type": "native-port",
       "repo": {
@@ -1360,6 +1387,7 @@
       "id": "bomberman64-recomp",
       "name": "Bomberman 64 (Recompiled)",
       "original_game": "Bomberman 64",
+      "game_id": "bomberman-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -1411,6 +1439,7 @@
       "id": "bombermanhero-recomp",
       "name": "Bomberman Hero (Recompiled)",
       "original_game": "Bomberman Hero",
+      "game_id": "bomberman-hero",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -1456,6 +1485,7 @@
       "id": "harvestmoon64-recomp",
       "name": "Harvest Moon 64 (Recompiled)",
       "original_game": "Harvest Moon 64",
+      "game_id": "harvest-moon-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -1507,6 +1537,7 @@
       "id": "snowboardkids2-recomp",
       "name": "Snowboard Kids 2 (Recompiled)",
       "original_game": "Snowboard Kids 2",
+      "game_id": "snowboard-kids-2",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -1550,6 +1581,7 @@
       "id": "kameo-recomp",
       "name": "Kameo RePowered",
       "original_game": "Kameo: Elements of Power",
+      "game_id": "kameo-elements-of-power",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -1593,6 +1625,7 @@
       "id": "ghostship-sm64",
       "name": "Super Mario 64 (Ghostship)",
       "original_game": "Super Mario 64",
+      "game_id": "super-mario-64",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -1642,6 +1675,7 @@
       "id": "unleashed-recomp",
       "name": "Unleashed Recompiled",
       "original_game": "Sonic Unleashed",
+      "game_id": "sonic-unleashed",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -1683,6 +1717,7 @@
       "id": "drmario64-recomp",
       "name": "Dr. Mario 64 (Recompiled)",
       "original_game": "Dr. Mario 64",
+      "game_id": "dr-mario-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -1724,6 +1759,7 @@
       "id": "tip-recomp",
       "name": "Viva Piñata: TiP (Recompiled)",
       "original_game": "Viva Piñata: Trouble in Paradise",
+      "game_id": "viva-pinata-trouble-in-paradise",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -1765,6 +1801,7 @@
       "id": "recherry-lollipop",
       "name": "Re-Cherry (Lollipop Chainsaw)",
       "original_game": "Lollipop Chainsaw",
+      "game_id": "lollipop-chainsaw",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -1806,6 +1843,7 @@
       "id": "renut-banjo-nb",
       "name": "reNut (Nuts & Bolts)",
       "original_game": "Banjo-Kazooie: Nuts & Bolts",
+      "game_id": "banjo-kazooie-nuts-and-bolts",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -1847,6 +1885,7 @@
       "id": "restuff-naughtybear",
       "name": "ReStuff (Naughty Bear)",
       "original_game": "Naughty Bear",
+      "game_id": "naughty-bear",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -1888,6 +1927,7 @@
       "id": "ctr-native",
       "name": "CTR Native",
       "original_game": "Crash Team Racing",
+      "game_id": "crash-team-racing",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -1929,6 +1969,7 @@
       "id": "symphony-recomp",
       "name": "SymphonyRecomp",
       "original_game": "Castlevania: Symphony of the Night",
+      "game_id": "castlevania-symphony-of-the-night",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -1974,6 +2015,7 @@
       "id": "golden-balloon",
       "name": "Golden Balloon",
       "original_game": "Diddy Kong Racing",
+      "game_id": "diddy-kong-racing",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -2019,6 +2061,7 @@
       "id": "lighthouse-banjo",
       "name": "Lighthouse",
       "original_game": "Banjo-Kazooie",
+      "game_id": "banjo-kazooie",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -2064,6 +2107,7 @@
       "id": "ape-escape-recomp",
       "name": "Ape Escape Recomp",
       "original_game": "Ape Escape",
+      "game_id": "ape-escape",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -2105,6 +2149,7 @@
       "id": "minish-cap-picori",
       "name": "Project Picori",
       "original_game": "The Legend of Zelda: The Minish Cap",
+      "game_id": "the-legend-of-zelda-the-minish-cap",
       "system": "gba",
       "type": "native-port",
       "repo": {
@@ -2152,6 +2197,7 @@
       "id": "kirby-wii-recomp",
       "name": "Kirby Wii Recomp",
       "original_game": "Kirby's Return to Dream Land",
+      "game_id": "kirbys-return-to-dream-land",
       "system": "wii",
       "type": "recompilation",
       "repo": {
@@ -2196,6 +2242,7 @@
       "id": "simpsons-game-recomp",
       "name": "The Simpsons Game: Recompiled",
       "original_game": "The Simpsons Game",
+      "game_id": "the-simpsons-game",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -2239,6 +2286,7 @@
       "id": "automobili-lamborghini-recomp",
       "name": "Automobili Lamborghini Recomp",
       "original_game": "Automobili Lamborghini",
+      "game_id": "automobili-lamborghini",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -2283,6 +2331,7 @@
       "id": "condemned2-recomp",
       "name": "Condemned 2 Recompiled",
       "original_game": "Condemned 2: Bloodshot",
+      "game_id": "condemned-2-bloodshot",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -2324,6 +2373,7 @@
       "id": "quest64-recomp",
       "name": "Quest 64 Recompiled",
       "original_game": "Quest 64",
+      "game_id": "quest-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -2365,6 +2415,7 @@
       "id": "chameleontwist-recomp",
       "name": "Chameleon Twist Recompiled",
       "original_game": "Chameleon Twist",
+      "game_id": "chameleon-twist",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -2406,6 +2457,7 @@
       "id": "svr07-recomp",
       "name": "SmackDown vs Raw 2007 Recompiled",
       "original_game": "WWE SmackDown vs. Raw 2007",
+      "game_id": "wwe-smackdown-vs-raw-2007",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -2447,6 +2499,7 @@
       "id": "zelda3-pc",
       "name": "A Link to the Past (PC)",
       "original_game": "The Legend of Zelda: A Link to the Past",
+      "game_id": "the-legend-of-zelda-a-link-to-the-past",
       "system": "snes",
       "type": "port",
       "repo": {
@@ -2488,6 +2541,7 @@
       "id": "smw-pc",
       "name": "Super Mario World (PC)",
       "original_game": "Super Mario World",
+      "game_id": "super-mario-world",
       "system": "snes",
       "type": "port",
       "repo": {
@@ -2529,6 +2583,7 @@
       "id": "cvlod-recomp",
       "name": "Castlevania: Legacy of Darkness (Recompiled)",
       "original_game": "Castlevania: Legacy of Darkness",
+      "game_id": "castlevania-legacy-of-darkness",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -2574,6 +2629,7 @@
       "id": "openxwa",
       "name": "X-Wing Alliance (OpenXWA)",
       "original_game": "Star Wars: X-Wing Alliance",
+      "game_id": "star-wars-x-wing-alliance",
       "system": "pc",
       "type": "port",
       "repo": {
@@ -2619,6 +2675,7 @@
       "id": "fzerox-gdiffuser",
       "name": "F-Zero X (G-Diffuser)",
       "original_game": "F-Zero X",
+      "game_id": "f-zero-x",
       "system": "n64",
       "type": "port",
       "repo": {
@@ -2662,6 +2719,7 @@
       "id": "dkr-recomp",
       "name": "Diddy Kong Racing (Recompiled)",
       "original_game": "Diddy Kong Racing",
+      "game_id": "diddy-kong-racing",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -2705,6 +2763,7 @@
       "id": "crash-recomp",
       "name": "Crash Bandicoot (Recompiled)",
       "original_game": "Crash Bandicoot",
+      "game_id": "crash-bandicoot",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -2747,6 +2806,7 @@
       "id": "starship-sf64",
       "name": "Starship",
       "original_game": "Star Fox 64",
+      "game_id": "star-fox-64",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -2789,6 +2849,7 @@
       "id": "mph-recomp",
       "name": "Metroid Prime Hunters Recomp",
       "original_game": "Metroid Prime Hunters",
+      "game_id": "metroid-prime-hunters",
       "system": "nds",
       "type": "recompilation",
       "repo": {
@@ -2829,6 +2890,7 @@
       "id": "tomba-recomp",
       "name": "Tomba! Recomp",
       "original_game": "Tomba!",
+      "game_id": "tomba",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -2870,6 +2932,7 @@
       "id": "ygofm-recomp",
       "name": "Forbidden Memories Recomp",
       "original_game": "Yu-Gi-Oh! Forbidden Memories",
+      "game_id": "yu-gi-oh-forbidden-memories",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -2910,6 +2973,7 @@
       "id": "digimonworld-recomp",
       "name": "Digimon World Recomp",
       "original_game": "Digimon World",
+      "game_id": "digimon-world",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -2950,6 +3014,7 @@
       "id": "sonic3-air",
       "name": "Sonic 3 A.I.R.",
       "original_game": "Sonic 3 & Knuckles",
+      "game_id": "sonic-3-and-knuckles",
       "system": "genesis",
       "type": "native-port",
       "repo": {
@@ -2992,6 +3057,7 @@
       "id": "wwf-nomercy-recomp",
       "name": "No Mercy Recompiled",
       "original_game": "WWF No Mercy",
+      "game_id": "wwf-no-mercy",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -3032,6 +3098,7 @@
       "id": "wm2000-recomp",
       "name": "WrestleMania 2000 Recompiled",
       "original_game": "WWF WrestleMania 2000",
+      "game_id": "wwf-wrestlemania-2000",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -3072,6 +3139,7 @@
       "id": "vpw64-recomp",
       "name": "VPW64 Recompiled",
       "original_game": "Virtual Pro Wrestling 64",
+      "game_id": "virtual-pro-wrestling-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -3112,6 +3180,7 @@
       "id": "wcw-revenge-recomp",
       "name": "Revenge Recompiled",
       "original_game": "WCW/nWo Revenge",
+      "game_id": "wcw-nwo-revenge",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -3152,6 +3221,7 @@
       "id": "wcw-worldtour-recomp",
       "name": "World Tour Recompiled",
       "original_game": "WCW vs. nWo: World Tour",
+      "game_id": "wcw-vs-nwo-world-tour",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -3192,6 +3262,7 @@
       "id": "ringout-sc2",
       "name": "Ring Out",
       "original_game": "Soulcalibur II",
+      "game_id": "soulcalibur-ii",
       "system": "gc",
       "type": "recompilation",
       "repo": {
@@ -3232,6 +3303,7 @@
       "id": "silenthill-pc",
       "name": "Silent Hill PC Port",
       "original_game": "Silent Hill",
+      "game_id": "silent-hill",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -3272,6 +3344,7 @@
       "id": "regaiden-recomp",
       "name": "RE Gaiden Recomp",
       "original_game": "Resident Evil Gaiden",
+      "game_id": "resident-evil-gaiden",
       "system": "gb",
       "type": "recompilation",
       "repo": {
@@ -3312,6 +3385,7 @@
       "id": "tekken3-recomp",
       "name": "Tekken 3 Recomp",
       "original_game": "Tekken 3",
+      "game_id": "tekken-3",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3352,6 +3426,7 @@
       "id": "sfa3-recomp",
       "name": "SF Alpha 3 Recomp",
       "original_game": "Street Fighter Alpha 3",
+      "game_id": "street-fighter-alpha-3",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3394,6 +3469,7 @@
       "id": "vandalhearts-pc",
       "name": "Vandal Hearts PC Port",
       "original_game": "Vandal Hearts",
+      "game_id": "vandal-hearts",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -3436,6 +3512,7 @@
       "id": "samurai-vs-zombies",
       "name": "Samurai vs Zombies (Decomp)",
       "original_game": "Samurai vs. Zombies Defense",
+      "game_id": "samurai-vs-zombies-defense",
       "system": "pc",
       "type": "native-port",
       "repo": {
@@ -3476,6 +3553,7 @@
       "id": "reblue-bluedragon",
       "name": "reblue",
       "original_game": "Blue Dragon",
+      "game_id": "blue-dragon",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -3521,6 +3599,7 @@
       "id": "opentie",
       "name": "OpenTIE",
       "original_game": "Star Wars: TIE Fighter",
+      "game_id": "star-wars-tie-fighter",
       "system": "pc",
       "type": "port",
       "repo": {
@@ -3565,6 +3644,7 @@
       "id": "xmen-ma2-pc",
       "name": "X-Men MA2 PC",
       "original_game": "X-Men: Mutant Academy 2",
+      "game_id": "x-men-mutant-academy-2",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3605,6 +3685,7 @@
       "id": "strider2-recomp",
       "name": "Strider 2 Recompiled",
       "original_game": "Strider 2",
+      "game_id": "strider-2",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3643,6 +3724,7 @@
       "id": "twistedmetal4-recomp",
       "name": "Twisted Metal 4 Recomp",
       "original_game": "Twisted Metal 4",
+      "game_id": "twisted-metal-4",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3685,6 +3767,7 @@
       "id": "dk64-recomp",
       "name": "DK64 Recompiled",
       "original_game": "Donkey Kong 64",
+      "game_id": "donkey-kong-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -3727,6 +3810,7 @@
       "id": "tenchu-sa-recomp",
       "name": "Tenchu SA Recomp",
       "original_game": "Tenchu: Stealth Assassins",
+      "game_id": "tenchu-stealth-assassins",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3767,6 +3851,7 @@
       "id": "rage-racer-pc",
       "name": "Rage Racer PC",
       "original_game": "Rage Racer",
+      "game_id": "rage-racer",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3809,6 +3894,7 @@
       "id": "einhander-recomp",
       "name": "Einhänder Recompiled",
       "original_game": "Einhänder",
+      "game_id": "einhander",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3851,6 +3937,7 @@
       "id": "klonoa-dtp-recomp",
       "name": "Klonoa DtP Recomp",
       "original_game": "Klonoa: Door to Phantomile",
+      "game_id": "klonoa-door-to-phantomile",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3893,6 +3980,7 @@
       "id": "mvc-recomp",
       "name": "MvC Recomp",
       "original_game": "Marvel vs. Capcom: Clash of Super Heroes",
+      "game_id": "marvel-vs-capcom-clash-of-super-heroes",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3935,6 +4023,7 @@
       "id": "teraskasi-recomp",
       "name": "Teräs Käsi Recomp",
       "original_game": "Star Wars: Masters of Teräs Käsi",
+      "game_id": "star-wars-masters-of-teras-kasi",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -3977,6 +4066,7 @@
       "id": "metalslugx-recomp",
       "name": "Metal Slug X Recomp",
       "original_game": "Metal Slug X",
+      "game_id": "metal-slug-x",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4019,6 +4109,7 @@
       "id": "rampage-tt-recomp",
       "name": "Rampage TT Recomp",
       "original_game": "Rampage Through Time",
+      "game_id": "rampage-through-time",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4061,6 +4152,7 @@
       "id": "jpb-recomp",
       "name": "Jedi Power Battles Recomp",
       "original_game": "Star Wars Episode I: Jedi Power Battles",
+      "game_id": "star-wars-episode-i-jedi-power-battles",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4103,6 +4195,7 @@
       "id": "bomberman-fr-recomp",
       "name": "Bomberman FR Recomp",
       "original_game": "Bomberman Fantasy Race",
+      "game_id": "bomberman-fantasy-race",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4145,6 +4238,7 @@
       "id": "bomberman-world-recomp",
       "name": "Bomberman World Recomp",
       "original_game": "Bomberman World",
+      "game_id": "bomberman-world",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4187,6 +4281,7 @@
       "id": "bomberman-pe-recomp",
       "name": "Bomberman PE Recomp",
       "original_game": "Bomberman Party Edition",
+      "game_id": "bomberman-party-edition",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4229,6 +4324,7 @@
       "id": "tomba2-recomp",
       "name": "Tomba! 2 Recomp",
       "original_game": "Tomba! 2: The Evil Swine Return",
+      "game_id": "tomba-2-the-evil-swine-return",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4269,6 +4365,7 @@
       "id": "legaia-recomp",
       "name": "Legend of Legaia Recomp",
       "original_game": "Legend of Legaia",
+      "game_id": "legend-of-legaia",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4309,6 +4406,7 @@
       "id": "syphonfilter2-recomp",
       "name": "Syphon Filter 2 Recompiled",
       "original_game": "Syphon Filter 2",
+      "game_id": "syphon-filter-2",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4349,6 +4447,7 @@
       "id": "rechan-stuntmaster",
       "name": "ReChan",
       "original_game": "Jackie Chan Stuntmaster",
+      "game_id": "jackie-chan-stuntmaster",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -4391,6 +4490,7 @@
       "id": "mmx6-recomp",
       "name": "Mega Man X6 Recomp",
       "original_game": "Mega Man X6",
+      "game_id": "mega-man-x6",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -4433,6 +4533,7 @@
       "id": "wipeout-phantom",
       "name": "WipEout Phantom Edition",
       "original_game": "Wipeout",
+      "game_id": "wipeout",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -4473,6 +4574,7 @@
       "id": "pgr4-recomp",
       "name": "PGR4 Recomp",
       "original_game": "Project Gotham Racing 4",
+      "game_id": "project-gotham-racing-4",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4513,6 +4615,7 @@
       "id": "eternalsonata-reprise",
       "name": "Eternal Sonata Reprise",
       "original_game": "Eternal Sonata",
+      "game_id": "eternal-sonata",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4553,6 +4656,7 @@
       "id": "exit1-recomp",
       "name": "EXIT Recomp",
       "original_game": "Exit",
+      "game_id": "exit",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4593,6 +4697,7 @@
       "id": "exit2-recomp",
       "name": "EXIT 2 Recomp",
       "original_game": "Exit 2",
+      "game_id": "exit-2",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4633,6 +4738,7 @@
       "id": "redahm",
       "name": "reDAHM",
       "original_game": "Destroy All Humans! Path of the Furon",
+      "game_id": "destroy-all-humans-path-of-the-furon",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4674,6 +4780,7 @@
       "id": "rewor-ghwor",
       "name": "re:WoR",
       "original_game": "Guitar Hero: Warriors of Rock",
+      "game_id": "guitar-hero-warriors-of-rock",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4714,6 +4821,7 @@
       "id": "downpour-recomp",
       "name": "Downpour Recomp",
       "original_game": "Silent Hill: Downpour",
+      "game_id": "silent-hill-downpour",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4754,6 +4862,7 @@
       "id": "ufc3-recomp",
       "name": "UFC 3 Recomp",
       "original_game": "UFC Undisputed 3",
+      "game_id": "ufc-undisputed-3",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4794,6 +4903,7 @@
       "id": "restuff-inparadise",
       "name": "reStuff in Paradise",
       "original_game": "Naughty Bear: Panic in Paradise",
+      "game_id": "naughty-bear-panic-in-paradise",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4835,6 +4945,7 @@
       "id": "ac6-recomp",
       "name": "AC6 Recomp",
       "original_game": "Ace Combat 6: Fires of Liberation",
+      "game_id": "ace-combat-6-fires-of-liberation",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -4875,6 +4986,7 @@
       "id": "sssv-recomp",
       "name": "SSSV Recompiled",
       "original_game": "Space Station Silicon Valley",
+      "game_id": "space-station-silicon-valley",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -4917,6 +5029,7 @@
       "id": "vpw2-recomp",
       "name": "VPW2 Recompiled",
       "original_game": "Virtual Pro Wrestling 2",
+      "game_id": "virtual-pro-wrestling-2",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -4957,6 +5070,7 @@
       "id": "papermario-recut",
       "name": "Paper Mario ReCut",
       "original_game": "Paper Mario",
+      "game_id": "paper-mario",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -4997,6 +5111,7 @@
       "id": "troublemakers-recomp",
       "name": "Trouble Makers Recomp",
       "original_game": "Mischief Makers",
+      "game_id": "mischief-makers",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -5039,6 +5154,7 @@
       "id": "mmxsnes-recomp",
       "name": "Mega Man X Recomp",
       "original_game": "Mega Man X",
+      "game_id": "mega-man-x",
       "system": "snes",
       "type": "recompilation",
       "repo": {
@@ -5081,6 +5197,7 @@
       "id": "smw-recomp",
       "name": "Super Mario World Recomp",
       "original_game": "Super Mario World",
+      "game_id": "super-mario-world",
       "system": "snes",
       "type": "recompilation",
       "repo": {
@@ -5123,6 +5240,7 @@
       "id": "emerald-recomp",
       "name": "Emerald Recomp",
       "original_game": "Pokémon Esmeralda",
+      "game_id": "pokemon-esmeralda",
       "system": "gba",
       "type": "recompilation",
       "repo": {
@@ -5163,6 +5281,7 @@
       "id": "firered-recomp",
       "name": "FireRed Recomp",
       "original_game": "Pokémon Rojo Fuego",
+      "game_id": "pokemon-rojo-fuego",
       "system": "gba",
       "type": "recompilation",
       "repo": {
@@ -5203,6 +5322,7 @@
       "id": "leafgreen-recomp",
       "name": "LeafGreen Recomp",
       "original_game": "Pokémon Verde Hoja",
+      "game_id": "pokemon-verde-hoja",
       "system": "gba",
       "type": "recompilation",
       "repo": {
@@ -5243,6 +5363,7 @@
       "id": "ruby-recomp",
       "name": "Ruby Recomp",
       "original_game": "Pokémon Rubí",
+      "game_id": "pokemon-rubi",
       "system": "gba",
       "type": "recompilation",
       "repo": {
@@ -5283,6 +5404,7 @@
       "id": "sapphire-recomp",
       "name": "Sapphire Recomp",
       "original_game": "Pokémon Zafiro",
+      "game_id": "pokemon-zafiro",
       "system": "gba",
       "type": "recompilation",
       "repo": {
@@ -5323,6 +5445,7 @@
       "id": "acgc-pc",
       "name": "ACGC PC Port",
       "original_game": "Animal Crossing",
+      "game_id": "animal-crossing",
       "system": "gc",
       "type": "native-port",
       "repo": {
@@ -5363,6 +5486,7 @@
       "id": "marioparty4-pc",
       "name": "Mario Party 4 (partyboard)",
       "original_game": "Mario Party 4",
+      "game_id": "mario-party-4",
       "system": "gc",
       "type": "native-port",
       "repo": {
@@ -5403,6 +5527,7 @@
       "id": "mikupan-fatalframe",
       "name": "MikuPan",
       "original_game": "Fatal Frame",
+      "game_id": "fatal-frame",
       "system": "ps2",
       "type": "native-port",
       "repo": {
@@ -5446,6 +5571,7 @@
       "id": "opengoal-jak",
       "name": "OpenGOAL",
       "original_game": "Jak & Daxter: The Precursor Legacy",
+      "game_id": "jak-and-daxter-the-precursor-legacy",
       "system": "ps2",
       "type": "native-port",
       "repo": {
@@ -5486,6 +5612,7 @@
       "id": "smb-remastered",
       "name": "SMB Remastered",
       "original_game": "Super Mario Bros.",
+      "game_id": "super-mario-bros",
       "system": "nes",
       "type": "native-port",
       "repo": {
@@ -5528,6 +5655,7 @@
       "id": "goldeneye-recomp",
       "name": "GoldenEye Recomp",
       "original_game": "GoldenEye 007",
+      "game_id": "goldeneye-007",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -5568,6 +5696,7 @@
       "id": "acx-recomp",
       "name": "ACX Recompilation",
       "original_game": "Ace Combat X: Skies of Deception",
+      "game_id": "ace-combat-x-skies-of-deception",
       "system": "psp",
       "type": "recompilation",
       "repo": {
@@ -5608,6 +5737,7 @@
       "id": "battleship-ssb64",
       "name": "BattleShip",
       "original_game": "Super Smash Bros.",
+      "game_id": "super-smash-bros",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -5650,6 +5780,7 @@
       "id": "sfex2plus-recomp",
       "name": "SF EX2 Plus Recompiled",
       "original_game": "Street Fighter EX2 Plus",
+      "game_id": "street-fighter-ex2-plus",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -5692,6 +5823,7 @@
       "id": "mksc-recomp",
       "name": "MKSC Recomp",
       "original_game": "Mario Kart: Super Circuit",
+      "game_id": "mario-kart-super-circuit",
       "system": "gba",
       "type": "recompilation",
       "repo": {
@@ -5732,6 +5864,7 @@
       "id": "opennectar-pikmin",
       "name": "Open Nectar",
       "original_game": "Pikmin",
+      "game_id": "pikmin",
       "system": "gc",
       "type": "native-port",
       "repo": {
@@ -5770,6 +5903,7 @@
       "id": "openpete-spyro",
       "name": "OpenPete",
       "original_game": "Spyro the Dragon",
+      "game_id": "spyro-the-dragon",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -5824,6 +5958,7 @@
       "id": "ctr-high-octane",
       "name": "CTR High Octane",
       "original_game": "Crash Team Racing",
+      "game_id": "crash-team-racing",
       "system": "psx",
       "type": "native-port",
       "repo": {
@@ -5864,6 +5999,7 @@
       "id": "roadrash64-recomp",
       "name": "Road Rash 64 Recompiled",
       "original_game": "Road Rash 64",
+      "game_id": "road-rash-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -5904,6 +6040,7 @@
       "id": "jetmoto-recomp",
       "name": "JetMoto",
       "original_game": "Jet Moto",
+      "game_id": "jet-moto",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -5945,6 +6082,7 @@
       "id": "jetmoto2-recomp",
       "name": "JetMoto2",
       "original_game": "Jet Moto 2",
+      "game_id": "jet-moto-2",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -5986,6 +6124,7 @@
       "id": "jetmoto3-recomp",
       "name": "JetMoto3",
       "original_game": "Jet Moto 3",
+      "game_id": "jet-moto-3",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -6027,6 +6166,7 @@
       "id": "triaevum-oot3d",
       "name": "TriAevum",
       "original_game": "The Legend of Zelda: Ocarina of Time 3D",
+      "game_id": "the-legend-of-zelda-ocarina-of-time-3d",
       "system": "3ds",
       "type": "recompilation",
       "repo": {
@@ -6067,6 +6207,7 @@
       "id": "snap64-recomp",
       "name": "Snap64 Recomp",
       "original_game": "Pokémon Snap",
+      "game_id": "pokemon-snap",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -6109,6 +6250,7 @@
       "id": "perfect-dark-dabs-mod",
       "name": "Perfect Dark (Dab's Mod)",
       "original_game": "Perfect Dark",
+      "game_id": "perfect-dark",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -6156,6 +6298,7 @@
       "id": "melee-pc",
       "name": "Melee PC",
       "original_game": "Super Smash Bros. Melee",
+      "game_id": "super-smash-bros-melee",
       "system": "gc",
       "type": "native-port",
       "repo": {
@@ -6198,6 +6341,7 @@
       "id": "strikers-pc",
       "name": "Strikers (port nativo)",
       "original_game": "Super Mario Strikers",
+      "game_id": "super-mario-strikers",
       "system": "gc",
       "type": "native-port",
       "repo": {
@@ -6244,6 +6388,7 @@
       "id": "aerogauge-recomp",
       "name": "AeroGauge: Recompiled",
       "original_game": "AeroGauge",
+      "game_id": "aerogauge",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -6286,6 +6431,7 @@
       "id": "spacechannel5-pc",
       "name": "Space Channel 5 (port nativo)",
       "original_game": "Space Channel 5",
+      "game_id": "space-channel-5",
       "system": "dc",
       "type": "native-port",
       "repo": {
@@ -6334,6 +6480,7 @@
       "id": "spiderman-ps1-recomp",
       "name": "OpenSpidey: Spider-Man",
       "original_game": "Spider-Man",
+      "game_id": "spider-man",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -6375,6 +6522,7 @@
       "id": "spiderman2-ps1-recomp",
       "name": "OpenSpidey: Spider-Man 2",
       "original_game": "Spider-Man 2: Enter Electro",
+      "game_id": "spider-man-2-enter-electro",
       "system": "psx",
       "type": "recompilation",
       "repo": {
@@ -6416,6 +6564,7 @@
       "id": "lostodyssey-recomp",
       "name": "Lost Odyssey Recomp",
       "original_game": "Lost Odyssey",
+      "game_id": "lost-odyssey",
       "system": "x360",
       "type": "recompilation",
       "repo": {
@@ -6456,6 +6605,7 @@
       "id": "racewave46",
       "name": "RaceWave46",
       "original_game": "Wave Race 64",
+      "game_id": "wave-race-64",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -6496,6 +6646,7 @@
       "id": "paperboat-pm64",
       "name": "PaperBoat",
       "original_game": "Paper Mario",
+      "game_id": "paper-mario",
       "system": "n64",
       "type": "native-port",
       "repo": {
@@ -6541,6 +6692,7 @@
       "id": "mmx2snes-recomp",
       "name": "Mega Man X2 Recomp",
       "original_game": "Mega Man X2",
+      "game_id": "mega-man-x2",
       "system": "snes",
       "type": "recompilation",
       "repo": {
@@ -6583,6 +6735,7 @@
       "id": "beetle-adventure-racing-recomp",
       "name": "Beetle Adventure Racing Recomp",
       "original_game": "Beetle Adventure Racing!",
+      "game_id": "beetle-adventure-racing",
       "system": "n64",
       "type": "recompilation",
       "repo": {
@@ -6623,6 +6776,7 @@
       "id": "busters-hidden-treasure-pc",
       "name": "Buster's Hidden Treasure PC",
       "original_game": "Tiny Toon Adventures: Buster's Hidden Treasure",
+      "game_id": "tiny-toon-adventures-busters-hidden-treasure",
       "system": "genesis",
       "type": "native-port",
       "repo": {
@@ -6663,6 +6817,7 @@
       "id": "issd-native",
       "name": "ISSD Native",
       "original_game": "International Superstar Soccer Deluxe",
+      "game_id": "international-superstar-soccer-deluxe",
       "system": "snes",
       "type": "recompilation",
       "repo": {
@@ -6703,6 +6858,7 @@
       "id": "goldeneye-pc-port",
       "name": "GoldenEye PC Port",
       "original_game": "GoldenEye 007",
+      "game_id": "goldeneye-007",
       "system": "n64",
       "type": "native-port",
       "repo": {

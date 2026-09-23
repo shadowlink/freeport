@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-17",
+  "updated_at": "2026-09-23",
   "source": "probed",
   "systems": [
     {
@@ -256,7 +256,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "5.0.1",
-        "published_at": "2026-08-25T17:54:43Z"
+        "published_at": "2026-09-18T22:31:49Z"
       },
       "year": 2000,
       "developer": "Nintendo",
@@ -582,13 +582,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "linux-x86_64",
-          "macos-x86_64",
-          "windows-x86_64"
-        ],
-        "latest_tag": "v0.2.61",
-        "published_at": "2026-09-16T14:14:20Z"
+        "platforms": [],
+        "latest_tag": "v0.3.2",
+        "published_at": "2026-09-23T10:19:31Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1152,8 +1148,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_776845b",
-        "published_at": "2026-09-18T05:36:17Z"
+        "latest_tag": "nightly_c7c89d6",
+        "published_at": "2026-09-21T03:40:46Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -1374,8 +1370,8 @@
           "linux-aarch64",
           "linux-x86_64"
         ],
-        "latest_tag": "v1.4.1",
-        "published_at": "2026-06-16T22:33:28Z"
+        "latest_tag": "v2.0.1",
+        "published_at": "2026-09-20T00:36:12Z"
       },
       "year": 2006,
       "developer": "Nintendo",
@@ -2920,8 +2916,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.13.0-alpha",
-        "published_at": "2026-09-12T02:37:05Z"
+        "latest_tag": "v0.14.1-alpha",
+        "published_at": "2026-09-20T21:32:09Z"
       },
       "year": 1997,
       "developer": "Whoopee Camp",
@@ -2961,8 +2957,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.1",
-        "published_at": "2026-09-13T16:09:00Z"
+        "latest_tag": "v0.6.2",
+        "published_at": "2026-09-20T04:49:40Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -3291,8 +3287,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "v1.6.2",
-        "published_at": "2026-09-17T22:23:47Z"
+        "latest_tag": "v1.6.3",
+        "published_at": "2026-09-22T23:58:34Z"
       },
       "year": 2003,
       "developer": "Namco",
@@ -3584,8 +3580,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.1.0",
-        "published_at": "2026-09-11T21:02:33Z"
+        "latest_tag": "v1.2.1",
+        "published_at": "2026-09-19T23:26:20Z"
       },
       "year": 2006,
       "developer": "Mistwalker / Artoon",
@@ -3882,8 +3878,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "0.6.7-alpha",
-        "published_at": "2026-09-15T23:47:16Z"
+        "latest_tag": "0.6.8-alpha-raytracer",
+        "published_at": "2026-09-20T18:02:05Z"
       },
       "year": 1996,
       "developer": "Namco",
@@ -4641,11 +4637,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "v1.1.3",
-        "published_at": "2026-08-21T23:13:39Z"
+        "platforms": [],
+        "latest_tag": "v1.2.1",
+        "published_at": "2026-09-20T00:14:23Z"
       },
       "year": 2007,
       "developer": "tri-Crescendo",
@@ -5185,8 +5179,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.4.3",
-        "published_at": "2026-08-16T07:37:35Z"
+        "latest_tag": "v1.6.5",
+        "published_at": "2026-09-22T01:51:27Z"
       },
       "year": 1993,
       "developer": "Capcom",
@@ -5228,8 +5222,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.12.0",
-        "published_at": "2026-09-11T08:01:27Z"
+        "latest_tag": "v0.14.2",
+        "published_at": "2026-09-22T13:53:58Z"
       },
       "year": 1990,
       "developer": "Nintendo",
@@ -5269,8 +5263,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.5",
-        "published_at": "2026-09-14T07:19:11Z"
+        "latest_tag": "v0.0.6",
+        "published_at": "2026-09-21T05:32:51Z"
       },
       "year": 2004,
       "developer": "Game Freak",
@@ -5891,8 +5885,8 @@
       },
       "cached": {
         "platforms": [],
-        "latest_tag": "0.6",
-        "published_at": "2026-09-15T22:34:38Z"
+        "latest_tag": "0.8",
+        "published_at": "2026-09-22T10:40:23Z"
       },
       "year": 2001,
       "developer": "Nintendo",
@@ -6028,8 +6022,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.2.0",
-        "published_at": "2026-09-10T16:22:47Z"
+        "latest_tag": "v1.3.1",
+        "published_at": "2026-09-19T20:54:06Z"
       },
       "year": 1999,
       "developer": "Pacific Coast Power & Light",
@@ -6192,11 +6186,9 @@
         "windows": "TriAevumForge.exe"
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "v0.6.0-alpha.2c",
-        "published_at": "2026-09-12T16:58:08Z"
+        "platforms": [],
+        "latest_tag": "v0.6.0-alpha.3b",
+        "published_at": "2026-09-18T16:54:15Z"
       },
       "year": 2011,
       "developer": "Grezzo / Nintendo",
@@ -6238,8 +6230,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.8",
-        "published_at": "2026-09-15T02:38:01Z"
+        "latest_tag": "v1.0.9",
+        "published_at": "2026-09-20T04:17:33Z"
       },
       "year": 1999,
       "developer": "HAL Laboratory / Pax Softnica",
@@ -6329,8 +6321,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.7-beta",
-        "published_at": "2026-09-17T22:32:59Z"
+        "latest_tag": "v0.2-beta",
+        "published_at": "2026-09-22T16:35:56Z"
       },
       "year": 2001,
       "developer": "HAL Laboratory",
@@ -6376,8 +6368,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.2.0",
-        "published_at": "2026-09-17T11:06:42Z"
+        "latest_tag": "v1.3.0",
+        "published_at": "2026-09-22T15:26:18Z"
       },
       "year": 2005,
       "developer": "Next Level Games",
@@ -6419,8 +6411,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.1",
-        "published_at": "2026-09-12T23:21:52Z"
+        "latest_tag": "v0.4.0",
+        "published_at": "2026-09-21T14:03:03Z"
       },
       "year": 1997,
       "developer": "ASCII Corporation",
@@ -6593,8 +6585,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.5.20",
-        "published_at": "2026-09-17T20:09:32Z"
+        "latest_tag": "v0.6.11",
+        "published_at": "2026-09-22T06:44:37Z"
       },
       "year": 2007,
       "developer": "Mistwalker / feelplus",
@@ -6720,11 +6712,10 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.1",
-        "published_at": "2026-08-06T01:59:11Z"
+        "latest_tag": "v0.1.2",
+        "published_at": "2026-09-22T01:39:39Z"
       },
       "year": 1994,
       "developer": "Capcom",
@@ -6764,8 +6755,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.0-alpha",
-        "published_at": "2026-09-17T14:53:51Z"
+        "latest_tag": "v0.4.2-alpha",
+        "published_at": "2026-09-20T11:01:55Z"
       },
       "year": 1999,
       "developer": "Paradigm Entertainment",
@@ -6846,8 +6837,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.0-beta.1",
-        "published_at": "2026-09-16T19:02:24Z"
+        "latest_tag": "v0.1.1b",
+        "published_at": "2026-09-19T15:26:15Z"
       },
       "year": 1995,
       "developer": "Konami",
@@ -6889,13 +6880,103 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.2",
-        "published_at": "2026-09-16T13:30:57Z"
+        "latest_tag": "v0.3.0",
+        "published_at": "2026-09-20T21:39:24Z"
       },
       "year": 1997,
       "developer": "Rare",
       "genre": "Disparos en primera persona",
       "wiki": "GoldenEye 007 (1997 video game)"
+    },
+    {
+      "id": "pilotwings64-recomp",
+      "name": "Pilotwings 64 Recomp",
+      "original_game": "Pilotwings 64",
+      "game_id": "pilotwings-64",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "danielgomesvieira2000",
+        "repo": "pilotwings-64-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Pilotwings%2064%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^Pilotwings64Recomp-.*-linux-x86_64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^Pilotwings64Recomp-.*-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher integrado te pedirá tu ROM de Pilotwings 64 (N64, USA; .z64/.n64/.v64 o zip) al arrancar. Mismo runtime que RaceWave46. En Linux necesita Vulkan, SDL2, GTK 3 y FreeType del sistema."
+      },
+      "launch": {
+        "linux": "Pilotwings64Recomp",
+        "windows": "Pilotwings64Recomp.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.1",
+        "published_at": "2026-09-17T17:14:55Z"
+      },
+      "year": 1996,
+      "developer": "Paradigm Simulation",
+      "genre": "Simulación",
+      "wiki": "Pilotwings 64"
+    },
+    {
+      "id": "z2rs",
+      "name": "z2rs",
+      "original_game": "Zelda II: The Adventure of Link",
+      "game_id": "zelda-ii-the-adventure-of-link",
+      "system": "nes",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "troyedwardsjr",
+        "repo": "z2rs"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Zelda%20II%20-%20The%20Adventure%20of%20Link%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^z2rs-.*-x86_64-unknown-linux-gnu\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^z2rs-.*-x86_64-pc-windows-msvc\\.zip$",
+        "macos-x86_64": "(?i)^z2rs-.*-x86_64-apple-darwin\\.tar\\.gz$",
+        "macos-aarch64": "(?i)^z2rs-.*-aarch64-apple-darwin\\.tar\\.gz$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Reconstrucción en Rust: arranca sin ROM y arrastra tu ROM de Zelda II (NES, USA No-Intro) a la ventana. Widescreen, mods y co-op online. El binario z2-signal solo hace falta para alojar partidas."
+      },
+      "launch": {
+        "linux": "z2rs",
+        "windows": "z2rs.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-aarch64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-22T12:41:29Z"
+      },
+      "year": 1987,
+      "developer": "Nintendo R&D4",
+      "genre": "Action RPG",
+      "wiki": "Zelda II: The Adventure of Link"
     }
   ]
 }

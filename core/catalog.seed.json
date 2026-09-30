@@ -116,6 +116,12 @@
       "name": "Xbox",
       "short": "XBOX",
       "color": "#3c9a3c"
+    },
+    {
+      "id": "ps5",
+      "name": "PlayStation 5",
+      "short": "PS5",
+      "color": "#2e6bd6"
     }
   ],
   "projects": [
@@ -6196,9 +6202,11 @@
         "windows": "TriAevumForge.exe"
       },
       "cached": {
-        "platforms": [],
-        "latest_tag": "v0.6.0-alpha.3b",
-        "published_at": "2026-09-18T16:54:15Z"
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.6.0-alpha.2c",
+        "published_at": "2026-09-12T16:58:08Z"
       },
       "year": 2011,
       "developer": "Grezzo / Nintendo",
@@ -11938,6 +11946,96 @@
       "developer": "Team Ninja",
       "genre": "Deportes",
       "wiki": "Dead or Alive Xtreme Beach Volleyball"
+    },
+    {
+      "id": "foxhollow-sfa",
+      "name": "Foxhollow",
+      "original_game": "Star Fox Adventures",
+      "game_id": "star-fox-adventures",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "web",
+        "owner": "foxhollow.dev",
+        "repo": "foxhollow"
+      },
+      "release_channel": "stable",
+      "direct": {
+        "version": "0.1.19",
+        "page": "https://foxhollow.dev/",
+        "downloads": {
+          "linux-x86_64": "https://cdn.foxhollow.dev/launcher/latest/Foxhollow-x86_64.AppImage"
+        },
+        "sha256": {}
+      },
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Star%20Fox%20Adventures%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)Foxhollow-x86_64\\.AppImage$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Launcher oficial (foxhollow.dev): al arrancar te pide tu copia de Star Fox Adventures (GameCube, cualquier región), mantiene el juego actualizado, gestiona partidas y tiene biblioteca de mods. Port nativo sobre el decomp SFA y Aurora; Linux, Windows y Mac. En Windows solo hay instalador (no incluido aquí)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "latest_tag": "0.1.19",
+        "published_at": "2026-09-29T23:06:20Z"
+      },
+      "year": 2002,
+      "developer": "Rare",
+      "genre": "Acción-aventura",
+      "wiki": "Star Fox Adventures"
+    },
+    {
+      "id": "deadcells-ps5-native",
+      "name": "DeadCells-PS5 Native",
+      "original_game": "Dead Cells",
+      "game_id": "dead-cells",
+      "system": "ps5",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "OverkillLabs",
+        "repo": "DeadCells-PS5-Native"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1f/Dead_cells_cover_art.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DeadCells-PS5-Native-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Copia los archivos DESCIFRADOS de tu copia PS5 de Dead Cells: Return to Castlevania Edition (PPSA15552) en la misma carpeta que deadcells.exe. El código x86-64 del juego se reenlaza como ejecutable Windows nativo (AnyPS5); shaders recompilados a Vulkan. Primer juego de PS5 nativo en PC."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "deadcells.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-27T00:13:06Z"
+      },
+      "year": 2018,
+      "developer": "Motion Twin / Evil Empire",
+      "genre": "Acción-plataformas",
+      "wiki": "Dead Cells"
     }
   ]
 }

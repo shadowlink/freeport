@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <g fill="#ffffff">
+    <path d="M60 30h70c40 0 62 18 62 50s-22 50-62 50h-40v40H60zm30 28v44h36c17 0 27-8 27-22s-10-22-27-22z"/>
+    <path d="M220 150c0-12 8-22 24-28l70-26c8-3 12-6 12-12 0-7-6-11-18-11h-72V45h80c36 0 56 14 56 38 0 16-9 26-30 34l-66 24c-6 2-9 5-9 9v20h-47z"/>
+    <path d="M410 45h120v28h-90v25h32c40 0 60 16 60 42 0 28-22 44-62 44h-60v-28h56c20 0 31-6 31-17s-11-16-31-16h-56z"/>
+  </g>
+  <text x="600" y="185" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="700" fill="#ffffff" text-anchor="end" letter-spacing="8">PLAYSTATION</text>
+</svg>

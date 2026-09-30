@@ -91,6 +91,7 @@ const LOGOS: &[(&str, &[u8])] = &[
     ("snes", include_bytes!("../assets/logos/snes.svg")),
     ("wii", include_bytes!("../assets/logos/wii.svg")),
     ("x360", include_bytes!("../assets/logos/x360.svg")),
+    ("xbox", include_bytes!("../assets/logos/xbox.svg")),
 ];
 
 struct DetailState {

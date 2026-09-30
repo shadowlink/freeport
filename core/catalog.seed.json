@@ -110,6 +110,12 @@
       "name": "Dreamcast",
       "short": "DC",
       "color": "#f05100"
+    },
+    {
+      "id": "xbox",
+      "name": "Xbox",
+      "short": "XBOX",
+      "color": "#3c9a3c"
     }
   ],
   "projects": [
@@ -10464,6 +10470,1474 @@
       "developer": "Dreambox Games",
       "genre": "Plataformas",
       "wiki": "Robox"
+    },
+    {
+      "id": "budokai3-hd-recomp",
+      "name": "DBZ Budokai 3 HD Collection Recomp",
+      "original_game": "Dragon Ball Z: Budokai 3 HD Collection",
+      "game_id": "dragon-ball-z-budokai-3-hd-collection",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "novapowers0",
+        "repo": "DBZ-Budokai-3-HD-Collection"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/f0/DBZ_Budokai_3.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^DBZ-Budokai-3-HD-Collection-.*-linux-amd64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^DBZ-Budokai-3-HD-Collection-v[\\d.]+\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Copia el default.xex y los data_*.afs de tu copia de Budokai 3 HD Collection (Xbox 360) donde indique el launcher. Windows y Linux (Vulkan), mods. Documentación en español."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.2.9",
+        "published_at": "2026-09-26T09:27:25Z"
+      },
+      "year": 2012,
+      "developer": "Dimps",
+      "genre": "Lucha",
+      "wiki": "Dragon Ball Z: Budokai HD Collection"
+    },
+    {
+      "id": "openjam-nba-jam-ofe",
+      "name": "OpenJam",
+      "original_game": "NBA Jam: On Fire Edition",
+      "game_id": "nba-jam-on-fire-edition",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "GTTeancum",
+        "repo": "OpenJam"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/89/Nba_jam_2010_cover.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^OpenJam-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Pon el contenedor XBLA de tu NBA Jam: On Fire Edition junto a los archivos y ejecuta «NBA JAM Mod Manager.exe»: desempaqueta el juego y prepara la carpeta."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0",
+        "published_at": "2026-09-26T02:25:59Z"
+      },
+      "year": 2011,
+      "developer": "EA Sports",
+      "genre": "Deportes",
+      "wiki": "NBA Jam: On Fire Edition"
+    },
+    {
+      "id": "estacado-darkness-recomp",
+      "name": "Estacado",
+      "original_game": "The Darkness",
+      "game_id": "the-darkness",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "invinceble55-wq",
+        "repo": "Estacado"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1c/Darkness_cover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Estacado-.*-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher toma tu disco de The Darkness (Xbox 360, USA/Europa; ISO o carpeta) y lo extrae (~8 GB). Presets gráficos automáticos, packs de texturas HD. Segunda versión, alternativa a The Darkness Recomp."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.9.0",
+        "published_at": "2026-09-29T14:47:21Z"
+      },
+      "year": 2007,
+      "developer": "Starbreeze Studios",
+      "genre": "Disparos en primera persona",
+      "wiki": "The Darkness (video game)"
+    },
+    {
+      "id": "mojorecomp-crash-titans",
+      "name": "MojoRecomp",
+      "original_game": "Crash of the Titans",
+      "game_id": "crash-of-the-titans",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "OAleex",
+        "repo": "MojoRecomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/9/98/Crash_of_the_Titans_cover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^MojoRecomp-Launcher-.*-windows-x64-portable\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Launcher portable con asistente: indica tu ISO de Crash of the Titans (Xbox 360) y descarga el runtime. Solo Windows; preview."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-29T00:54:31Z"
+      },
+      "year": 2007,
+      "developer": "Radical Entertainment",
+      "genre": "Plataformas",
+      "wiki": "Crash of the Titans"
+    },
+    {
+      "id": "mw2-recompiled",
+      "name": "MW2 Recompiled",
+      "original_game": "Call of Duty: Modern Warfare 2",
+      "game_id": "call-of-duty-modern-warfare-2",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "PaulCombal",
+        "repo": "mw2-recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/5/52/Call_of_Duty_Modern_Warfare_2_%282009%29_cover.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^mw2-.*-linux-lan\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^mw2-.*-windows-lan\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar te pide tu ISO de Modern Warfare 2 (Xbox 360, v1.0.557) y copia los archivos a game/ (~6 GB). Variante LAN; la variante Steam usa la red de Steam."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-27T14:46:03Z"
+      },
+      "year": 2009,
+      "developer": "Infinity Ward",
+      "genre": "Disparos en primera persona",
+      "wiki": "Call of Duty: Modern Warfare 2"
+    },
+    {
+      "id": "svr2011-recomp",
+      "name": "SVR2011 Recomp",
+      "original_game": "WWE SmackDown vs. Raw 2011",
+      "game_id": "wwe-smackdown-vs-raw-2011",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "shaneomac1337",
+        "repo": "SVR2011-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/79/Wwe_svr_11_cover_art.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^SVR2011-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher copia una vez los archivos desde tu ISO de SmackDown vs. Raw 2011 (Xbox 360, USA/Europa; ~6 GB)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.4.0",
+        "published_at": "2026-09-28T17:11:07Z"
+      },
+      "year": 2010,
+      "developer": "Yuke's",
+      "genre": "Lucha libre",
+      "wiki": "WWE SmackDown vs. Raw 2011"
+    },
+    {
+      "id": "svr2011-pc",
+      "name": "SvR2011 PC",
+      "original_game": "WWE SmackDown vs. Raw 2011",
+      "game_id": "wwe-smackdown-vs-raw-2011",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "KaikoClanworth1",
+        "repo": "wwe-svr2011-pc"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/79/Wwe_svr_11_cover_art.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^SvR2011-PC-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher instala el juego desde tu ISO de SmackDown vs. Raw 2011 (Xbox 360), gestiona DLC, música y vídeos de entrada propios. Renderer Vulkan experimental. Segunda versión."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.2",
+        "published_at": "2026-09-30T02:58:16Z"
+      },
+      "year": 2010,
+      "developer": "Yuke's",
+      "genre": "Lucha libre",
+      "wiki": "WWE SmackDown vs. Raw 2011"
+    },
+    {
+      "id": "project-1944-cod3",
+      "name": "Project 1944",
+      "original_game": "Call of Duty 3",
+      "game_id": "call-of-duty-3",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "zenit2893-cmyk",
+        "repo": "project-1944"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/5/51/Call_of_Duty_3_Game_Cover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^cod3-pc-full\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Launcher (PowerShell/WPF, 6 idiomas) que instala desde tu ISO o carpeta de Call of Duty 3 (Xbox 360, USA/Europa; ~7 GB). Paquete completo de ~385 MB."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.2",
+        "published_at": "2026-09-26T22:33:52Z"
+      },
+      "year": 2006,
+      "developer": "Treyarch",
+      "genre": "Disparos en primera persona",
+      "wiki": "Call of Duty 3"
+    },
+    {
+      "id": "nhl-3on3-recomp",
+      "name": "3on3NHL Recomp",
+      "original_game": "3 on 3 NHL Arcade",
+      "game_id": "3-on-3-nhl-arcade",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Wndwsqrrl",
+        "repo": "3on3NHL-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/e/ea/3_on_3_NHL_Arcade_cover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^3on3NHL-recomp-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Pon tu paquete XBLA de 3 on 3 NHL Arcade (carpeta 58410975) junto al launcher, pulsa «Set up game» y «Play»."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "NHL 3on3 Launcher.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-30T02:27:19Z"
+      },
+      "year": 2009,
+      "developer": "EA Canada",
+      "genre": "Deportes",
+      "wiki": "3 on 3 NHL Arcade"
+    },
+    {
+      "id": "timberline-open-season",
+      "name": "Timberline Recompiled",
+      "original_game": "Open Season",
+      "game_id": "open-season",
+      "system": "x360",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "ShadowLuigi",
+        "repo": "TimberlineRecompiled"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/9/9e/Open_Season_Wii.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^win-amd64-release\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Copia los datos de tu copia de Open Season (Xbox 360) en la carpeta openseason/. WIP experimental, solo Windows."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "WIP",
+        "published_at": "2026-09-29T15:25:52Z"
+      },
+      "year": 2006,
+      "developer": "Ubisoft Montreal",
+      "genre": "Plataformas",
+      "wiki": "Open Season (video game)"
+    },
+    {
+      "id": "cbfd-recompiled",
+      "name": "CBFD Recompiled",
+      "original_game": "Conker's Bad Fur Day",
+      "game_id": "conkers-bad-fur-day",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "sciaschi",
+        "repo": "CBFD-Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Conker%27s%20Bad%20Fur%20Day%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^ConkerRecompiled-.*-Linux\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^ConkerRecompiled-.*-Windows\\.zip$",
+        "macos-aarch64": "(?i)^ConkerRecompiled-.*-macOS\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher (RecompFrontend) te pide tu ROM USA de Conker's Bad Fur Day la primera vez. Windows (D3D12/Vulkan), Linux (Vulkan) y macOS. Menú de mods. Segunda versión, mucho más completa."
+      },
+      "launch": {
+        "linux": "ConkerRecomp",
+        "windows": "ConkerRecomp.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-aarch64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "V0.1.4",
+        "published_at": "2026-09-28T18:20:21Z"
+      },
+      "year": 2001,
+      "developer": "Rare",
+      "genre": "Plataformas",
+      "wiki": "Conker's Bad Fur Day"
+    },
+    {
+      "id": "snowboardkids-recomp-hikari",
+      "name": "Snowboard Kids Recompiled (HikariLucy)",
+      "original_game": "Snowboard Kids",
+      "game_id": "snowboard-kids",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "HikariLucy",
+        "repo": "SnowboardKids-Recomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Snowboard%20Kids%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^SnowboardKidsRecompiled-.*-Linux-x86_64\\.zip$",
+        "windows-x86_64": "(?i)^SnowboardKidsRecompiled-.*-Windows-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ROM de Snowboard Kids (N64, USA). Beta pública con Linux validado. Segunda versión."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.9.0-beta.1",
+        "published_at": "2026-09-29T20:28:03Z"
+      },
+      "year": 1997,
+      "developer": "Racdym",
+      "genre": "Carreras",
+      "wiki": "Snowboard Kids"
+    },
+    {
+      "id": "banjo-tooie-recompiled-ssd",
+      "name": "Banjo-Tooie Recompiled (alpha)",
+      "original_game": "Banjo-Tooie",
+      "game_id": "banjo-tooie",
+      "system": "n64",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "some-scurvy-dog",
+        "repo": "BanjoTooieRecompiled"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Banjo-Tooie%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^BanjoTooieRecompiled-Alpha.*-Windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En la página Play del launcher, «Choose ROM…» con tu ROM NTSC-U 1.0 de Banjo-Tooie. Alfa Windows; segunda versión."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "TooieRecompiled.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0-alpha.2",
+        "published_at": "2026-09-29T03:30:13Z"
+      },
+      "year": 2000,
+      "developer": "Rare",
+      "genre": "Plataformas",
+      "wiki": "Banjo-Tooie"
+    },
+    {
+      "id": "fzero-recomp-craigshaw",
+      "name": "FZeroRecomp",
+      "original_game": "F-Zero",
+      "game_id": "f-zero",
+      "system": "snes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "craigshaw",
+        "repo": "FZeroRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/F-Zero%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^FZeroRecomp-.*-Windows-x64\\.zip$",
+        "macos-aarch64": "(?i)^FZeroRecomp-.*-macOS-arm64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ROM de F-Zero (SNES, USA, sin cabecera). Widescreen nativo. Segunda versión."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "macos-aarch64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.5.0",
+        "published_at": "2026-09-27T07:52:09Z"
+      },
+      "year": 1990,
+      "developer": "Nintendo EAD",
+      "genre": "Carreras",
+      "wiki": "F-Zero (video game)"
+    },
+    {
+      "id": "buster-busts-loose-pc",
+      "name": "Buster Busts Loose PC",
+      "original_game": "Tiny Toon Adventures: Buster Busts Loose!",
+      "game_id": "tiny-toon-adventures-buster-busts-loose",
+      "system": "snes",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "Darhkfox",
+        "repo": "BusterBustsLoose"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Super%20Nintendo%20Entertainment%20System/Named_Boxarts/Tiny%20Toon%20Adventures%20-%20Buster%20Busts%20Loose%21%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^BusterBustsLoose-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "Tiny Toon Adventures - Buster Busts Loose! (USA).sfc",
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Buster Busts Loose! (SNES, USA); se copia junto al ejecutable con el nombre exacto que espera. Widescreen real, trucos, selector de nivel."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "BusterBustsLoose.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0",
+        "published_at": "2026-09-28T18:19:09Z"
+      },
+      "year": 1993,
+      "developer": "Konami",
+      "genre": "Plataformas",
+      "wiki": "Tiny Toon Adventures: Buster Busts Loose!"
+    },
+    {
+      "id": "smb2j-fds-recomp",
+      "name": "SMB2 (Japan) FDS Recomp",
+      "original_game": "Super Mario Bros.: The Lost Levels",
+      "game_id": "super-mario-bros-the-lost-levels",
+      "system": "nes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "SuperMarioBros2JapanFDSRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Family%20Computer%20Disk%20System/Named_Boxarts/Super%20Mario%20Bros.%202%20%28Japan%29%20%28En%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^SuperMarioBros2JapanFDSRecomp-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu imagen .fds de Super Mario Bros. 2 (Japón, Famicom Disk System) y la BIOS del FDS, que se ejecuta recompilada."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.1",
+        "published_at": "2026-09-28T19:25:49Z"
+      },
+      "year": 1986,
+      "developer": "Nintendo R&D4",
+      "genre": "Plataformas",
+      "wiki": "Super Mario Bros.: The Lost Levels"
+    },
+    {
+      "id": "shantae-recomp",
+      "name": "Shantae Recomp",
+      "original_game": "Shantae",
+      "game_id": "shantae",
+      "system": "gb",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "vibecodekun",
+        "repo": "shantaerecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Color/Named_Boxarts/Shantae%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^Shantae_Recomp-.*-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)^shantae-recomp-.*-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher te pide tu ROM de Shantae (GBC, USA) al primer arranque. Vista ampliada, sin ralentizaciones, rebobinado, extras de GBA."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "shantae.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.5",
+        "published_at": "2026-09-29T16:27:43Z"
+      },
+      "year": 2002,
+      "developer": "WayForward",
+      "genre": "Plataformas",
+      "wiki": "Shantae (video game)"
+    },
+    {
+      "id": "pmd-red-rescue-recomp",
+      "name": "Green Rescue Team",
+      "original_game": "Pokémon Mystery Dungeon: Red Rescue Team",
+      "game_id": "pokemon-mystery-dungeon-red-rescue-team",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Asphaltian",
+        "repo": "pmd-green"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Pokemon%20Mystery%20Dungeon%20-%20Red%20Rescue%20Team%20%28USA%2C%20Australia%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^GreenRescueTeam-.*-Linux\\.zip$",
+        "windows-x86_64": "(?i)^GreenRescueTeam-.*-Windows\\.zip$",
+        "macos-aarch64": "(?i)^GreenRescueTeam-.*-macOS\\.zip$",
+        "macos-x86_64": "(?i)^GreenRescueTeam-.*-macOS\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "La primera vez, «Choose a ROM» con tu ROM de Red Rescue Team (GBA, USA/Australia) o arrástrala; se queda con una copia."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-aarch64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-26T17:50:48Z"
+      },
+      "year": 2005,
+      "developer": "Chunsoft",
+      "genre": "RPG",
+      "wiki": "Pokémon Mystery Dungeon: Red Rescue Team and Blue Rescue Team"
+    },
+    {
+      "id": "sonic3k-recomp",
+      "name": "Sonic 3 & Knuckles Recomp",
+      "original_game": "Sonic 3 & Knuckles",
+      "game_id": "sonic-3-and-knuckles",
+      "system": "genesis",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "Sonic3AndKnucklesRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%20Mega%20Drive%20-%20Genesis/Named_Boxarts/Sonic%20_%20Knuckles%20%2B%20Sonic%20The%20Hedgehog%203%20%28Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^Sonic3KRecomp-linux-x86_64-.*\\.AppImage$",
+        "windows-x86_64": "(?i)^Sonic3KRecomp-windows-x64-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Build del cartucho combinado: el launcher te pide tu ROM de Sonic 3 & Knuckles (Mega Drive). Widescreen desde Mods. Alternativa a Sonic 3 A.I.R."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.5.1",
+        "published_at": "2026-09-28T18:12:34Z"
+      },
+      "year": 1994,
+      "developer": "Sega Technical Institute",
+      "genre": "Plataformas",
+      "wiki": "Sonic 3 & Knuckles"
+    },
+    {
+      "id": "chaotix-recompiled",
+      "name": "Chaotix Recompiled",
+      "original_game": "Knuckles' Chaotix",
+      "game_id": "knuckles-chaotix",
+      "system": "genesis",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "YuutaTsubasa",
+        "repo": "ChaotixRecompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%2032X/Named_Boxarts/Knuckles%27%20Chaotix%20%28Japan%2C%20USA%29%20%28En%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^ChaotixRecompiled-.*-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ROM de Knuckles' Chaotix (Sega 32X, Japón/USA); no hace falta BIOS de 32X. Widescreen real. Llega a título, menús y selección de fase."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.5",
+        "published_at": "2026-09-28T04:10:44Z"
+      },
+      "year": 1995,
+      "developer": "Sega",
+      "genre": "Plataformas",
+      "wiki": "Knuckles' Chaotix"
+    },
+    {
+      "id": "ygo-forbidden-memories-recomp",
+      "name": "Forbidden Memories Recompiled",
+      "original_game": "Yu-Gi-Oh! Forbidden Memories",
+      "game_id": "yu-gi-oh-forbidden-memories",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Unchiga",
+        "repo": "Yu-Gi-Oh-Forbidden-Memories-Recompiled"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Yu-Gi-Oh%21%20Forbidden%20Memories%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^yfm-redecomp-v.*-linux\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^yfm-redecomp-v.*-windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al primer arranque elige el .bin de tu disco USA de Forbidden Memories. Reconstruido desde el decomp; editor y mod HD aparte. Preview."
+      },
+      "launch": {
+        "linux": "memories-pc",
+        "windows": "memories-pc.exe"
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.4-preview.1",
+        "published_at": "2026-09-30T00:49:55Z"
+      },
+      "year": 1999,
+      "developer": "Konami",
+      "genre": "Juego de cartas",
+      "wiki": "Yu-Gi-Oh! Forbidden Memories"
+    },
+    {
+      "id": "sfex-plus-alpha-recomp",
+      "name": "EX Plus Alpha Recomp",
+      "original_game": "Street Fighter EX Plus Alpha",
+      "game_id": "street-fighter-ex-plus-alpha",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "guimaraf",
+        "repo": "plusalpha-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Street%20Fighter%20EX%20Plus%20Alpha%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^(EXPlusAlpha-Recomp-Windows-x64|alphaBuildClean)\\.zip$",
+        "linux-x86_64": "(?i)^EXPlusAlpha-Recomp-Linux-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu imagen USA de Street Fighter EX Plus Alpha (SLUS-00548) en la carpeta disc-a/ y tu BIOS SCPH-1001 (LLE). Alfa."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.3-alpha",
+        "published_at": "2026-08-28T15:51:39Z"
+      },
+      "year": 1997,
+      "developer": "Arika",
+      "genre": "Lucha",
+      "wiki": "Street Fighter EX"
+    },
+    {
+      "id": "dbgt-final-bout-recomp",
+      "name": "DB Final Bout Recomp",
+      "original_game": "Dragon Ball GT: Final Bout",
+      "game_id": "dragon-ball-gt-final-bout",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "novapowers0",
+        "repo": "DB-Final-Bout-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Dragon%20Ball%20GT%20-%20Final%20Bout%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^dbfb-.*-setup-host-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu disco de Dragon Ball GT: Final Bout (PS1, USA, SLUS-00493); el launcher lo prepara. Jugable con widescreen estirado."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.1",
+        "published_at": "2026-09-26T16:39:37Z"
+      },
+      "year": 1997,
+      "developer": "TOSE",
+      "genre": "Lucha",
+      "wiki": "Dragon Ball GT: Final Bout"
+    },
+    {
+      "id": "r4-ridge-racer-type4-recomp",
+      "name": "R4 Recomp",
+      "original_game": "R4: Ridge Racer Type 4",
+      "game_id": "r4-ridge-racer-type-4",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "tetrisgm",
+        "repo": "RidgeRacerType4Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/R4%20-%20Ridge%20Racer%20Type%204%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^r4-.*-windows-x64\\.zip$",
+        "macos-aarch64": "(?i)^r4-.*-macos-arm64\\.zip$",
+        "macos-x86_64": "(?i)^r4-.*-macos-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher (recomp-ui) te pide tu disco de R4: Ridge Racer Type 4 (PS1, USA, SLUS-00797). BIOS recompilada."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "macos-aarch64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-26T05:56:19Z"
+      },
+      "year": 1998,
+      "developer": "Namco",
+      "genre": "Carreras",
+      "wiki": "R4: Ridge Racer Type 4"
+    },
+    {
+      "id": "re15pc",
+      "name": "RE15pc",
+      "original_game": "Resident Evil 1.5",
+      "game_id": "resident-evil-1-5",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "JulioCacko",
+        "repo": "RE15pc"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/f8/Resident_Evil_1.5.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^RE15pc-.*-win-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Port de preservación del prototipo de Biohazard 2 del 6 de noviembre de 1996 (Resident Evil 1.5). Necesitas tu imagen de ese disco; se recompila localmente (RecompOne) y después no hace falta el disco."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.4.0",
+        "published_at": "2026-09-29T02:38:02Z"
+      },
+      "year": 1996,
+      "developer": "Capcom",
+      "genre": "Survival horror",
+      "wiki": "Resident Evil 1.5"
+    },
+    {
+      "id": "dark-cloud-2-recomp",
+      "name": "DC2 Recomp",
+      "original_game": "Dark Cloud 2",
+      "game_id": "dark-cloud-2",
+      "system": "ps2",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Red-tv141",
+        "repo": "DC2-PS2RECOMP"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%202/Named_Boxarts/Dark%20Chronicle%20%28Europe%29%20%28En%2CFr%2CDe%2CEs%2CIt%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DC2Recomp.*\\.rar$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Abre DC2Launcher.exe e indica tu ISO de Dark Cloud 2 (PS2); extrae los datos y lanza el runner nativo. Solo Windows."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "DC2Launcher.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "0.9.4",
+        "published_at": "2026-09-16T18:59:47Z"
+      },
+      "year": 2002,
+      "developer": "Level-5",
+      "genre": "Action RPG",
+      "wiki": "Dark Chronicle"
+    },
+    {
+      "id": "lcs-native",
+      "name": "LCSNative",
+      "original_game": "Grand Theft Auto: Liberty City Stories",
+      "game_id": "grand-theft-auto-liberty-city-stories",
+      "system": "psp",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "elmasas",
+        "repo": "lcs-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/e/ea/Grand_Theft_Auto_Liberty_City_Stories_box.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^LCSNative-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Copia tu EBOOT.ELF descifrado y la carpeta PSP_GAME de tu disco de Liberty City Stories (PSP) en game/ dentro de la carpeta del juego. Ajustes en LCSNative.ini."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "LCSNative.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.4",
+        "published_at": "2026-09-29T21:23:14Z"
+      },
+      "year": 2005,
+      "developer": "Rockstar Leeds",
+      "genre": "Acción-aventura",
+      "wiki": "Grand Theft Auto: Liberty City Stories"
+    },
+    {
+      "id": "deepsea-wind-waker",
+      "name": "Deep Sea",
+      "original_game": "The Legend of Zelda: The Wind Waker",
+      "game_id": "the-legend-of-zelda-the-wind-waker",
+      "system": "gc",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "AH64-dll",
+        "repo": "DeepSea"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20The%20Wind%20Waker%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DeepSea-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El primer arranque construye el módulo del juego desde tu disco USA de The Wind Waker (carpeta extraída, ISO, WBFS o RVZ); tarda un rato y necesita ~2 GB. 60 fps, Vulkan. Beta."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0-beta.4",
+        "published_at": "2026-09-26T20:57:20Z"
+      },
+      "year": 2002,
+      "developer": "Nintendo EAD",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: The Wind Waker"
+    },
+    {
+      "id": "silly-reencounter",
+      "name": "Silly ReEncounter",
+      "original_game": "Serious Sam: Next Encounter",
+      "game_id": "serious-sam-next-encounter",
+      "system": "gc",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "takoshero96",
+        "repo": "Silly-ReEncounter"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/6/64/Serious_Sam_Next_Encounter.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^SillyReEncounter-Public\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona (o arrastra) tu imagen de Serious Sam: Next Encounter (GameCube, USA; ISO, GCM, RVZ…): el launcher extrae los datos (~1,3 GB) y traduce y compila el main.dol en tu PC."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "recomp",
+        "published_at": "2026-09-27T23:33:45Z"
+      },
+      "year": 2004,
+      "developer": "Climax Solent",
+      "genre": "Disparos en primera persona",
+      "wiki": "Serious Sam: Next Encounter"
+    },
+    {
+      "id": "moh-frontline-gc-recomp",
+      "name": "MOH Frontline GC Recomp",
+      "original_game": "Medal of Honor: Frontline",
+      "game_id": "medal-of-honor-frontline",
+      "system": "gc",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "ant0-blase",
+        "repo": "MOHFrontline-GC-RECOMP"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Medal%20of%20Honor%20-%20Frontline%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^MOHFrontline-GC-RECOMP-.*-Linux-x86_64\\.tar\\.gz$",
+        "windows-x86_64": "(?i)^MOHFrontline-GC-RECOMP-.*-Windows-x86_64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu ISO USA de Medal of Honor: Frontline (GameCube, GMFE69); la detecta y extrae. Recompilación experimental (DolRecomp + ModernGekko), Vulkan/Wayland."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.2",
+        "published_at": "2026-09-27T19:44:14Z"
+      },
+      "year": 2002,
+      "developer": "EA Los Angeles",
+      "genre": "Disparos en primera persona",
+      "wiki": "Medal of Honor: Frontline"
+    },
+    {
+      "id": "sms-launcher",
+      "name": "SMS Launcher",
+      "original_game": "Super Mario Sunshine",
+      "game_id": "super-mario-sunshine",
+      "system": "gc",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "chasem-dev",
+        "repo": "sms-launcher"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Super%20Mario%20Sunshine%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^SMS-Launcher-.*\\.AppImage$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Launcher del port nativo de Super Mario Sunshine: te guía, descarga las herramientas que necesita y construye el juego desde tu imagen de disco. En Windows solo hay instalador (no incluido aquí)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64"
+        ],
+        "latest_tag": "v0.1.33",
+        "published_at": "2026-09-28T21:43:40Z"
+      },
+      "year": 2002,
+      "developer": "Nintendo EAD",
+      "genre": "Plataformas",
+      "wiki": "Super Mario Sunshine"
+    },
+    {
+      "id": "wiiparty-recomp",
+      "name": "Wii Party Recomp",
+      "original_game": "Wii Party",
+      "game_id": "wii-party",
+      "system": "wii",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "arelkair",
+        "repo": "wiiparty-recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Wii/Named_Boxarts/Wii%20Party%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)^wiipartyrecomp-launcher-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)^wiipartyrecomp-offline-windows\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher construye el juego en tu PC desde tu copia de Wii Party (ISO, WBFS, RVZ…). Windows: paquete offline con todo; Linux: launcher AppImage experimental. Alfa."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.2-alpha",
+        "published_at": "2026-09-29T14:31:12Z"
+      },
+      "year": 2010,
+      "developer": "Nd Cube",
+      "genre": "Party",
+      "wiki": "Wii Party"
+    },
+    {
+      "id": "buffy-chaos-bleeds-pc",
+      "name": "Buffy: Chaos Bleeds PC",
+      "original_game": "Buffy the Vampire Slayer: Chaos Bleeds",
+      "game_id": "buffy-the-vampire-slayer-chaos-bleeds",
+      "system": "xbox",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "KaikoClanworth1",
+        "repo": "buffy-chaos-bleeds-pc"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Microsoft%20-%20Xbox/Named_Boxarts/Buffy%20the%20Vampire%20Slayer%20-%20Chaos%20Bleeds%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Buffy-Chaos-Bleeds-PC-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher instala desde tu ISO/XISO de Chaos Bleeds (Xbox original; no valen PS2 ni GameCube). Packs de texturas. Preview; Proton experimental."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.0",
+        "published_at": "2026-09-30T02:45:45Z"
+      },
+      "year": 2003,
+      "developer": "Eurocom",
+      "genre": "Acción-aventura",
+      "wiki": "Buffy the Vampire Slayer: Chaos Bleeds"
+    },
+    {
+      "id": "ssx-tricky-pc",
+      "name": "SSX Tricky PC",
+      "original_game": "SSX Tricky",
+      "game_id": "ssx-tricky",
+      "system": "xbox",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "MatiasRiveraC",
+        "repo": "SSX-Tricky-PC"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Microsoft%20-%20Xbox/Named_Boxarts/SSX%20Tricky%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^SSX-Tricky-PC-.*-win64\\.7z$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher te pide tu ISO USA de SSX Tricky (Xbox original) y comprueba que es exactamente esa build."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-29T15:16:30Z"
+      },
+      "year": 2001,
+      "developer": "EA Canada",
+      "genre": "Deportes",
+      "wiki": "SSX Tricky"
+    },
+    {
+      "id": "doaxbv-re",
+      "name": "DOAXBV RE",
+      "original_game": "Dead or Alive Xtreme Beach Volleyball",
+      "game_id": "dead-or-alive-xtreme-beach-volleyball",
+      "system": "xbox",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "NoRain211",
+        "repo": "doaxbv-re"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Microsoft%20-%20Xbox/Named_Boxarts/Dead%20or%20Alive%20Xtreme%20Beach%20Volleyball%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DOAXBV-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita los datos de tu copia de Dead or Alive Xtreme Beach Volleyball (Xbox original). Port legible reconstruido desde una recompilación completa. Alfa."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.5.1",
+        "published_at": "2026-09-30T01:06:02Z"
+      },
+      "year": 2003,
+      "developer": "Team Ninja",
+      "genre": "Deportes",
+      "wiki": "Dead or Alive Xtreme Beach Volleyball"
     }
   ]
 }

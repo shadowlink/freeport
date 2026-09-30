@@ -85,21 +85,25 @@ pub fn pick_release(
     channel: &str,
     rolling_tag: Option<&str>,
 ) -> Option<Release> {
+    // A release with no downloadable assets (e.g. a tag pushed before CI has
+    // uploaded the builds, or a notes-only release) must never be picked: it
+    // would show up as an "update" that then fails with "no asset matches".
+    let usable = |r: &&Release| !r.draft && !r.assets.is_empty();
     match channel {
         "rolling" => {
             if let Some(tag) = rolling_tag {
                 releases.iter().find(|r| r.tag_name == tag).cloned()
             } else {
-                releases.iter().find(|r| !r.draft).cloned()
+                releases.iter().find(usable).cloned()
             }
         }
-        "prerelease" => releases.iter().find(|r| !r.draft).cloned(),
+        "prerelease" => releases.iter().find(usable).cloned(),
         _ => releases
             .iter()
-            .find(|r| !r.draft && !r.prerelease)
+            .find(|r| !r.prerelease && usable(r))
             .cloned()
-            // fall back to any non-draft release if none are marked stable
-            .or_else(|| releases.iter().find(|r| !r.draft).cloned()),
+            // fall back to any usable release if none are marked stable
+            .or_else(|| releases.iter().find(usable).cloned()),
     }
 }
 
@@ -296,19 +300,33 @@ mod tests {
     #[test]
     fn stable_skips_prerelease_and_draft() {
         let releases = vec![
-            rel("v3-draft", false, true, &[]),
-            rel("v2-pre", true, false, &[]),
-            rel("v1", false, false, &[]),
+            rel("v3-draft", false, true, &["a.zip"]),
+            rel("v2-pre", true, false, &["a.zip"]),
+            rel("v1", false, false, &["a.zip"]),
         ];
         let picked = pick_release(&releases, "stable", None).unwrap();
         assert_eq!(picked.tag_name, "v1");
     }
 
     #[test]
+    fn releases_without_assets_are_skipped() {
+        // TriAevum case: newest prereleases were tagged with no builds attached.
+        let releases = vec![
+            rel("v0.6.0-alpha.3b", true, false, &[]),
+            rel("v0.6.0-alpha.3", true, false, &[]),
+            rel("v0.6.0-alpha.2c", true, false, &["TriAevum-Windows-x64.zip"]),
+        ];
+        assert_eq!(pick_release(&releases, "prerelease", None).unwrap().tag_name, "v0.6.0-alpha.2c");
+        assert_eq!(pick_release(&releases, "stable", None).unwrap().tag_name, "v0.6.0-alpha.2c");
+        let empty = vec![rel("v9", false, false, &[])];
+        assert!(pick_release(&empty, "stable", None).is_none());
+    }
+
+    #[test]
     fn rolling_matches_fixed_tag() {
         let releases = vec![
-            rel("nightly", false, false, &[]),
-            rel("ci-dev-build", true, false, &[]),
+            rel("nightly", false, false, &["a.zip"]),
+            rel("ci-dev-build", true, false, &["a.zip"]),
         ];
         let picked = pick_release(&releases, "rolling", Some("ci-dev-build")).unwrap();
         assert_eq!(picked.tag_name, "ci-dev-build");

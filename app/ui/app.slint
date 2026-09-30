@@ -630,23 +630,38 @@ export component MainWindow inherits Window {
                 animate opacity { duration: 260ms; easing: ease-out; }
                 HorizontalLayout {
                     padding-left: 16px;
-                    padding-right: 8px;
+                    padding-right: 12px;
                     spacing: 12px;
+                    // The text column must be allowed to shrink (min-width: 0 +
+                    // elided single-line texts); otherwise a long title pushes the
+                    // buttons past the right edge on non-maximized windows.
                     VerticalLayout {
                         horizontal-stretch: 1;
+                        min-width: 0px;
                         alignment: center;
                         spacing: 3px;
                         Text {
                             text: root.update-busy ? "Actualizando…"
                                   : (root.update-error ? "La actualización falló"
                                      : "Nueva versión v\{root.update-version} disponible");
-                            color: #0b0c10; font-weight: 800;
+                            color: #0b0c10; font-weight: 800; overflow: elide; wrap: no-wrap;
                         }
                         if root.update-busy: Bar { value: -1; height: 6px; fill: #0b0c10; }
-                        if !root.update-busy && !root.update-error && root.update-notes != "": Text { text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; }
+                        if !root.update-busy && root.update-notes != "": Text {
+                            text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; wrap: no-wrap;
+                        }
                     }
-                    if !root.update-busy: Btn { label: root.update-error ? "Reintentar" : "Actualizar"; bg: #0b0c10; fg: #ffb23e; clicked => { root.do-update(); } }
-                    if !root.update-busy: Btn { label: "Después"; bg: #ffffff44; fg: #0b0c10; clicked => { root.dismiss-update(); } }
+                    // Buttons: fixed width, vertically centered in the 54px band.
+                    if !root.update-busy: VerticalLayout {
+                        alignment: center;
+                        horizontal-stretch: 0;
+                        Btn { label: root.update-error ? "Reintentar" : "Actualizar"; bg: #0b0c10; fg: #ffb23e; clicked => { root.do-update(); } }
+                    }
+                    if !root.update-busy: VerticalLayout {
+                        alignment: center;
+                        horizontal-stretch: 0;
+                        Btn { label: "Después"; bg: #ffffff44; fg: #0b0c10; clicked => { root.dismiss-update(); } }
+                    }
                 }
             }
             Rectangle {

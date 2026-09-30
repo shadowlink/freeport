@@ -2162,6 +2162,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(id) = std::env::var("FREEPORT_DEBUG_OPEN").ok().filter(|s| !s.is_empty()) {
         win.invoke_open_game(id.into()); // dev aid: open a game page at startup
     }
+    if std::env::var_os("FREEPORT_DEBUG_UPDATE").is_some() {
+        // dev aid: show the self-update banner with fake data (layout checks)
+        win.set_update_version("9.9.9".into());
+        win.set_update_notes("Notas de la versión de prueba para comprobar el elidido del texto largo en ventanas estrechas".into());
+        win.set_update_available(true);
+    }
 
     // NUEVO badge: ids never seen before this session. First run records a
     // baseline instead of flagging the whole catalog.
@@ -2257,7 +2263,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let client = app.client.clone();
             handle.spawn(async move {
                 if let Err(e) = update::apply(&client, &upd).await {
-                    let _ = e;
+                    eprintln!("[freeport] auto-update: {e}");
                     let _ = slint::invoke_from_event_loop(move || {
                         UI.with(|u| {
                             if let Some((_, weak)) = &*u.borrow() {
@@ -2265,6 +2271,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     w.set_update_busy(false);
                                     w.set_update_available(true); // keep banner to retry
                                     w.set_update_error(true);
+                                    w.set_update_notes(e.into()); // tell the user WHY
                                 }
                             }
                         });

@@ -99,7 +99,15 @@ pub async fn apply(client: &reqwest::Client, upd: &Update) -> Result<(), String>
     let sig = Signature::from_slice(&sig_bytes).map_err(|e| e.to_string())?;
     pk.verify(&bytes, &sig).map_err(|_| "firma inválida".to_string())?;
 
-    let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+    // Inside an AppImage `current_exe()` is the binary extracted into the
+    // read-only FUSE mount (/tmp/.mount_*/usr/bin/freeport), so writing next to
+    // it fails with EROFS and the update silently "does nothing". The runtime
+    // exports $APPIMAGE with the path of the .AppImage the user launched: that
+    // is the file to replace (the manifest ships a whole AppImage on Linux).
+    let exe = match std::env::var_os("APPIMAGE").map(std::path::PathBuf::from) {
+        Some(p) if p.is_file() => p,
+        _ => std::env::current_exe().map_err(|e| e.to_string())?,
+    };
     #[cfg(windows)]
     {
         // Windows locks a running executable, so it can't be overwritten. Write
@@ -125,12 +133,21 @@ pub async fn apply(client: &reqwest::Client, upd: &Update) -> Result<(), String>
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
+        // Same directory as the target so the final rename is atomic.
         let newp = exe.with_extension("new");
-        std::fs::write(&newp, &bytes).map_err(|e| e.to_string())?;
+        std::fs::write(&newp, &bytes).map_err(|e| format!("no se pudo escribir {}: {e}", newp.display()))?;
         let _ = std::fs::set_permissions(&newp, std::fs::Permissions::from_mode(0o755));
-        std::fs::rename(&newp, &exe).map_err(|e| e.to_string())?;
+        std::fs::rename(&newp, &exe).map_err(|e| format!("no se pudo reemplazar {}: {e}", exe.display()))?;
     }
-    std::process::Command::new(&exe).spawn().map_err(|e| e.to_string())?;
+    // Relaunch the replaced file. Drop the AppImage runtime's variables so the
+    // new instance mounts itself instead of inheriting our (soon gone) mount.
+    std::process::Command::new(&exe)
+        .env_remove("APPIMAGE")
+        .env_remove("APPDIR")
+        .env_remove("OWD")
+        .env_remove("ARGV0")
+        .spawn()
+        .map_err(|e| format!("no se pudo relanzar {}: {e}", exe.display()))?;
     std::process::exit(0);
 }
 

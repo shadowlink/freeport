@@ -414,7 +414,12 @@ fn rebuild(app: &App, win: &MainWindow) {
             CardItem {
                 id: p.id.clone().into(),
                 title: title.into(),
-                subtitle: p.name.clone().into(),
+                // One quiet line under the art: the project, or how many there are.
+                subtitle: if g.members.len() > 1 {
+                    format!("{} versiones", g.members.len()).into()
+                } else {
+                    p.name.clone().into()
+                },
                 cover: app.cover(p),
                 installed: any_installed,
                 is_windows: is_win,

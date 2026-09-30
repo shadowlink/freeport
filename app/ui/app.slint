@@ -261,21 +261,6 @@ component KindPill inherits Rectangle {
     }
 }
 
-// "⧉ 2 VERSIONES" pill: a catalog card that folds several ports of one game.
-component VersionsPill inherits Rectangle {
-    in property <int> count;
-    height: 18px;
-    width: vp-l.preferred-width;
-    border-radius: 5px;
-    background: #b48cff;
-    drop-shadow-blur: 6px; drop-shadow-color: #000000aa;
-    vp-l := HorizontalLayout {
-        padding-left: 7px; padding-right: 7px;
-        Text { text: "⧉ \{root.count} VERSIONES";
-               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
-    }
-}
-
 // Version selector chip (detail hero): name + kind/platforms, amber when active.
 component VersionChip inherits Rectangle {
     in property <VersionRow> ver;
@@ -863,44 +848,8 @@ export component MainWindow inherits Window {
                                     width: 100%; height: 100%;
                                     source: c.cover; title: c.title; hovered: cover-ta.has-hover;
                                 }
-                                // Bottom scrim so version/update badges read over any art.
-                                Rectangle {
-                                    y: parent.height - 56px; height: 56px;
-                                    background: @linear-gradient(180deg, #0b0c1000 0%, #0b0c10cc 100%);
-                                }
-                                if c.versions <= 1: KindPill { x: 6px; y: 6px; kind: c.kind; }
-                                if c.versions > 1: VersionsPill { x: 6px; y: 6px; count: c.versions; }
-                                if c.is-windows: Tag {
-                                    x: 6px; y: 28px;
-                                    label: "WIN"; fg: white; bg: #2b6fb3;
-                                }
-                                if c.is-new && !c.installed: Tag {
-                                    x: 6px; y: c.is-windows ? 48px : 28px;
-                                    label: "NUEVO"; fg: #0b0c10; bg: #7de17d;
-                                }
-                                // Version (bottom-left) — installed tag, or latest for catalog cards.
-                                if c.version != "": Tag {
-                                    x: 6px; y: parent.height - 22px;
-                                    label: c.version; fg: #ffffffcc; bg: #000000b0;
-                                }
-                                // Update available (bottom-right): amber pill with the target tag.
-                                if c.update-available: Rectangle {
-                                    x: parent.width - self.width - 6px; y: parent.height - 24px; height: 18px;
-                                    width: up-l.preferred-width;
-                                    border-radius: 5px; background: #ffd166;
-                                    up-l := HorizontalLayout {
-                                        padding-left: 6px; padding-right: 6px;
-                                        Text { text: c.new-version != "" ? "↑ \{c.new-version}" : "↑ UPDATE";
-                                               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; }
-                                    }
-                                }
-                                // Installed check (bottom-right) when up to date.
-                                if c.installed && !c.update-available: Rectangle {
-                                    x: parent.width - 24px; y: parent.height - 24px; width: 18px; height: 18px;
-                                    border-radius: 9px; background: #4de1c1;
-                                    Text { text: "✓"; color: #0b0c10; font-size: 11px; font-weight: 900;
-                                           horizontal-alignment: center; vertical-alignment: center; }
-                                }
+                                // Cover art stays clean: no badges over it. State lives in the
+                                // border colour (installed), the action row below and the ficha.
                                 cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
                                 // Hover quick-play (installed games): big center button.
                                 Rectangle {

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-23",
+  "updated_at": "2026-09-30",
   "source": "probed",
   "systems": [
     {
@@ -256,7 +256,7 @@
           "windows-x86_64"
         ],
         "latest_tag": "5.0.1",
-        "published_at": "2026-09-18T22:31:49Z"
+        "published_at": "2026-08-25T17:54:43Z"
       },
       "year": 2000,
       "developer": "Nintendo",
@@ -582,9 +582,13 @@
         "windows": null
       },
       "cached": {
-        "platforms": [],
-        "latest_tag": "v0.3.2",
-        "published_at": "2026-09-23T10:19:31Z"
+        "platforms": [
+          "linux-x86_64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.31",
+        "published_at": "2026-09-29T09:33:23Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1148,8 +1152,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "nightly_c7c89d6",
-        "published_at": "2026-09-21T03:40:46Z"
+        "latest_tag": "nightly_6ddb17c",
+        "published_at": "2026-09-27T13:26:00Z"
       },
       "year": 2006,
       "developer": "Eden Games",
@@ -1370,8 +1374,8 @@
           "linux-aarch64",
           "linux-x86_64"
         ],
-        "latest_tag": "v2.0.1",
-        "published_at": "2026-09-20T00:36:12Z"
+        "latest_tag": "v2.0.2",
+        "published_at": "2026-09-25T07:21:33Z"
       },
       "year": 2006,
       "developer": "Nintendo",
@@ -1514,8 +1518,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.2.1",
-        "published_at": "2026-07-07T00:15:42Z"
+        "latest_tag": "v1.2.2",
+        "published_at": "2026-09-25T21:17:14Z"
       },
       "year": 1999,
       "developer": "Victor Interactive",
@@ -2180,8 +2184,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.9.3",
-        "published_at": "2026-09-12T21:49:18Z"
+        "latest_tag": "v0.9.5",
+        "published_at": "2026-09-28T06:56:37Z"
       },
       "year": 2004,
       "developer": "Nintendo / Capcom",
@@ -2269,8 +2273,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.5.5",
-        "published_at": "2026-09-06T05:12:52Z"
+        "latest_tag": "v0.0.6.0",
+        "published_at": "2026-09-29T06:01:04Z"
       },
       "year": 2007,
       "developer": "Electronic Arts",
@@ -2356,8 +2360,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "0.1.0",
-        "published_at": "2026-08-05T02:16:24Z"
+        "latest_tag": "0.2.1",
+        "published_at": "2026-09-29T08:03:05Z"
       },
       "year": 2008,
       "developer": "Monolith Productions",
@@ -2612,8 +2616,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2.26",
-        "published_at": "2026-07-02T14:10:34Z"
+        "latest_tag": "v0.2.27",
+        "published_at": "2026-09-28T19:30:34Z"
       },
       "year": 1999,
       "developer": "Konami",
@@ -2746,8 +2750,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "Version1.0.4",
-        "published_at": "2026-09-03T19:55:18Z"
+        "latest_tag": "Version1.0.5beta10",
+        "published_at": "2026-09-16T10:20:40Z"
       },
       "year": 1997,
       "developer": "Rare",
@@ -3287,8 +3291,8 @@
         "platforms": [
           "linux-x86_64"
         ],
-        "latest_tag": "v1.6.3",
-        "published_at": "2026-09-22T23:58:34Z"
+        "latest_tag": "v1.6.5",
+        "published_at": "2026-09-27T23:26:50Z"
       },
       "year": 2003,
       "developer": "Namco",
@@ -4431,8 +4435,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.3-alpha",
-        "published_at": "2026-09-15T16:09:34Z"
+        "latest_tag": "v0.2.0",
+        "published_at": "2026-09-23T17:20:48Z"
       },
       "year": 2000,
       "developer": "Eidetic",
@@ -4638,8 +4642,8 @@
       },
       "cached": {
         "platforms": [],
-        "latest_tag": "v1.2.1",
-        "published_at": "2026-09-20T00:14:23Z"
+        "latest_tag": "v1.2.4",
+        "published_at": "2026-09-24T16:47:16Z"
       },
       "year": 2007,
       "developer": "tri-Crescendo",
@@ -5179,8 +5183,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.6.5",
-        "published_at": "2026-09-22T01:51:27Z"
+        "latest_tag": "v1.6.6",
+        "published_at": "2026-09-25T00:33:08Z"
       },
       "year": 1993,
       "developer": "Capcom",
@@ -5263,8 +5267,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.6",
-        "published_at": "2026-09-21T05:32:51Z"
+        "latest_tag": "v0.1.1",
+        "published_at": "2026-09-27T04:16:40Z"
       },
       "year": 2004,
       "developer": "Game Freak",
@@ -5846,8 +5850,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.0.3",
-        "published_at": "2026-08-31T17:52:40Z"
+        "latest_tag": "v0.1.2",
+        "published_at": "2026-09-28T07:31:46Z"
       },
       "year": 2001,
       "developer": "Intelligent Systems",
@@ -5885,8 +5889,8 @@
       },
       "cached": {
         "platforms": [],
-        "latest_tag": "0.8",
-        "published_at": "2026-09-22T10:40:23Z"
+        "latest_tag": "0.9",
+        "published_at": "2026-09-28T16:29:29Z"
       },
       "year": 2001,
       "developer": "Nintendo",
@@ -6022,8 +6026,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.3.1",
-        "published_at": "2026-09-19T20:54:06Z"
+        "latest_tag": "v1.4.2",
+        "published_at": "2026-09-29T06:48:48Z"
       },
       "year": 1999,
       "developer": "Pacific Coast Power & Light",
@@ -6230,8 +6234,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.9",
-        "published_at": "2026-09-20T04:17:33Z"
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-09-27T06:26:47Z"
       },
       "year": 1999,
       "developer": "HAL Laboratory / Pax Softnica",
@@ -6277,8 +6281,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v3.8.0",
-        "published_at": "2026-09-17T12:02:57Z"
+        "latest_tag": "v3.10.0",
+        "published_at": "2026-09-29T06:24:19Z"
       },
       "year": 2000,
       "developer": "Rare",
@@ -6321,8 +6325,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.2-beta",
-        "published_at": "2026-09-22T16:35:56Z"
+        "latest_tag": "v0.2.2-beta",
+        "published_at": "2026-09-25T08:50:45Z"
       },
       "year": 2001,
       "developer": "HAL Laboratory",
@@ -6411,8 +6415,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.4.0",
-        "published_at": "2026-09-21T14:03:03Z"
+        "latest_tag": "v0.5.0",
+        "published_at": "2026-09-23T11:02:46Z"
       },
       "year": 1997,
       "developer": "ASCII Corporation",
@@ -6585,8 +6589,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.6.11",
-        "published_at": "2026-09-22T06:44:37Z"
+        "latest_tag": "v0.7.15",
+        "published_at": "2026-09-29T00:26:14Z"
       },
       "year": 2007,
       "developer": "Mistwalker / feelplus",
@@ -6672,8 +6676,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "1.0.1",
-        "published_at": "2026-09-17T22:42:33Z"
+        "latest_tag": "1.0.2",
+        "published_at": "2026-09-28T20:10:41Z"
       },
       "year": 2000,
       "developer": "Intelligent Systems",
@@ -6796,8 +6800,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.1",
-        "published_at": "2026-09-16T17:56:23Z"
+        "latest_tag": "v1.2",
+        "published_at": "2026-09-23T16:50:38Z"
       },
       "year": 1993,
       "developer": "Konami",
@@ -6880,8 +6884,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.0",
-        "published_at": "2026-09-20T21:39:24Z"
+        "latest_tag": "v0.4.0",
+        "published_at": "2026-09-28T14:35:30Z"
       },
       "year": 1997,
       "developer": "Rare",
@@ -6966,12 +6970,10 @@
       "cached": {
         "platforms": [
           "linux-x86_64",
-          "macos-aarch64",
-          "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.0",
-        "published_at": "2026-09-22T12:41:29Z"
+        "latest_tag": "v0.4.0",
+        "published_at": "2026-09-29T05:24:33Z"
       },
       "year": 1987,
       "developer": "Nintendo R&D4",
@@ -6991,7 +6993,7 @@
         "repo": "DPRecomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/c/c5/Deadly_Premonition_cover_art.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/c/c5/Deadly_Premonition_cover_art.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^DPRecomp-.*-win64\\.zip$"
@@ -7011,8 +7013,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.4.6",
-        "published_at": "2026-09-22T20:20:37Z"
+        "latest_tag": "v2.0.11",
+        "published_at": "2026-09-28T18:46:56Z"
       },
       "year": 2010,
       "developer": "Access Games",
@@ -7032,7 +7034,7 @@
         "repo": "Ninja-s-Dawn---A-Ninja-Gaiden-2-Recompilation-Project"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/4/4f/Ninja_Gaiden_II.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/4/4f/Ninja_Gaiden_II.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^ng2recomp-.*-win-amd64\\.zip$"
@@ -7052,8 +7054,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.24",
-        "published_at": "2026-09-22T21:52:12Z"
+        "latest_tag": "v1.1.5",
+        "published_at": "2026-09-29T04:57:00Z"
       },
       "year": 2008,
       "developer": "Team Ninja",
@@ -7073,7 +7075,7 @@
         "repo": "Fable-2-Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Fable_II_cover_%28cropped%29.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Fable_II_cover_%28cropped%29.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^Fable[._ ]?2.*\\.zip$"
@@ -7093,8 +7095,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "1.1.0",
-        "published_at": "2026-09-17T03:55:40Z"
+        "latest_tag": "1.3.0",
+        "published_at": "2026-09-28T21:40:57Z"
       },
       "year": 2008,
       "developer": "Lionhead Studios",
@@ -7114,7 +7116,7 @@
         "repo": "A-Legend-Never-dies---Fable-2-Recompilation"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Fable_II_cover_%28cropped%29.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Fable_II_cover_%28cropped%29.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^fable2recomp-.*-win-amd64\\.zip$"
@@ -7134,8 +7136,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.0",
-        "published_at": "2026-09-22T21:16:27Z"
+        "latest_tag": "v1.3.5",
+        "published_at": "2026-09-29T08:59:54Z"
       },
       "year": 2008,
       "developer": "Lionhead Studios",
@@ -7155,7 +7157,7 @@
         "repo": "NFSMW-Recompiled"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/8e/Need_for_Speed_Most_Wanted_Box_Art.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/8e/Need_for_Speed_Most_Wanted_Box_Art.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^win-amd64-release\\.zip$"
@@ -7196,7 +7198,7 @@
         "repo": "Dead_Rising_2_Case_Zero_Xenon_Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/77/Dead_Rising_2_cover.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/77/Dead_Rising_2_cover.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^CaseZeroRecomp-linux-x86_64\\.AppImage$",
@@ -7239,7 +7241,7 @@
         "repo": "Dead_Rising_2_Case_West_Xenon_Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/77/Dead_Rising_2_cover.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/77/Dead_Rising_2_cover.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^CaseWestRecomp-linux-x86_64\\.AppImage$",
@@ -7282,7 +7284,7 @@
         "repo": "Project8Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/8c/Tony_Hawk%27s_Project_8_cover.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/8c/Tony_Hawk%27s_Project_8_cover.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^Project8Recomp-.*-linux-x86_64\\.zip$",
@@ -7327,7 +7329,7 @@
         "repo": "The-Darkness-Recomp"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1c/Darkness_cover.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1c/Darkness_cover.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^The-Darkness-Recomp-.*-windows-x64\\.zip$"
@@ -7347,8 +7349,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.1",
-        "published_at": "2026-09-20T18:02:19Z"
+        "latest_tag": "v0.1.2",
+        "published_at": "2026-09-27T05:09:42Z"
       },
       "year": 2007,
       "developer": "Starbreeze Studios",
@@ -7368,7 +7370,7 @@
         "repo": "htrecomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1e/Hydro-thunder-hurricane-cover-01.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1e/Hydro-thunder-hurricane-cover-01.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^HydroThunderHurricane-Recompiled-.*\\.zip$"
@@ -7409,7 +7411,7 @@
         "repo": "Free-Riders-Recompiled"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/3/3f/Sonic_Free_Riders_Box_Artwork.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/3/3f/Sonic_Free_Riders_Box_Artwork.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^FreeRidersRecompiled-.*-linux-x64\\.tar\\.gz$",
@@ -7431,8 +7433,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.1.2",
-        "published_at": "2026-09-22T18:51:06Z"
+        "latest_tag": "v0.3.0",
+        "published_at": "2026-09-28T15:15:19Z"
       },
       "year": 2010,
       "developer": "Sonic Team",
@@ -7517,8 +7519,8 @@
           "macos-aarch64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.0",
-        "published_at": "2026-09-21T11:45:33Z"
+        "latest_tag": "v0.5.1",
+        "published_at": "2026-09-28T11:09:08Z"
       },
       "year": 1999,
       "developer": "Quest",
@@ -7560,8 +7562,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.3",
-        "published_at": "2026-09-22T15:17:27Z"
+        "latest_tag": "v1.0.2",
+        "published_at": "2026-09-14T10:02:23Z"
       },
       "year": 1996,
       "developer": "Nintendo EAD",
@@ -7980,8 +7982,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.0.5",
-        "published_at": "2026-09-16T06:27:15Z"
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-09-27T08:43:35Z"
       },
       "year": 1997,
       "developer": "Racdym",
@@ -8489,8 +8491,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.10.0",
-        "published_at": "2026-09-12T06:38:44Z"
+        "latest_tag": "v1.11.0",
+        "published_at": "2026-09-25T19:57:22Z"
       },
       "year": 1985,
       "developer": "Nintendo R&D4",
@@ -8698,11 +8700,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "linux-x86_64"
-        ],
-        "latest_tag": "v0.1.0-linux",
-        "published_at": "2026-06-14T22:10:08Z"
+        "platforms": [],
+        "latest_tag": "v1.2.0",
+        "published_at": "2026-09-24T15:55:52Z"
       },
       "year": 1990,
       "developer": "Nintendo R&D1",
@@ -8748,8 +8748,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.7.80",
-        "published_at": "2026-09-22T23:10:37Z"
+        "latest_tag": "v0.7.94",
+        "published_at": "2026-09-29T07:44:35Z"
       },
       "year": 1999,
       "developer": "Game Freak",
@@ -8955,8 +8955,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.7.0",
-        "published_at": "2026-09-22T18:14:49Z"
+        "latest_tag": "v0.8.1",
+        "published_at": "2026-09-28T05:59:49Z"
       },
       "year": 1992,
       "developer": "Sega Technical Institute",
@@ -9170,8 +9170,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.8.0",
-        "published_at": "2026-09-22T22:52:35Z"
+        "latest_tag": "v0.9.0",
+        "published_at": "2026-09-26T02:18:52Z"
       },
       "year": 1998,
       "developer": "Square",
@@ -9587,11 +9587,9 @@
         "windows": "Sly1-Release.exe"
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "decompilation",
-        "published_at": "2026-09-20T09:40:12Z"
+        "platforms": [],
+        "latest_tag": "v0.2.0-beta.1",
+        "published_at": "2026-09-28T11:49:13Z"
       },
       "year": 2002,
       "developer": "Sucker Punch Productions",
@@ -9693,7 +9691,7 @@
         "repo": "Yakumo"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/a/ae/Monster_Hunter_Portable_3rd.png?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/a/ae/Monster_Hunter_Portable_3rd.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^yakumo-.*-linux-x86_64\\.tar\\.gz$",
@@ -9711,12 +9709,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "linux-x86_64",
-          "windows-x86_64"
-        ],
-        "latest_tag": "v0.5.0",
-        "published_at": "2026-09-20T19:54:57Z"
+        "platforms": [],
+        "latest_tag": "v0.7.0-test.1",
+        "published_at": "2026-09-29T00:57:02Z"
       },
       "year": 2010,
       "developer": "Capcom",
@@ -9736,7 +9731,7 @@
         "repo": "AloneInTheDarkReHaunted"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/73/Alone_in_the_Dark_boxart.jpg?utm_source=en.wikipedia.org&utm_campaign=imageinfo&utm_content=original",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/73/Alone_in_the_Dark_boxart.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^AITD_REHAUNTED_.*_Win64\\.zip$",
@@ -9764,6 +9759,711 @@
       "developer": "Infogrames",
       "genre": "Survival horror",
       "wiki": "Alone in the Dark (1992 video game)"
+    },
+    {
+      "id": "duck-hunt-nes-recomp",
+      "name": "Duck Hunt NES Recomp",
+      "original_game": "Duck Hunt",
+      "game_id": "duck-hunt",
+      "system": "nes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "DuckHuntNESRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Duck%20Hunt%20%28World%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DuckHunt(NES)?Recomp-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Duck Hunt (NES) cuando te la pida. El ratón hace de Zapper: apunta y dispara."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-07-01T07:06:14Z"
+      },
+      "year": 1984,
+      "developer": "Nintendo R&D1",
+      "genre": "Acción",
+      "wiki": "Duck Hunt"
+    },
+    {
+      "id": "yoshi-nes-recomp",
+      "name": "Yoshi NES Recomp",
+      "original_game": "Yoshi",
+      "game_id": "yoshi",
+      "system": "nes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "YoshiNESRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Yoshi%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^YoshiNESRecomp-windows-x64\\.zip$",
+        "macos-aarch64": "(?i)^YoshiNESRecomp-macos-arm64\\.zip$",
+        "linux-x86_64": "(?i)^Yoshi-x86_64\\.AppImage$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Yoshi (NES, USA) cuando te la pida; la ruta se recuerda."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "macos-aarch64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.1.0",
+        "published_at": "2026-04-07T22:07:01Z"
+      },
+      "year": 1991,
+      "developer": "Game Freak",
+      "genre": "Puzle",
+      "wiki": "Yoshi (video game)"
+    },
+    {
+      "id": "yoshis-cookie-recomp",
+      "name": "Yoshi's Cookie Recomp",
+      "original_game": "Yoshi's Cookie",
+      "game_id": "yoshis-cookie",
+      "system": "nes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "YoshisCookieRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Yoshi%27s%20Cookie%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^YoshisCookieRecomp-windows-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Yoshi's Cookie (NES, USA) cuando te la pida."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-07-01T07:00:52Z"
+      },
+      "year": 1992,
+      "developer": "Bullet-Proof Software",
+      "genre": "Puzle",
+      "wiki": "Yoshi's Cookie"
+    },
+    {
+      "id": "gumshoe-nes-recomp",
+      "name": "Gumshoe NES Recomp",
+      "original_game": "Gumshoe",
+      "game_id": "gumshoe",
+      "system": "nes",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "GumshoeNESRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%20Entertainment%20System/Named_Boxarts/Gumshoe%20%28USA%2C%20Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Gumshoe(NES)?Recomp-windows-x64\\.zip$",
+        "macos-aarch64": "(?i)^GumshoeNESRecomp-macos-arm64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Selecciona tu ROM de Gumshoe (NES) cuando te la pida. El ratón hace de Zapper."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.3",
+        "published_at": "2026-07-01T07:04:00Z"
+      },
+      "year": 1986,
+      "developer": "Nintendo R&D1",
+      "genre": "Acción",
+      "wiki": "Gumshoe (video game)"
+    },
+    {
+      "id": "dbz-legacy-of-goku-recomp",
+      "name": "DBZ: Legacy of Goku Recomp",
+      "original_game": "Dragon Ball Z: The Legacy of Goku",
+      "game_id": "dragon-ball-z-the-legacy-of-goku",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "DragonBallZLegacyOfGokuRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Dragon%20Ball%20Z%20-%20The%20Legacy%20of%20Goku%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DragonBallZLegacyOfGokuRecomp-windows-x64-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el launcher selecciona tu ROM de The Legacy of Goku (GBA, USA) y tu BIOS de GBA. Widescreen adaptativo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.2",
+        "published_at": "2026-08-03T02:28:31Z"
+      },
+      "year": 2002,
+      "developer": "Webfoot Technologies",
+      "genre": "Action RPG",
+      "wiki": "Dragon Ball Z: The Legacy of Goku"
+    },
+    {
+      "id": "dbz-legacy-of-goku2-recomp",
+      "name": "DBZ: Legacy of Goku II Recomp",
+      "original_game": "Dragon Ball Z: The Legacy of Goku II",
+      "game_id": "dragon-ball-z-the-legacy-of-goku-ii",
+      "system": "gba",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "mstan",
+        "repo": "DragonBallZLegacyofGokuIIRecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy%20Advance/Named_Boxarts/Dragon%20Ball%20Z%20-%20The%20Legacy%20of%20Goku%20II%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^DragonBallZLegacyofGokuIIRecomp-windows-x64-.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "En el launcher selecciona tu ROM de The Legacy of Goku II (GBA, USA) y tu BIOS de GBA. Widescreen adaptativo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.0.2",
+        "published_at": "2026-08-03T02:28:35Z"
+      },
+      "year": 2003,
+      "developer": "Webfoot Technologies",
+      "genre": "Action RPG",
+      "wiki": "Dragon Ball Z: The Legacy of Goku II"
+    },
+    {
+      "id": "samurai-shodown-wr-recomp",
+      "name": "Samurai Shodown: Warriors Rage Recomp",
+      "original_game": "Samurai Shodown: Warriors Rage",
+      "game_id": "samurai-shodown-warriors-rage",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "omegakatana92",
+        "repo": "Samuai-Shodown-Warriors-Rage-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Samurai%20Shodown%20-%20Warriors%20Rage%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Samurai\\.Shodown.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, el launcher (recomp-ui) tiene un menú de configuración donde indicas tu disco (.cue/.bin) de Samurai Shodown: Warriors Rage (PS1, USA). OpenBIOS incluida. Fan port."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-09T01:41:38Z"
+      },
+      "year": 1999,
+      "developer": "SNK",
+      "genre": "Lucha",
+      "wiki": "Samurai Shodown: Warriors Rage"
+    },
+    {
+      "id": "bloody-roar-recomp",
+      "name": "Bloody Roar Recompiled",
+      "original_game": "Bloody Roar",
+      "game_id": "bloody-roar",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "omegakatana92",
+        "repo": "Bloody-Roar"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Bloody%20Roar%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Bloody\\.Roar\\.zip$",
+        "linux-x86_64": "(?i)^Bloody_Roar_Recompiled-.*-linux-x86_64\\.AppImage$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, el launcher (recomp-ui) tiene un menú de configuración donde indicas tu disco (.cue/.bin) de Bloody Roar (PS1, USA). OpenBIOS incluida. Fan port."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-08T01:17:30Z"
+      },
+      "year": 1997,
+      "developer": "Raizing / Eighting",
+      "genre": "Lucha",
+      "wiki": "Bloody Roar (video game)"
+    },
+    {
+      "id": "macross-dyrl-recomp",
+      "name": "Macross DYRL Recomp",
+      "original_game": "Macross: Do You Remember Love?",
+      "game_id": "macross-do-you-remember-love",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "omegakatana92",
+        "repo": "Macross-Do-You-Remember-Love-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/fa/Ch%C5%8D_Jik%C5%AB_Y%C5%8Dsai_Macross_Ai_Oboete_Imasu_ka_Cover.jpg",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Macross.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Launcher recomp-ui: indica tus dos discos (.cue/.bin) de Macross: Do You Remember Love? (PS1, Japón; cada disco tiene su ejecutable). OpenBIOS incluida."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-13T14:29:49Z"
+      },
+      "year": 1999,
+      "developer": "Bandai / Sega",
+      "genre": "Matamarcianos",
+      "wiki": null
+    },
+    {
+      "id": "rbff-dominated-mind-recomp",
+      "name": "Real Bout Fatal Fury: Dominated Mind Recomp",
+      "original_game": "Real Bout Fatal Fury Special: Dominated Mind",
+      "game_id": "real-bout-fatal-fury-special-dominated-mind",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "omegakatana92",
+        "repo": "Real-Bout-Fatal-Fury-Dominated-Mind-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Real%20Bout%20Garou%20Densetsu%20Special%20-%20Dominated%20Mind%20%28Japan%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Real\\.Bout.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu disco de Real Bout Garou Densetsu Special: Dominated Mind (PS1, Japón). Usa el launcher RetComM para enlazar disco y BIOS."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-09T02:35:53Z"
+      },
+      "year": 1998,
+      "developer": "SNK",
+      "genre": "Lucha",
+      "wiki": "Real Bout Fatal Fury Special: Dominated Mind"
+    },
+    {
+      "id": "rising-zan-recomp",
+      "name": "Rising Zan Recomp",
+      "original_game": "Rising Zan: The Samurai Gunman",
+      "game_id": "rising-zan-the-samurai-gunman",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "omegakatana92",
+        "repo": "Rising-Zan-The-Samurai-Gundam-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Rising%20Zan%20-%20The%20Samurai%20Gunman%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Rising\\.Zan.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, el launcher (recomp-ui) tiene un menú de configuración donde indicas tu disco (.cue/.bin) de Rising Zan: The Samurai Gunman (PS1, USA, SLUS-00829). OpenBIOS incluida. Fan port."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-08T00:52:17Z"
+      },
+      "year": 1999,
+      "developer": "UEP Systems",
+      "genre": "Hack and slash",
+      "wiki": "Rising Zan: The Samurai Gunman"
+    },
+    {
+      "id": "raystorm-recomp",
+      "name": "RayStorm Recomp",
+      "original_game": "RayStorm",
+      "game_id": "raystorm",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "omegakatana92",
+        "repo": "Rayforce-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/RayStorm%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Raystorm\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al arrancar, el launcher (recomp-ui) tiene un menú de configuración donde indicas tu disco (.cue/.bin) de RayStorm (PS1, USA, SLUS-00482). OpenBIOS incluida. Fan port."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v1.0.0",
+        "published_at": "2026-09-08T00:53:01Z"
+      },
+      "year": 1996,
+      "developer": "Taito",
+      "genre": "Matamarcianos",
+      "wiki": "RayStorm"
+    },
+    {
+      "id": "tekken3-recompiled-fishbones",
+      "name": "Tekken 3 Recompiled (Jun)",
+      "original_game": "Tekken 3",
+      "game_id": "tekken-3",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "FishB0nes98",
+        "repo": "Tekken3Recompiled"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Tekken%203%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Tekken3Recompiled-.*-Easy-Setup\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Abre «Play Tekken 3.exe», elige tu CUE/BIN de Tekken 3 (PS1, USA) y pulsa «Set up & play». Recompilación híbrida con Jun Kazama jugable, widescreen y skins. Preview."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "Play Tekken 3.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.4",
+        "published_at": "2026-09-23T15:07:44Z"
+      },
+      "year": 1997,
+      "developer": "Namco",
+      "genre": "Lucha",
+      "wiki": "Tekken 3"
+    },
+    {
+      "id": "spyro3-recompiled",
+      "name": "Spyro 3 Recompiled",
+      "original_game": "Spyro: Year of the Dragon",
+      "game_id": "spyro-year-of-the-dragon",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "wafflewizard1",
+        "repo": "Spyro-3-Recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Spyro%20-%20Year%20of%20the%20Dragon%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^Spyro\\.3\\.Recompiled.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Necesita tu disco de Spyro: Year of the Dragon (PS1). Incluye multijugador en red. Sin documentación en el repo: revisa el README del zip."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "1.3",
+        "published_at": "2026-08-08T00:13:31Z"
+      },
+      "year": 2000,
+      "developer": "Insomniac Games",
+      "genre": "Plataformas",
+      "wiki": "Spyro: Year of the Dragon"
+    },
+    {
+      "id": "toystory2-recomp",
+      "name": "Toy Story 2 Recomp",
+      "original_game": "Toy Story 2: Buzz Lightyear to the Rescue",
+      "game_id": "toy-story-2-buzz-lightyear-to-the-rescue",
+      "system": "psx",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "PeriBluGaming",
+        "repo": "ToyStory2Recomp"
+      },
+      "release_channel": "prerelease",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Disney-Pixar%20Toy%20Story%202%20-%20Buzz%20Lightyear%20to%20the%20Rescue%21%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^ToyStory2Recomp-.*-windows-x64\\.zip$",
+        "macos-x86_64": "(?i)^ToyStory2Recomp-.*-macos-intel-x64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher te pide tu disco de Toy Story 2 (PS1, USA, SLUS-00893). BIOS recompilada, OpenBIOS incluida. Alfa."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0-alpha",
+        "published_at": "2026-08-07T21:01:01Z"
+      },
+      "year": 1999,
+      "developer": "Traveller's Tales",
+      "genre": "Plataformas",
+      "wiki": "Toy Story 2: Buzz Lightyear to the Rescue"
+    },
+    {
+      "id": "mspacman-genesis-recomp",
+      "name": "Ms. Pac-Man Recomp",
+      "original_game": "Ms. Pac-Man",
+      "game_id": "ms-pac-man",
+      "system": "genesis",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "vibecodekun",
+        "repo": "mspacmanrecomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Sega%20-%20Mega%20Drive%20-%20Genesis/Named_Boxarts/Ms.%20Pac-Man%20%28USA%2C%20Europe%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^MsPacManRecomp-.*-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El launcher te pide tu ROM de Ms. Pac-Man (Tengen, Mega Drive USA/Europa) y la verifica. Vista vertical del laberinto completo."
+      },
+      "launch": {
+        "linux": null,
+        "windows": "MsPacManRecomp.exe"
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.0",
+        "published_at": "2026-09-18T06:56:53Z"
+      },
+      "year": 1991,
+      "developer": "Tengen",
+      "genre": "Acción",
+      "wiki": "Ms. Pac-Man"
+    },
+    {
+      "id": "robox-recompiled",
+      "name": "ROBOX Recompiled",
+      "original_game": "Robox",
+      "game_id": "robox",
+      "system": "wii",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "Eggscantfly",
+        "repo": "robox-recompiled"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Wii/Named_Boxarts/Robox%20%28USA%29%20%28WiiWare%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^ROBOX-Recompiled-win64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "El primer arranque ofrece dos rutas: tu WAD de Robox (WiiWare) con la clave común de Wii (key.bin), o el .dol y la carpeta Assets ya extraídos."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.1.8",
+        "published_at": "2026-07-30T08:15:49Z"
+      },
+      "year": 2010,
+      "developer": "Dreambox Games",
+      "genre": "Plataformas",
+      "wiki": "Robox"
     }
   ]
 }

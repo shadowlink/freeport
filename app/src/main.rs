@@ -347,10 +347,6 @@ fn rebuild(app: &App, win: &MainWindow) {
     let active = win.get_active_system().to_string();
     let library = win.get_library_tab();
     let query = win.get_search_text().to_lowercase();
-    let sort_mode = win.get_sort_mode().to_string();
-    let filter_kind = win.get_filter_kind().to_string();
-    let filter_plat = win.get_filter_plat().to_string();
-    let filter_genre = win.get_filter_genre().to_string();
     let seen = app.seen.borrow();
     let now_secs = SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_secs() as i64).unwrap_or(0);
     let busy = app.busy.borrow();
@@ -398,15 +394,6 @@ fn rebuild(app: &App, win: &MainWindow) {
             || (library && !installed.contains_key(&p.id))
             || (!active.is_empty() && p.system != active)
         {
-            return None;
-        }
-        if !filter_kind.is_empty() && p.kind != filter_kind {
-            return None;
-        }
-        if (filter_plat == "native" && is_win) || (filter_plat == "windows" && !is_win) {
-            return None;
-        }
-        if !filter_genre.is_empty() && p.genre.as_deref() != Some(filter_genre.as_str()) {
             return None;
         }
         if !query.is_empty() {
@@ -512,14 +499,8 @@ fn rebuild(app: &App, win: &MainWindow) {
             },
         ));
     }
-    // Favorites first, then by the selected sort mode.
-    sortable.sort_by(|a, b| {
-        b.0.cmp(&a.0).then_with(|| match sort_mode.as_str() {
-            "year" => b.2.cmp(&a.2),
-            "recent" => b.3.cmp(&a.3),
-            _ => a.1.cmp(&b.1),
-        })
-    });
+    // Favorites first, then alphabetical — always.
+    sortable.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
     // "Seguir jugando": most recently played installed games (library shelf).
     let mut recent_pool: Vec<(i64, CardItem)> = sortable
         .iter()
@@ -614,13 +595,6 @@ fn rebuild(app: &App, win: &MainWindow) {
         });
     }
 
-    // Genre filter options: every distinct curated genre.
-    let mut genres: Vec<String> = catalog.projects.iter().filter_map(|p| p.genre.clone()).collect();
-    genres.sort();
-    genres.dedup();
-    let mut genre_labels: Vec<SharedString> = vec!["Todos los géneros".into()];
-    genre_labels.extend(genres.into_iter().map(SharedString::from));
-
     win.set_systems(ModelRc::new(VecModel::from(sys_rows)));
     win.set_rows(ModelRc::new(VecModel::from(rows)));
     win.set_header_title(header.into());
@@ -628,7 +602,6 @@ fn rebuild(app: &App, win: &MainWindow) {
     win.set_updates_pending(pending as i32);
     win.set_recent(ModelRc::new(VecModel::from(recent)));
     win.set_newcomers(ModelRc::new(VecModel::from(newcomers)));
-    win.set_genre_labels(ModelRc::new(VecModel::from(genre_labels)));
 }
 
 impl App {
@@ -1392,7 +1365,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         });
     });
 
-    win.set_sort_mode("name".into());
 
     // Populate settings UI.
     {
@@ -2455,6 +2427,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rows = version_rows(&app, &members, &installed, true, "");
         let title = members.first().map(|m| m.original_game.clone()).unwrap_or_default();
         open_chooser(&app, &win, "play", &format!("Jugar a {title}"), rows);
+    }
+    if std::env::var_os("FREEPORT_DEBUG_SETTINGS").is_some() {
+        win.set_settings_visible(true); // dev aid: land on the settings screen
     }
     if std::env::var_os("FREEPORT_DEBUG_UPDATE").is_some() {
         // dev aid: show the self-update banner with fake data (layout checks)

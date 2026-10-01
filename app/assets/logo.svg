@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1b1e2a"/><stop offset="1" stop-color="#0b0c10"/>
+    </linearGradient>
+    <linearGradient id="amber" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd27a"/><stop offset="1" stop-color="#f39a1e"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4de1c1" stop-opacity="0"/><stop offset="0.5" stop-color="#4de1c1"/><stop offset="1" stop-color="#4de1c1" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.35" r="0.6">
+      <stop offset="0" stop-color="#ffb23e" stop-opacity="0.28"/><stop offset="1" stop-color="#ffb23e" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- badge -->
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#bg)"/>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="url(#glow)"/>
+  <rect x="12.5" y="12.5" width="231" height="231" rx="52" fill="none" stroke="#ffffff" stroke-opacity="0.08" stroke-width="3"/>
+  <!-- waves: the port -->
+  <path d="M40 196 q16 -12 32 0 t32 0 t32 0 t32 0 t32 0 t16 -6" fill="none" stroke="url(#teal)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M56 214 q16 -10 32 0 t32 0 t32 0 t32 0 t24 -4" fill="none" stroke="url(#teal)" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+  <!-- anchor: ring doubles as a controller button -->
+  <circle cx="128" cy="58" r="17" fill="none" stroke="url(#amber)" stroke-width="10"/>
+  <circle cx="128" cy="58" r="5" fill="#0b0c10"/>
+  <!-- stock with D-pad notches -->
+  <rect x="84" y="86" width="88" height="12" rx="6" fill="url(#amber)"/>
+  <rect x="100" y="80" width="8" height="24" rx="3" fill="#0b0c10" opacity="0.55"/>
+  <rect x="148" y="80" width="8" height="24" rx="3" fill="#0b0c10" opacity="0.55"/>
+  <!-- shank -->
+  <rect x="121" y="74" width="14" height="96" rx="7" fill="url(#amber)"/>
+  <!-- arms / flukes -->
+  <path d="M60 134 c6 42 42 56 68 56 s62 -14 68 -56 l-18 10 c-5 24 -28 32 -50 32 s-45 -8 -50 -32 z" fill="url(#amber)"/>
+  <path d="M56 128 l22 -4 l-6 22 z" fill="url(#amber)"/>
+  <path d="M200 128 l-22 -4 l6 22 z" fill="url(#amber)"/>
+</svg>

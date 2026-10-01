@@ -371,13 +371,11 @@ fn rebuild(app: &App, win: &MainWindow) {
             .filter(|p| p.system == s.id && app.visibility(p, &installed, show_windows).0)
             .filter(|p| !library || installed.contains_key(&p.id))
         {
-            if library {
-                count += 1;
-            } else {
-                keys.insert(p.game_key());
-            }
+            keys.insert(p.game_key());
+            count += 1;
         }
-        let count = if library { count } else { keys.len() };
+        let _ = count;
+        let count = keys.len();
         if count == 0 {
             continue;
         }
@@ -425,19 +423,12 @@ fn rebuild(app: &App, win: &MainWindow) {
         Some(is_win)
     };
 
-    // Catalog: one card per GAME (versions of the same game fold into one card,
-    // see core::groups). Library: one card per install, so every installed
-    // version is launchable directly.
-    let card_groups: Vec<freeport_core::groups::GameGroup> = if library {
-        catalog
-            .projects
-            .iter()
-            .filter(|p| passes(p).is_some())
-            .map(|p| freeport_core::groups::GameGroup { key: p.id.clone(), primary: 0, members: vec![p] })
-            .collect()
-    } else {
-        freeport_core::groups::group_visible(&catalog.projects, &app.triple, |p| passes(p).is_some())
-    };
+    // One card per GAME everywhere (versions of the same game fold into one
+    // card, see core::groups). In the library too: with several versions
+    // installed the card asks which one to play/remove, or uses the default
+    // chosen in the game page.
+    let card_groups: Vec<freeport_core::groups::GameGroup> =
+        freeport_core::groups::group_visible(&catalog.projects, &app.triple, |p| passes(p).is_some());
 
     // (favorite, name_lc, year, last_played_epoch, card) for sorting.
     let mut sortable: Vec<(bool, String, i64, i64, CardItem)> = Vec::new();

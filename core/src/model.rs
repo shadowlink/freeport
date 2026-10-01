@@ -254,6 +254,10 @@ pub struct Config {
     /// Per-project runner override (project id -> runner id).
     #[serde(default)]
     pub game_runners: HashMap<String, String>,
+    /// Version launched by default when a game has several installed
+    /// (game_key -> project id). Absent = ask every time.
+    #[serde(default)]
+    pub preferred_version: HashMap<String, String>,
     /// repo slug -> last-seen ETag, to make polling cheap (304s don't count
     /// against the rate limit).
     #[serde(default)]

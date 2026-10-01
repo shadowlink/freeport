@@ -169,6 +169,8 @@ struct App {
     launching: RefCell<std::collections::HashMap<String, bool>>,
     /// Mirror of `Config::show_experimental`, refreshed on every rebuild.
     show_experimental: std::cell::Cell<bool>,
+    /// What the open version chooser will do with the picked id.
+    chooser_mode: RefCell<String>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
     /// Catalog ids → first-seen epoch (drives NUEVO badge + newcomers strip).
@@ -234,6 +236,61 @@ fn box_aspect(system: &str) -> f32 {
         "psp" => 0.58,
         _ => 0.667,
     }
+}
+
+/// Slot width multiplier for a box aspect: landscape boxes widen up to 45% so
+/// their art stays legible; portrait boxes keep the base width (and grow tall).
+fn slot_factor(aspect: f32) -> f32 {
+    ((aspect / 0.667).sqrt()).clamp(1.0, 1.45)
+}
+
+/// Every version of the same game as `id` that the user can see (installed
+/// ones always count), in catalog order.
+fn group_members(app: &App, id: &str, installed: &store::InstalledMap, show_windows: bool) -> Vec<Project> {
+    let Some(p) = app.find(id) else { return Vec::new() };
+    let key = p.game_key().to_string();
+    app.catalog
+        .borrow()
+        .projects
+        .iter()
+        .filter(|r| r.game_key() == key && (r.id == p.id || app.visibility(r, installed, show_windows).0))
+        .cloned()
+        .collect()
+}
+
+fn version_rows(app: &App, members: &[Project], installed: &store::InstalledMap, show_windows: bool, active: &str) -> Vec<VersionRow> {
+    members
+        .iter()
+        .map(|r| {
+            let (_, rwin) = app.visibility(r, installed, show_windows);
+            let mut plats: Vec<&str> = r
+                .cached
+                .as_ref()
+                .map(|c| c.platforms.iter().map(|t| platform_label(t)).collect())
+                .unwrap_or_default();
+            plats.dedup();
+            VersionRow {
+                id: r.id.clone().into(),
+                name: r.name.clone().into(),
+                kind: if r.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
+                is_windows: rwin,
+                installed: installed.contains_key(&r.id),
+                active: r.id == active,
+                platforms: plats.join(" · ").into(),
+                meta: r.cached.as_ref().and_then(|c| c.latest_tag.clone()).unwrap_or_default().into(),
+            }
+        })
+        .collect()
+}
+
+/// Opens the version chooser dialog.
+fn open_chooser(app: &App, win: &MainWindow, mode: &str, title: &str, rows: Vec<VersionRow>) {
+    *app.chooser_mode.borrow_mut() = mode.to_string();
+    win.set_chooser_mode(mode.into());
+    win.set_chooser_title(title.into());
+    win.set_chooser_items(ModelRc::new(VecModel::from(rows)));
+    win.set_chooser_remember(false);
+    win.set_chooser_visible(true);
 }
 
 /// Human label for an asset triple ("linux-x86_64" → "Linux").
@@ -460,6 +517,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 is_new: any_new,
                 versions: g.members.len() as i32,
                 aspect: box_aspect(&p.system),
+                card_w: win.get_card_w() as f32 * slot_factor(box_aspect(&p.system)),
             },
         ));
     }
@@ -483,11 +541,28 @@ fn rebuild(app: &App, win: &MainWindow) {
     let cards: Vec<CardItem> = sortable.into_iter().map(|t| t.4).collect();
 
     let count = cards.len() as i32;
-    let cols = (win.get_cols().max(1)) as usize;
-    let rows: Vec<ModelRc<CardItem>> = cards
-        .chunks(cols)
-        .map(|c| ModelRc::new(VecModel::from(c.to_vec())))
-        .collect();
+    // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
+    // the art isn't tiny, so rows hold a variable number of cards. The usable
+    // width comes from the UI (window minus sidebar and padding).
+    let base_w = win.get_card_w() as f32;
+    let avail = (win.get_grid_width() as f32 - 16.0).max(base_w);
+    let gap = 14.0;
+    let mut rows: Vec<ModelRc<CardItem>> = Vec::new();
+    let mut row: Vec<CardItem> = Vec::new();
+    let mut used = 0.0f32;
+    for c in cards {
+        let w = c.card_w;
+        let need = if row.is_empty() { w } else { used + gap + w };
+        if !row.is_empty() && need > avail {
+            rows.push(ModelRc::new(VecModel::from(std::mem::take(&mut row))));
+            used = 0.0;
+        }
+        used = if row.is_empty() { w } else { used + gap + w };
+        row.push(c);
+    }
+    if !row.is_empty() {
+        rows.push(ModelRc::new(VecModel::from(row)));
+    }
 
     let header = if !active.is_empty() {
         catalog.systems.iter().find(|s| s.id == active).map(|s| s.name.clone()).unwrap_or(active)
@@ -544,6 +619,7 @@ fn rebuild(app: &App, win: &MainWindow) {
             is_new: true,
                     versions: 1,
                     aspect: box_aspect(&p.system),
+        card_w: 0.0,
         });
     }
 
@@ -687,6 +763,7 @@ fn build_detail(app: &App, win: &MainWindow) {
             is_new: false,
                     versions: 1,
                     aspect: box_aspect(&r.system),
+        card_w: 0.0,
         })
         .collect();
 
@@ -715,6 +792,15 @@ fn build_detail(app: &App, win: &MainWindow) {
             }
         })
         .collect();
+
+    // "Al jugar desde la tarjeta": ask, or one of the versions (same order as `versions`).
+    let pref = store::load_config(&app.paths).ok().and_then(|c| c.preferred_version.get(p.game_key()).cloned());
+    let mut default_labels: Vec<SharedString> = vec!["Preguntar".into()];
+    default_labels.extend(versions.iter().map(|v| v.name.clone()));
+    let default_index = pref
+        .and_then(|id| versions.iter().position(|v| v.id.as_str() == id))
+        .map(|i| i as i32 + 1)
+        .unwrap_or(0);
 
     let mut mod_rows: Vec<ModRow> = Vec::new();
     if p.mods.is_some() {
@@ -889,6 +975,8 @@ fn build_detail(app: &App, win: &MainWindow) {
         kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
         tier: p.tier().into(),
         aspect: box_aspect(&p.system),
+        default_labels: ModelRc::new(VecModel::from(default_labels)),
+        default_index,
         version: installed_tag.into(),
         new_version: if update { latest_tag.into() } else { "".into() },
         facts: ModelRc::new(VecModel::from(facts)),
@@ -1065,6 +1153,7 @@ fn build_tv(app: &App, win: &MainWindow) {
                     is_new: false,
                     versions: 1,
                     aspect: box_aspect(&p.system),
+                card_w: 0.0,
                 }
             })
             .collect();
@@ -1284,6 +1373,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
         show_experimental: std::cell::Cell::new(false),
+        chooser_mode: RefCell::new(String::new()),
         install_error: RefCell::new(HashSet::new()),
         seen: RefCell::new(std::collections::HashMap::new()),
         ra_cache: RefCell::new(std::collections::HashMap::new()),
@@ -1921,11 +2011,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    win.on_install({
+    // Installing is shared by the card/ficha button and the version chooser.
+    let start_install: Rc<dyn Fn(String)> = Rc::new({
         let app = app.clone();
         let handle = handle.clone();
-        move |id| {
-            let id = id.to_string();
+        move |id: String| {
             let Some(project) = app.find(&id) else { return };
             app.busy.borrow_mut().insert(id.clone());
             app.install_progress.borrow_mut().insert(id.clone(), 0.0);
@@ -1982,6 +2072,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 });
                 refresh_library_size(paths.clone()).await;
             });
+        }
+    });
+
+    win.on_install({
+        let app = app.clone();
+        let weak = win.as_weak();
+        let start_install = start_install.clone();
+        move |id| {
+            let id = id.to_string();
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            let show_windows = store::load_config(&app.paths).map(|c| c.show_windows).unwrap_or(false);
+            let members = group_members(&app, &id, &installed, show_windows);
+            let candidates: Vec<&Project> = members.iter().filter(|m| !installed.contains_key(&m.id)).collect();
+            if candidates.len() > 1 && !installed.contains_key(&id) {
+                if let Some(w) = weak.upgrade() {
+                    let title = candidates[0].original_game.clone();
+                    let rows = version_rows(&app, &members, &installed, show_windows, "");
+                    let rows: Vec<VersionRow> = rows.into_iter().filter(|r| !r.installed).collect();
+                    open_chooser(&app, &w, "install", &format!("Instalar {title}"), rows);
+                }
+                return;
+            }
+            start_install(id);
         }
     });
 
@@ -2162,10 +2275,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    win.on_play({
+    let start_play: Rc<dyn Fn(String)> = Rc::new({
         let app = app.clone();
-        move |id| {
-            let id = id.to_string();
+        move |id: String| {
             let Some(project) = app.find(&id) else { return };
             app.launching.borrow_mut().insert(id.clone(), false); // "Jugando…"
             ui_refresh();
@@ -2183,6 +2295,115 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 });
                 ui_refresh();
             });
+        }
+    });
+
+    win.on_play({
+        let app = app.clone();
+        let weak = win.as_weak();
+        let start_play = start_play.clone();
+        move |id| {
+            let id = id.to_string();
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            let cfg = store::load_config(&app.paths).unwrap_or_default();
+            let members = group_members(&app, &id, &installed, cfg.show_windows);
+            let inst: Vec<&Project> = members.iter().filter(|m| installed.contains_key(&m.id)).collect();
+            if inst.len() > 1 {
+                let key = members[0].game_key().to_string();
+                if let Some(pref) = cfg.preferred_version.get(&key) {
+                    if inst.iter().any(|m| &m.id == pref) {
+                        start_play(pref.clone());
+                        return;
+                    }
+                }
+                if let Some(w) = weak.upgrade() {
+                    let title = members[0].original_game.clone();
+                    let rows: Vec<VersionRow> = version_rows(&app, &members, &installed, cfg.show_windows, "")
+                        .into_iter()
+                        .filter(|r| r.installed)
+                        .collect();
+                    open_chooser(&app, &w, "play", &format!("Jugar a {title}"), rows);
+                }
+                return;
+            }
+            start_play(if inst.len() == 1 { inst[0].id.clone() } else { id });
+        }
+    });
+
+    // Card ✕: several versions installed → ask which; one → the usual confirm.
+    win.on_request_uninstall({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |id| {
+            let id = id.to_string();
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            let show_windows = store::load_config(&app.paths).map(|c| c.show_windows).unwrap_or(false);
+            let members = group_members(&app, &id, &installed, show_windows);
+            let inst: Vec<&Project> = members.iter().filter(|m| installed.contains_key(&m.id)).collect();
+            let Some(w) = weak.upgrade() else { return };
+            if inst.len() > 1 {
+                let title = members[0].original_game.clone();
+                let rows: Vec<VersionRow> = version_rows(&app, &members, &installed, show_windows, "")
+                    .into_iter()
+                    .filter(|r| r.installed)
+                    .collect();
+                open_chooser(&app, &w, "uninstall", &format!("Eliminar {title}"), rows);
+                return;
+            }
+            let target = inst.first().map(|m| (*m).clone()).or_else(|| app.find(&id));
+            if let Some(t) = target {
+                w.set_confirm_id(t.id.clone().into());
+                w.set_confirm_title(t.original_game.clone().into());
+                w.set_confirm_visible(true);
+            }
+        }
+    });
+
+    win.on_choose_version({
+        let app = app.clone();
+        let weak = win.as_weak();
+        let start_install = start_install.clone();
+        let start_play = start_play.clone();
+        move |id, remember| {
+            let id = id.to_string();
+            let mode = app.chooser_mode.borrow().clone();
+            match mode.as_str() {
+                "install" => start_install(id),
+                "play" => {
+                    if remember {
+                        if let (Some(p), Ok(mut c)) = (app.find(&id), store::load_config(&app.paths)) {
+                            c.preferred_version.insert(p.game_key().to_string(), id.clone());
+                            let _ = store::save_config(&app.paths, &c);
+                        }
+                    }
+                    start_play(id);
+                }
+                _ => {
+                    if let (Some(p), Some(w)) = (app.find(&id), weak.upgrade()) {
+                        w.set_confirm_id(p.id.clone().into());
+                        w.set_confirm_title(format!("{} ({})", p.original_game, p.name).into());
+                        w.set_confirm_visible(true);
+                    }
+                }
+            }
+        }
+    });
+
+    win.on_set_default_version({
+        let app = app.clone();
+        move |detail_id, index| {
+            let Some(p) = app.find(&detail_id) else { return };
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            let Ok(mut cfg) = store::load_config(&app.paths) else { return };
+            let members = group_members(&app, &detail_id, &installed, cfg.show_windows);
+            let key = p.game_key().to_string();
+            if index <= 0 {
+                cfg.preferred_version.remove(&key);
+            } else if let Some(m) = members.get(index as usize - 1) {
+                cfg.preferred_version.insert(key, m.id.clone());
+            }
+            let _ = store::save_config(&app.paths, &cfg);
+            ui_refresh();
         }
     });
 
@@ -2222,6 +2443,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if let Some(id) = std::env::var("FREEPORT_DEBUG_OPEN").ok().filter(|s| !s.is_empty()) {
         win.invoke_open_game(id.into()); // dev aid: open a game page at startup
+    }
+    if let Some(sz) = std::env::var("FREEPORT_DEBUG_SIZE").ok() {
+        // dev aid: force a window size, e.g. FREEPORT_DEBUG_SIZE=900x700 (after show)
+        if let Some((w, h)) = sz.split_once('x') {
+            if let (Ok(w), Ok(h)) = (w.parse::<f32>(), h.parse::<f32>()) {
+                let weak = win.as_weak();
+                slint::Timer::single_shot(std::time::Duration::from_millis(600), move || {
+                    if let Some(win) = weak.upgrade() {
+                        win.window().set_size(slint::LogicalSize::new(w, h));
+                    }
+                });
+            }
+        }
+    }
+    if let Some(id) = std::env::var("FREEPORT_DEBUG_CHOOSER").ok().filter(|s| !s.is_empty()) {
+        // dev aid: open the version chooser (play mode) for a game id
+        let installed = store::load_installed(&app.paths).unwrap_or_default();
+        let members = group_members(&app, &id, &installed, true);
+        let rows = version_rows(&app, &members, &installed, true, "");
+        let title = members.first().map(|m| m.original_game.clone()).unwrap_or_default();
+        open_chooser(&app, &win, "play", &format!("Jugar a {title}"), rows);
     }
     if std::env::var_os("FREEPORT_DEBUG_UPDATE").is_some() {
         // dev aid: show the self-update banner with fake data (layout checks)

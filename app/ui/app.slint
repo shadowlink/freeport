@@ -23,6 +23,7 @@ struct CardItem {
     is-new: bool,        // recently added to the catalog
     versions: int,       // projects folded into this card (1 = plain project)
     aspect: float,       // width/height of the system's original box (1.43 N64, 1.0 PS1, 0.58 PSP…)
+    card-w: float,       // px: slot width for this card (landscape boxes get a wider slot)
 }
 
 // One version of a game in the detail page's selector.
@@ -224,6 +225,8 @@ struct DetailData {
     kind: string,        // "RECOMP" | "PORT"
     tier: string,        // "curado" | "comunidad" | "experimental"
     aspect: float,       // width/height of the system's original box
+    default-labels: [string], // "Preguntar", then one per version
+    default-index: int,       // current choice in default-labels
     version: string,     // installed tag
     new-version: string, // latest tag when an update is available
     facts: [FactRow],
@@ -360,6 +363,15 @@ export component MainWindow inherits Window {
     in property <bool> detail-visible;
     // Uninstall confirmation
     in-out property <bool> confirm-visible;
+    // Version chooser (install / play / uninstall when a game has several ports)
+    in-out property <bool> chooser-visible;
+    in property <string> chooser-title;
+    in property <string> chooser-mode;        // "install" | "play" | "uninstall"
+    in property <[VersionRow]> chooser-items;
+    in-out property <bool> chooser-remember;
+    callback choose-version(string, bool);    // project id, remember
+    callback request-uninstall(string);       // card ✕: Rust decides (chooser or confirm)
+    callback set-default-version(string, int); // detail id, index in default-labels (0 = ask)
     in-out property <string> confirm-id;
     in-out property <string> confirm-title;
     // Settings
@@ -425,6 +437,8 @@ export component MainWindow inherits Window {
     // Responsive column count for the cover grid. Card slot = card-w + 14px gap;
     // main area = window width minus the 244px sidebar and grid padding.
     out property <int> cols: max(1, floor((root.width - 244px - 24px) / (root.card-w + 14px)));
+    // Pixel width the grid rows can use (Rust packs variable-width cards into it).
+    out property <length> grid-width: root.width - 244px - 24px;
     changed cols => { root.refresh(); }
 
     VerticalLayout {
@@ -623,23 +637,29 @@ export component MainWindow inherits Window {
                     padding-left: 16px;
                     padding-right: 12px;
                     spacing: 12px;
-                    // The text column must be allowed to shrink (min-width: 0 +
-                    // elided single-line texts); otherwise a long title pushes the
-                    // buttons past the right edge on non-maximized windows.
-                    VerticalLayout {
+                    // Text column: a plain stretching Rectangle whose texts are sized
+                    // to 100% of it. A layout-managed Text keeps its preferred width
+                    // as minimum in Slint and pushes the buttons off-screen on narrow
+                    // windows; absolute sizing inside a min-width: 0 box never does.
+                    Rectangle {
                         horizontal-stretch: 1;
                         min-width: 0px;
-                        alignment: center;
-                        spacing: 3px;
-                        Text {
-                            text: root.update-busy ? "Actualizando…"
-                                  : (root.update-error ? "La actualización falló"
-                                     : "Nueva versión v\{root.update-version} disponible");
-                            color: #0b0c10; font-weight: 800; overflow: elide; wrap: no-wrap;
-                        }
-                        if root.update-busy: Bar { value: -1; height: 6px; fill: #0b0c10; }
-                        if !root.update-busy && root.update-notes != "": Text {
-                            text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; wrap: no-wrap;
+                        VerticalLayout {
+                            width: 100%;
+                            alignment: center;
+                            spacing: 3px;
+                            Text {
+                                width: 100%;
+                                text: root.update-busy ? "Actualizando…"
+                                      : (root.update-error ? "La actualización falló"
+                                         : "Nueva versión v\{root.update-version} disponible");
+                                color: #0b0c10; font-weight: 800; overflow: elide; wrap: no-wrap;
+                            }
+                            if root.update-busy: Bar { value: -1; height: 6px; fill: #0b0c10; }
+                            if !root.update-busy && root.update-notes != "": Text {
+                                width: 100%;
+                                text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; wrap: no-wrap;
+                            }
                         }
                     }
                     // Buttons: fixed width, vertically centered in the 54px band.
@@ -839,10 +859,12 @@ export component MainWindow inherits Window {
                         alignment: end;
                         gcard := Rectangle {
                         // The frame takes the shape of the system's box: wide for
-                        // N64, square for PS1, tall for PSP. Width is the slot's.
-                        property <length> box-h: root.card-w / (c.aspect > 0 ? c.aspect : 0.667);
-                        width: root.card-w;
-                        height: self.box-h + 90px;
+                        // N64, square for PS1, tall for PSP. Landscape boxes get a
+                        // wider slot (Rust packs rows by width), so they don't shrink.
+                        property <length> slot-w: c.card-w > 0 ? c.card-w * 1px : root.card-w;
+                        property <length> box-h: self.slot-w / (c.aspect > 0 ? c.aspect : 0.667);
+                        width: self.slot-w;
+                        height: self.box-h + 86px;
                         VerticalLayout {
                             spacing: 4px;
                             Rectangle {
@@ -888,7 +910,6 @@ export component MainWindow inherits Window {
                                 }
                             }
                             Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
-                            Text { text: c.subtitle; color: #ffffff99; font-size: 10px; overflow: elide; }
 
                             // Action row
                             if c.busy: HorizontalLayout {
@@ -924,7 +945,7 @@ export component MainWindow inherits Window {
                                     bg: #1c1f28; fg: c.rom-ok ? #4de1c1 : white;
                                     clicked => { root.pick-rom(c.id); }
                                 }
-                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = c.id; root.confirm-title = c.title; root.confirm-visible = true; } }
+                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.request-uninstall(c.id); } }
                             }
                             if !c.busy && !c.installed: Btn {
                                 label: c.install-error ? "⚠ Reintentar" : "↓ Instalar";
@@ -1030,6 +1051,17 @@ export component MainWindow inherits Window {
                                     for v in root.detail.versions: VersionChip {
                                         ver: v;
                                         clicked => { if !v.active { root.open-game(v.id); } }
+                                    }
+                                }
+                                if root.detail.has-versions && root.detail.default-labels.length > 1: HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: start;
+                                    Text { text: "Al jugar desde la tarjeta"; color: #ffffff77; font-size: 11px; vertical-alignment: center; }
+                                    ComboBox {
+                                        width: 260px; height: 30px;
+                                        model: root.detail.default-labels;
+                                        current-index: root.detail.default-index;
+                                        selected => { root.set-default-version(root.detail.id, self.current-index); }
                                     }
                                 }
                                 if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
@@ -1514,6 +1546,63 @@ export component MainWindow inherits Window {
                     alignment: end; spacing: 8px;
                     Btn { label: "Cancelar"; bg: #1c1f28; fg: white; clicked => { root.confirm-visible = false; } }
                     Btn { label: "Eliminar"; bg: #e04b5a; fg: white; clicked => { root.uninstall(root.confirm-id); root.confirm-visible = false; } }
+                }
+            }
+        }
+    }
+
+    // ── Version chooser ──────────────────────────────────
+    if root.chooser-visible: Rectangle {
+        width: 100%; height: 100%;
+        background: #000000cc;
+        opacity: 0;
+        init => { self.opacity = 1; }
+        animate opacity { duration: 140ms; easing: ease-out; }
+        TouchArea { clicked => { root.chooser-visible = false; } }
+        Rectangle {
+            width: 460px;
+            height: ch-l.preferred-height;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            border-radius: 14px; background: #14161d;
+            border-width: 1px; border-color: #2b2f3a;
+            drop-shadow-blur: 40px; drop-shadow-color: #00000099;
+            TouchArea { }
+            ch-l := VerticalLayout {
+                padding: 22px; spacing: 10px;
+                Text { text: root.chooser-title; color: white; font-size: 18px; font-weight: 800; wrap: word-wrap; }
+                Text { text: root.chooser-mode == "install" ? "Este juego tiene varios ports. ¿Cuál quieres instalar?"
+                           : (root.chooser-mode == "play" ? "Tienes varias versiones instaladas. ¿Cuál quieres jugar?"
+                              : "Tienes varias versiones instaladas. ¿Cuál quieres eliminar?");
+                       color: #ffffffaa; font-size: 13px; wrap: word-wrap; }
+                for v in root.chooser-items: Rectangle {
+                    height: 54px;
+                    border-radius: 9px;
+                    background: ch-ta.has-hover ? #ffffff14 : #1c1f28;
+                    border-width: 1px; border-color: ch-ta.has-hover ? #ffb23e : #2b2f3a;
+                    HorizontalLayout {
+                        padding-left: 14px; padding-right: 14px; spacing: 10px;
+                        VerticalLayout {
+                            alignment: center; spacing: 2px; horizontal-stretch: 1;
+                            Text { text: v.name; color: white; font-size: 14px; font-weight: 800; overflow: elide; }
+                            Text { text: (v.kind == "RECOMP" ? "⟳ Recomp" : "⚓ Port")
+                                         + (v.platforms != "" ? " · " + v.platforms : "")
+                                         + (v.is-windows ? " · Wine/Proton" : "")
+                                         + (v.meta != "" ? " · " + v.meta : "");
+                                   color: #ffffff88; font-size: 10px; overflow: elide; }
+                        }
+                        if v.installed: Text { text: "✓ instalado"; color: #4de1c1; font-size: 11px; font-weight: 800; vertical-alignment: center; }
+                    }
+                    ch-ta := TouchArea { mouse-cursor: pointer; clicked => { root.chooser-visible = false; root.choose-version(v.id, root.chooser-remember); } }
+                }
+                if root.chooser-mode == "play": HorizontalLayout {
+                    spacing: 8px;
+                    CheckBox { checked <=> root.chooser-remember; }
+                    Text { text: "Recordar para la próxima vez (se cambia en la ficha del juego)"; color: #ffffffaa; font-size: 12px; vertical-alignment: center; wrap: word-wrap; }
+                }
+                HorizontalLayout {
+                    alignment: end;
+                    Btn { label: "Cancelar"; bg: #1c1f28; fg: white; clicked => { root.chooser-visible = false; } }
                 }
             }
         }

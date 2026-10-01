@@ -98,3 +98,17 @@ pub async fn get(client: &reqwest::Client, paths: &Paths, url: &str) -> Result<V
 pub fn path_for(paths: &Paths, url: &str) -> std::path::PathBuf {
     cache_path(paths, url)
 }
+
+/// Decodes an image file into RGBA8 pixels (for GPU upload), downscaling very
+/// large covers so a texture never exceeds `max_side` on its longest edge.
+pub fn load_rgba(path: &std::path::Path, max_side: u32) -> Option<(u32, u32, Vec<u8>)> {
+    let img = image::open(path).ok()?;
+    let img = if img.width().max(img.height()) > max_side {
+        img.resize(max_side, max_side, image::imageops::FilterType::Triangle)
+    } else {
+        img
+    };
+    let rgba = img.to_rgba8();
+    let (w, h) = rgba.dimensions();
+    Some((w, h, rgba.into_raw()))
+}

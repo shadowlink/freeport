@@ -402,6 +402,19 @@ export component MainWindow inherits Window {
     in property <[SysRow]> settings-systems;  // every system, for the per-system experimental switches
     in property <bool> active-exp-on;         // header: experimentals shown for the selected system
     in property <int> active-exp-hidden;      // header: how many are hidden for it
+    // Experimental 3D box viewer (box painted by OpenGL inside `v3-*`)
+    in-out property <bool> viewer3d-visible;
+    in property <string> viewer3d-id;
+    in property <string> viewer3d-title;
+    in property <bool> viewer3d-installed;
+    out property <length> v3-x: v3-area.absolute-position.x;
+    out property <length> v3-y: v3-area.absolute-position.y;
+    out property <length> v3-w: v3-area.width;
+    out property <length> v3-h: v3-area.height;
+    callback open-viewer3d(string);
+    callback close-viewer3d();
+    callback viewer3d-drag(length, length);
+    callback viewer3d-release();
     in-out property <string> rail-tip;        // window-level tooltip for the icon rail
     in-out property <length> rail-tip-y;
     in-out property <string> current-runner-label;
@@ -1184,6 +1197,7 @@ export component MainWindow inherits Window {
                                 if !root.detail.busy: HorizontalLayout {
                                     spacing: 8px;
                                     alignment: start;
+                                    Btn { label: "⬡ 3D"; bg: #1c1f28; fg: #4de1c1; clicked => { root.open-viewer3d(root.detail.id); } }
                                     if root.detail.installed: Btn {
                                         label: root.detail.play-state == 1 ? "▶ Jugando…" : (root.detail.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
                                         bg: root.detail.play-state == 2 ? #ff5d73 : #ffb23e;
@@ -1408,6 +1422,54 @@ export component MainWindow inherits Window {
     }
     } // ── end content area ───────────────────────
     } // ── end window column (titlebar + content) ─
+
+    // ── 3D box viewer (experimental) ─────────────────────
+    Rectangle {
+        visible: root.viewer3d-visible;
+        width: 100%; height: 100%;
+        background: #0b0c10ee;
+        TouchArea { clicked => { root.close-viewer3d(); } }
+        VerticalLayout {
+            padding: 20px; spacing: 12px;
+            HorizontalLayout {
+                Btn { label: "← Cerrar"; bg: #1c1f28; fg: white; clicked => { root.close-viewer3d(); } }
+                Rectangle { horizontal-stretch: 1; }
+                Text { text: "Arrastra para girar la caja"; color: #ffffff66; font-size: 12px; vertical-alignment: center; }
+            }
+            v3-area := Rectangle {
+                vertical-stretch: 1;
+                v3-ta := TouchArea {
+                    property <length> lx; property <length> ly;
+                    mouse-cursor: grab;
+                    pointer-event(e) => {
+                        if (e.kind == PointerEventKind.down) { self.lx = self.mouse-x; self.ly = self.mouse-y; }
+                        if (e.kind == PointerEventKind.up || e.kind == PointerEventKind.cancel) { root.viewer3d-release(); }
+                    }
+                    moved => {
+                        if (self.pressed) {
+                            root.viewer3d-drag(self.mouse-x - self.lx, self.mouse-y - self.ly);
+                            self.lx = self.mouse-x; self.ly = self.mouse-y;
+                        }
+                    }
+                }
+            }
+            Text { text: root.viewer3d-title; color: white; font-size: 26px; font-weight: 900; horizontal-alignment: center; }
+            HorizontalLayout {
+                alignment: center;
+                Rectangle {
+                    width: 260px; height: 52px; border-radius: 26px;
+                    background: v3-play.has-hover ? #ffc766 : #ffb23e;
+                    drop-shadow-blur: 24px; drop-shadow-color: #ffb23e66;
+                    animate background { duration: 120ms; }
+                    Text { text: root.viewer3d-installed ? "▶  JUGAR" : "↓  INSTALAR"; color: #0b0c10; font-size: 18px; font-weight: 900;
+                           horizontal-alignment: center; vertical-alignment: center; letter-spacing: 1px; }
+                    v3-play := TouchArea { mouse-cursor: pointer;
+                        clicked => { if (root.viewer3d-installed) { root.play(root.viewer3d-id); } else { root.install(root.viewer3d-id); } root.close-viewer3d(); } }
+                }
+            }
+            Rectangle { height: 8px; }
+        }
+    }
 
     // ── Modo TV / Big Picture ────────────────────────────
     if root.tv-visible: FocusScope {

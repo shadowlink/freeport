@@ -3,6 +3,7 @@
 
 slint::include_modules!();
 
+mod box3d;
 #[cfg(windows)]
 mod win_titlebar;
 
@@ -173,6 +174,9 @@ struct App {
     exp_all: std::cell::Cell<bool>,
     /// What the open version chooser will do with the picked id.
     chooser_mode: RefCell<String>,
+    /// Experimental 3D box viewer state (shared with the GL rendering notifier).
+    viewer3d: box3d::Shared,
+    viewer3d_timer: RefCell<Option<slint::Timer>>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
     /// Catalog ids → first-seen epoch (drives NUEVO badge + newcomers strip).
@@ -293,6 +297,27 @@ fn open_chooser(app: &App, win: &MainWindow, mode: &str, title: &str, rows: Vec<
     win.set_chooser_items(ModelRc::new(VecModel::from(rows)));
     win.set_chooser_remember(false);
     win.set_chooser_visible(true);
+}
+
+/// Box depth relative to its height, per system (cardboard N64/GB boxes are
+/// thick; jewel and DVD cases thin).
+fn box_depth(system: &str) -> f32 {
+    match system {
+        "n64" | "gb" | "gba" | "pc" => 0.16,
+        "nds" | "3ds" => 0.11,
+        "psp" => 0.09,
+        "psx" => 0.085,
+        _ => 0.08,
+    }
+}
+
+/// Plastic cases catch highlights; cardboard boxes don't.
+fn box_glossy(system: &str) -> bool {
+    !matches!(system, "n64" | "gb" | "gba" | "pc")
+}
+
+fn color_rgb(c: Color) -> [f32; 3] {
+    [c.red() as f32 / 255.0, c.green() as f32 / 255.0, c.blue() as f32 / 255.0]
 }
 
 /// Human label for an asset triple ("linux-x86_64" → "Linux").
@@ -1401,6 +1426,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         exp_systems: RefCell::new(HashSet::new()),
         exp_all: std::cell::Cell::new(false),
         chooser_mode: RefCell::new(String::new()),
+        viewer3d: Default::default(),
+        viewer3d_timer: RefCell::new(None),
         install_error: RefCell::new(HashSet::new()),
         seen: RefCell::new(std::collections::HashMap::new()),
         ra_cache: RefCell::new(std::collections::HashMap::new()),
@@ -2478,6 +2505,167 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if let Some(id) = std::env::var("FREEPORT_DEBUG_OPEN").ok().filter(|s| !s.is_empty()) {
         win.invoke_open_game(id.into()); // dev aid: open a game page at startup
     }
+    // ── Experimental 3D box viewer: GL overlay via the rendering notifier ──
+    {
+        let renderer: Rc<RefCell<Option<box3d::BoxRenderer>>> = Rc::new(RefCell::new(None));
+        let viewer = app.viewer3d.clone();
+        let weak = win.as_weak();
+        let r = win.window().set_rendering_notifier(move |state, api| match state {
+            slint::RenderingState::RenderingSetup => {
+                if let slint::GraphicsAPI::NativeOpenGL { get_proc_address } = api {
+                    match box3d::BoxRenderer::new(get_proc_address) {
+                        Ok(b) => *renderer.borrow_mut() = Some(b),
+                        Err(e) => eprintln!("[freeport] 3D: {e}"),
+                    }
+                }
+            }
+            slint::RenderingState::AfterRendering => {
+                let mut st = viewer.borrow_mut();
+                if !st.visible {
+                    return;
+                }
+                let Some(w) = weak.upgrade() else { return };
+                let scale = w.window().scale_factor();
+                let size = w.window().size();
+                st.region = (
+                    w.get_v3_x() * scale,
+                    w.get_v3_y() * scale,
+                    w.get_v3_w() * scale,
+                    w.get_v3_h() * scale,
+                );
+                if let Some(b) = renderer.borrow_mut().as_mut() {
+                    b.render(&mut st, size.width as f32, size.height as f32);
+                }
+            }
+            slint::RenderingState::RenderingTeardown => {
+                *renderer.borrow_mut() = None;
+            }
+            _ => {}
+        });
+        if let Err(e) = r {
+            eprintln!("[freeport] 3D no disponible: {e:?}");
+        }
+    }
+    win.on_open_viewer3d({
+        let app = app.clone();
+        let handle = handle.clone();
+        let weak = win.as_weak();
+        move |id| {
+            let Some(p) = app.find(&id) else { return };
+            let Some(w) = weak.upgrade() else { return };
+            let accent = app
+                .catalog
+                .borrow()
+                .systems
+                .iter()
+                .find(|s| s.id == p.system)
+                .map(|s| color_rgb(parse_color(&s.color)))
+                .unwrap_or([1.0, 0.7, 0.24]);
+            {
+                let mut st = app.viewer3d.borrow_mut();
+                st.visible = true;
+                st.aspect = box_aspect(&p.system);
+                st.depth = box_depth(&p.system);
+                st.glossy = box_glossy(&p.system);
+                st.accent = accent;
+                st.yaw = 0.35;
+                st.pitch = -0.12;
+                st.vel_yaw = 0.0;
+                st.vel_pitch = 0.0;
+                st.dragging = false;
+                st.t = 0.0;
+                // Thumbnail first (instant), full-size cover when it arrives.
+                if let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()) {
+                    let thumb = thumbs::path_for(&app.paths, url);
+                    st.pending_cover = thumbs::load_rgba(&thumb, 1024);
+                }
+            }
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            w.set_viewer3d_id(p.id.clone().into());
+            w.set_viewer3d_title(p.original_game.clone().into());
+            w.set_viewer3d_installed(installed.contains_key(&p.id));
+            w.set_viewer3d_visible(true);
+            w.window().request_redraw();
+            if let Some(url) = p.box_art.clone().or(p.cover_url.clone()) {
+                let client = app.client.clone();
+                let paths = app.paths.clone();
+                handle.spawn(async move {
+                    if let Ok(path) = thumbs::get_full(&client, &paths, &url).await {
+                        if let Some(px) = thumbs::load_rgba(&path, 1024) {
+                            let _ = slint::invoke_from_event_loop(move || {
+                                UI.with(|u| {
+                                    if let Some((app, weak)) = &*u.borrow() {
+                                        app.viewer3d.borrow_mut().pending_cover = Some(px);
+                                        if let Some(w) = weak.upgrade() {
+                                            w.window().request_redraw();
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    }
+                });
+            }
+            // Animation: inertia, idle spin, float.
+            let weak2 = weak.clone();
+            let viewer = app.viewer3d.clone();
+            let timer = slint::Timer::default();
+            timer.start(slint::TimerMode::Repeated, std::time::Duration::from_millis(16), move || {
+                let mut st = viewer.borrow_mut();
+                if !st.visible {
+                    return;
+                }
+                st.t += 0.016;
+                if !st.dragging {
+                    st.yaw += st.vel_yaw;
+                    st.pitch += st.vel_pitch;
+                    st.vel_yaw *= 0.94;
+                    st.vel_pitch *= 0.90;
+                    if st.vel_yaw.abs() < 0.0008 {
+                        st.vel_yaw = 0.0;
+                        st.yaw += 0.0035; // slow showcase spin
+                    }
+                    st.pitch += (-0.12 - st.pitch) * 0.04;
+                }
+                if let Some(w) = weak2.upgrade() {
+                    w.window().request_redraw();
+                }
+            });
+            *app.viewer3d_timer.borrow_mut() = Some(timer);
+        }
+    });
+    win.on_close_viewer3d({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            app.viewer3d.borrow_mut().visible = false;
+            *app.viewer3d_timer.borrow_mut() = None;
+            if let Some(w) = weak.upgrade() {
+                w.set_viewer3d_visible(false);
+            }
+        }
+    });
+    win.on_viewer3d_drag({
+        let app = app.clone();
+        move |dx, dy| {
+            let mut st = app.viewer3d.borrow_mut();
+            st.dragging = true;
+            st.yaw += dx * 0.012;
+            st.pitch = (st.pitch + dy * 0.008).clamp(-0.9, 0.9);
+            st.vel_yaw = dx * 0.012;
+            st.vel_pitch = dy * 0.004;
+        }
+    });
+    win.on_viewer3d_release({
+        let app = app.clone();
+        move || {
+            app.viewer3d.borrow_mut().dragging = false;
+        }
+    });
+    if let Some(id) = std::env::var("FREEPORT_DEBUG_3D").ok().filter(|s| !s.is_empty()) {
+        win.invoke_open_viewer3d(id.into()); // dev aid: open the 3D viewer for a game
+    }
+
     if let Some(sz) = std::env::var("FREEPORT_DEBUG_SIZE").ok() {
         // dev aid: force a window size, e.g. FREEPORT_DEBUG_SIZE=900x700 (after show)
         if let Some((w, h)) = sz.split_once('x') {

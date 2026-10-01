@@ -147,7 +147,7 @@
         "source": "thunderstore",
         "community": "zelda-64-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/958c6e525626a72dc5722a63f638a80b.png",
+      "box_art": null,
       "ra_supported": true,
       "quality_signals": {
         "downloads": 363811,
@@ -209,7 +209,7 @@
         "source": "gamebanana",
         "community": "16121"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/ed89e6477ff6a465891a5f17f77948ae.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 2259750,
         "stars": 5509,
@@ -270,7 +270,7 @@
         "source": "gamebanana",
         "community": "20371"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/958c6e525626a72dc5722a63f638a80b.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 696974,
         "stars": 2271,
@@ -333,7 +333,7 @@
         "source": "gamebanana",
         "community": "22970"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/bc11db020cb9418782afa3d1e0a1209b.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 227799,
         "stars": 2382,
@@ -393,7 +393,7 @@
       "developer": "Rare",
       "genre": "Disparos en primera persona",
       "wiki": "Perfect Dark",
-      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 11074,
         "stars": 2028,
@@ -450,7 +450,7 @@
       "developer": "Nintendo",
       "genre": "Plataformas",
       "wiki": "Super Mario 64",
-      "box_art": "https://cdn2.steamgriddb.com/grid/f293653ffa5c0e53453463a82401dbec.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 1647136,
         "stars": 1381,
@@ -505,7 +505,7 @@
       "developer": "Reflections",
       "genre": "Conducción",
       "wiki": "Driver 2",
-      "box_art": "https://cdn2.steamgriddb.com/grid/eb101d7eef150524b3cd895d08e4f673.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 69854,
         "stars": 1363,
@@ -568,7 +568,7 @@
         "source": "thunderstore",
         "community": "banjo-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/a154a70f923c579313aa9c47ed7c34e2.png",
+      "box_art": null,
       "ra_supported": true,
       "quality_signals": {
         "downloads": 138336,
@@ -595,7 +595,7 @@
         "repo": "dino-recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://cdn2.steamgriddb.com/grid/11738c383581f80d010ca13ac005d763.png",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Dinosaur%20Planet%20%28USA%29%20%28Proto%29%20%282000-12-01%29.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux-x64\\.tar\\.gz$",
@@ -629,7 +629,7 @@
         "source": "thunderstore",
         "community": "dinosaur-planet-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/11738c383581f80d010ca13ac005d763.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 19941,
         "stars": 318,
@@ -688,7 +688,7 @@
       "developer": "Konami",
       "genre": "Acción-aventura",
       "wiki": "Ganbare Goemon: Neo Momoyama Bakufu no Odori",
-      "box_art": "https://cdn2.steamgriddb.com/grid/47e596b1edee7909345c64a4d1a39517.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 21624,
         "stars": 302,
@@ -751,7 +751,7 @@
         "source": "thunderstore",
         "community": "mega-man-64-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/174cbbef75ac1b1b15847299d50f77bf.jpg",
+      "box_art": null,
       "ra_supported": true,
       "ra_beta": true,
       "quality_signals": {
@@ -779,7 +779,7 @@
         "repo": "skate3recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/84/Skate-3-Boxart.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/cb5afcadcac972f1c6d743c96936ebe3.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux",
@@ -810,7 +810,7 @@
       "developer": "EA Black Box",
       "genre": "Deportes",
       "wiki": "Skate 3",
-      "box_art": "https://cdn2.steamgriddb.com/grid/cb5afcadcac972f1c6d743c96936ebe3.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 83185,
         "stars": 1437,
@@ -867,7 +867,7 @@
       "developer": "Konami",
       "genre": "Metroidvania",
       "wiki": "Castlevania: Symphony of the Night",
-      "box_art": "https://cdn2.steamgriddb.com/grid/13e50e203d8be253cc8cd7fbe1509c63.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 19850,
         "stars": 358,
@@ -925,7 +925,7 @@
       "developer": "SCEI",
       "genre": "RPG",
       "wiki": "The Legend of Dragoon",
-      "box_art": "https://cdn2.steamgriddb.com/grid/aa82fd1c7df60df76d515816cbdb76a0.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 21601,
         "stars": 535,
@@ -981,7 +981,7 @@
       "developer": "Core Design",
       "genre": "Acción-aventura",
       "wiki": "Tomb Raider (videojuego de 1996)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/87368138229b6995db6b5c482f90a5bf.jpg",
+      "box_art": null,
       "quality_signals": {
         "downloads": 49321,
         "stars": 1000,
@@ -1007,7 +1007,7 @@
         "repo": "Sonic-Mania-Decompilation"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/d/d2/Sonic_Mania_%28artwork%29.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/850dc71b17efabd2c38aa16820445433.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux",
@@ -1037,7 +1037,7 @@
       "developer": "Christian Whitehead",
       "genre": "Plataformas",
       "wiki": "Sonic Mania",
-      "box_art": "https://cdn2.steamgriddb.com/grid/850dc71b17efabd2c38aa16820445433.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 76929,
         "stars": 802,
@@ -1092,7 +1092,7 @@
       "developer": "Stainless Games",
       "genre": "Carreras",
       "wiki": "Carmageddon",
-      "box_art": "https://cdn2.steamgriddb.com/grid/0b10574b8240b424056808b793bef04f.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 8278,
         "stars": 1199,
@@ -1147,7 +1147,7 @@
       "developer": "Jagex",
       "genre": "MMORPG",
       "wiki": "RuneScape",
-      "box_art": "https://cdn2.steamgriddb.com/grid/0a544b368c0e804e1d704353be3ee0d9.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 3204,
         "stars": 129,
@@ -1173,7 +1173,7 @@
         "repo": "OpenTestDriveUnlimited"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/6/63/Test_Drive_Unlimited_boxart.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/5b776b4aeed9a6abe4c8f6e26aa3b74f.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux",
@@ -1202,7 +1202,7 @@
       "developer": "Eden Games",
       "genre": "Carreras",
       "wiki": "Test Drive Unlimited",
-      "box_art": "https://cdn2.steamgriddb.com/grid/5b776b4aeed9a6abe4c8f6e26aa3b74f.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 621,
         "stars": 122,
@@ -1257,7 +1257,7 @@
       "developer": "Blizzard North",
       "genre": "Action RPG",
       "wiki": "Diablo (videojuego)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/cced2922f69c1c789ba9d1c9c4210b1c.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 593047,
         "stars": 9775,
@@ -1312,7 +1312,7 @@
       "developer": "Oddworld Inhabitants",
       "genre": "Plataformas",
       "wiki": "Oddworld: Abe's Oddysee",
-      "box_art": "https://cdn2.steamgriddb.com/grid/80c1f602065ea6c3e6db56273de523cb.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 24595,
         "stars": 437,
@@ -1369,7 +1369,7 @@
       "developer": "id Software",
       "genre": "Disparos en primera persona",
       "wiki": "Doom (videojuego de 1993)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/ef58f7ffe086514aa0164c7fc4f6cea8.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 25460,
         "stars": 543,
@@ -1424,7 +1424,7 @@
       "developer": "Nintendo",
       "genre": "Acción-aventura",
       "wiki": "The Legend of Zelda: Twilight Princess",
-      "box_art": "https://cdn2.steamgriddb.com/grid/36d6a670240681fbbf69cbba0c9065ce.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 1252039,
         "stars": 5604,
@@ -1485,7 +1485,7 @@
         "source": "thunderstore",
         "community": "bomberman-64-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/c5b781ce025e8217c23f95f9569a0b96.png",
+      "box_art": null,
       "ra_supported": true,
       "ra_beta": true,
       "quality_signals": {
@@ -1544,7 +1544,7 @@
       "developer": "Hudson Soft",
       "genre": "Plataformas",
       "wiki": "Bomberman Hero",
-      "box_art": "https://cdn2.steamgriddb.com/grid/0e6e9339d71b9008e8ecd4680608d0ec.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 9043,
         "stars": 120,
@@ -1605,7 +1605,7 @@
         "source": "thunderstore",
         "community": "harvest-moon-64-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/cab8fb3904dfe2e30a8579bc38e74ada.png",
+      "box_art": null,
       "ra_supported": true,
       "ra_beta": true,
       "quality_signals": {
@@ -1662,7 +1662,7 @@
       "developer": "Racdym",
       "genre": "Deportes",
       "wiki": "Snowboard Kids 2",
-      "box_art": "https://cdn2.steamgriddb.com/grid/b1a491999695f9df23123c2290041da8.jpg",
+      "box_art": null,
       "quality_signals": {
         "downloads": 6675,
         "stars": 93,
@@ -1688,7 +1688,7 @@
         "repo": "KameoRePowered"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/0/0f/Kameocover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/94461b919021d58fa910449500cf8845.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)kameorepowered-v.*linux-x64\\.tar\\.gz",
@@ -1717,7 +1717,7 @@
       "developer": "Rare",
       "genre": "Acción-aventura",
       "wiki": "Kameo: Elements of Power",
-      "box_art": "https://cdn2.steamgriddb.com/grid/94461b919021d58fa910449500cf8845.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 3768,
         "stars": 52,
@@ -1778,7 +1778,7 @@
         "source": "gamebanana",
         "community": "24131"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/f293653ffa5c0e53453463a82401dbec.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 111567,
         "stars": 791,
@@ -1831,7 +1831,7 @@
       "developer": "Sega",
       "genre": "Plataformas",
       "wiki": "Sonic Unleashed",
-      "box_art": "https://cdn2.steamgriddb.com/grid/b80c0932cb6f7be27c8d37b4c847a8bd.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 712348,
         "stars": 5098,
@@ -1857,7 +1857,7 @@
         "repo": "drmario64_recomp_plus"
       },
       "release_channel": "stable",
-      "cover_url": "https://cdn2.steamgriddb.com/grid/c3884b938f2ccc63708d922671c5ea23.png",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Dr.%20Mario%2064%20%28USA%29.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)windows\\.zip$"
@@ -1884,7 +1884,7 @@
       "developer": "Nintendo",
       "genre": "Puzle",
       "wiki": "Dr. Mario 64",
-      "box_art": "https://cdn2.steamgriddb.com/grid/c3884b938f2ccc63708d922671c5ea23.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 10043,
         "stars": 146,
@@ -1937,7 +1937,7 @@
       "developer": "Rare",
       "genre": "Simulación",
       "wiki": "Viva Piñata: Trouble in Paradise",
-      "box_art": "https://cdn2.steamgriddb.com/grid/e9437348054c27c0951c7d9d59bac04f.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 8673,
         "stars": 184,
@@ -1990,7 +1990,7 @@
       "developer": "Grasshopper Manufacture",
       "genre": "Hack and slash",
       "wiki": "Lollipop Chainsaw",
-      "box_art": "https://cdn2.steamgriddb.com/grid/7e601e63a48cb33f754d5bd684631118.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 1374,
         "stars": 35,
@@ -2043,7 +2043,7 @@
       "developer": "Rare",
       "genre": "Plataformas",
       "wiki": "Banjo-Kazooie: Nuts & Bolts",
-      "box_art": "https://cdn2.steamgriddb.com/grid/17faa600670ae46a32ff83f76e83806a.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 12567,
         "stars": 142,
@@ -2096,7 +2096,7 @@
       "developer": "Behaviour Interactive",
       "genre": "Acción",
       "wiki": "Naughty Bear",
-      "box_art": "https://cdn2.steamgriddb.com/grid/cb9078c5cafe2934e4eceadc54d585c5.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 2933,
         "stars": 51,
@@ -2149,7 +2149,7 @@
       "developer": "Naughty Dog",
       "genre": "Carreras",
       "wiki": "Crash Team Racing",
-      "box_art": "https://cdn2.steamgriddb.com/grid/3a6430ccda63161354c5c81e538e7196.jpg",
+      "box_art": null,
       "quality_signals": {
         "downloads": 13934,
         "stars": 376,
@@ -2206,7 +2206,7 @@
       "developer": "Konami",
       "genre": "Metroidvania",
       "wiki": "Castlevania: Symphony of the Night",
-      "box_art": "https://cdn2.steamgriddb.com/grid/13e50e203d8be253cc8cd7fbe1509c63.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 41955,
         "stars": 800,
@@ -2263,7 +2263,7 @@
       "developer": "Rare",
       "genre": "Carreras",
       "wiki": "Diddy Kong Racing",
-      "box_art": "https://cdn2.steamgriddb.com/grid/4c38b84197c2e1a8444814d95c2487a8.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 16034,
         "stars": 172,
@@ -2320,7 +2320,7 @@
       "developer": "Rare",
       "genre": "Plataformas",
       "wiki": "Banjo-Kazooie",
-      "box_art": "https://cdn2.steamgriddb.com/grid/a154a70f923c579313aa9c47ed7c34e2.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 32468,
         "stars": 465,
@@ -2373,7 +2373,7 @@
       "developer": "Sony Computer Entertainment",
       "genre": "Plataformas",
       "wiki": "Ape Escape",
-      "box_art": "https://cdn2.steamgriddb.com/grid/41653fbde31f556e57a71ea6edf1efaa.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 4859,
         "stars": 81,
@@ -2432,7 +2432,7 @@
       "developer": "Nintendo / Capcom",
       "genre": "Acción-aventura",
       "wiki": "The Legend of Zelda: The Minish Cap",
-      "box_art": "https://cdn2.steamgriddb.com/grid/a687f78b9842c87225e74921765feb1b.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 1920,
         "stars": 440,
@@ -2488,7 +2488,7 @@
       "developer": "HAL Laboratory",
       "genre": "Plataformas",
       "wiki": "Kirby's Return to Dream Land",
-      "box_art": "https://cdn2.steamgriddb.com/grid/e63bb9e9a4b930959b8cc4259afc9ba4.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 9369,
         "stars": 163,
@@ -2543,7 +2543,7 @@
       "developer": "Electronic Arts",
       "genre": "Acción-plataformas",
       "wiki": "The Simpsons Game",
-      "box_art": "https://cdn2.steamgriddb.com/grid/df5ffddf7952e45a242c550a389dfb0b.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 11167,
         "stars": 222,
@@ -2598,7 +2598,7 @@
       "developer": "Titus",
       "genre": "Carreras",
       "wiki": "Automobili Lamborghini (video game)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/1c7e02e71df12a6cdae7888b9785b38f.png",
+      "box_art": null,
       "rolling_tag": "v0.5.0",
       "quality_signals": {
         "downloads": 3983,
@@ -2652,7 +2652,7 @@
       "developer": "Monolith Productions",
       "genre": "Terror",
       "wiki": "Condemned 2: Bloodshot",
-      "box_art": "https://cdn2.steamgriddb.com/grid/93a77d951ae320600dc9619f3ddeee72.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 3906,
         "stars": 181,
@@ -2703,8 +2703,8 @@
       "developer": "Imagineer",
       "genre": "RPG",
       "wiki": "Quest 64",
-      "cover_url": "https://cdn2.steamgriddb.com/grid/59e6bb2bb03821bb51050ea6d0a23bb8.png",
-      "box_art": "https://cdn2.steamgriddb.com/grid/59e6bb2bb03821bb51050ea6d0a23bb8.png",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Quest%2064%20%28USA%29.png",
+      "box_art": null,
       "logo_url": null,
       "quality_signals": {
         "downloads": 6859,
@@ -2756,8 +2756,8 @@
       "developer": "Japan System Supply",
       "genre": "Plataformas",
       "wiki": "Chameleon Twist",
-      "cover_url": "https://cdn2.steamgriddb.com/grid/78ec3e9ba98d856873f1bdb01194eef9.png",
-      "box_art": "https://cdn2.steamgriddb.com/grid/78ec3e9ba98d856873f1bdb01194eef9.png",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Chameleon%20Twist%20%28USA%29.png",
+      "box_art": null,
       "logo_url": null,
       "quality_signals": {
         "downloads": 4892,
@@ -2810,7 +2810,7 @@
       "genre": "Lucha libre",
       "wiki": "WWE SmackDown vs. Raw 2007",
       "cover_url": "https://cdn2.steamgriddb.com/grid/9bcc55f2146b211f2cc87e59ec6b39c2.png",
-      "box_art": "https://cdn2.steamgriddb.com/grid/9bcc55f2146b211f2cc87e59ec6b39c2.png",
+      "box_art": null,
       "logo_url": null,
       "quality_signals": {
         "downloads": 11850,
@@ -2868,7 +2868,7 @@
       "developer": "Konami",
       "genre": "Acción-aventura",
       "wiki": "Castlevania: Legacy of Darkness",
-      "box_art": "https://cdn2.steamgriddb.com/grid/363ed890155b2eeda0aa492cc52e3d34.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 9264,
         "stars": 122,
@@ -2894,7 +2894,7 @@
         "repo": "OpenXWA"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/3f3a9b160a4e4cbc2f2228e3024dda79.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux-x86_64.*\\.tar",
@@ -2925,7 +2925,7 @@
       "developer": "Totally Games",
       "genre": "Simulador de combate espacial",
       "wiki": "Star Wars: X-Wing Alliance",
-      "box_art": "https://cdn2.steamgriddb.com/grid/3f3a9b160a4e4cbc2f2228e3024dda79.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 629,
         "stars": 139,
@@ -2980,7 +2980,7 @@
       "developer": "Nintendo",
       "genre": "Carreras",
       "wiki": "F-Zero X",
-      "box_art": "https://cdn2.steamgriddb.com/grid/652e2fd3b2fa943f2b4ff310e419d7f2.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 11625,
         "stars": 272,
@@ -3006,7 +3006,7 @@
         "repo": "DKR-R"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Nintendo%2064/Named_Boxarts/Diddy%20Kong%20Racing%20%28USA%29%20%28En%2CFr%29.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux.*appimage",
@@ -3035,7 +3035,7 @@
       "developer": "Rare",
       "genre": "Carreras",
       "wiki": "Diddy Kong Racing",
-      "box_art": "https://cdn2.steamgriddb.com/grid/4c38b84197c2e1a8444814d95c2487a8.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 13810,
         "stars": 192,
@@ -3061,7 +3061,7 @@
         "repo": "CrashBandicoot-Launcher"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Crash%20Bandicoot%20%28USA%29.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)linux",
@@ -3089,7 +3089,7 @@
       "developer": "Naughty Dog",
       "genre": "Plataformas",
       "wiki": "Crash Bandicoot (video game)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/8282b546dda9ec05515966ba0fe3e5d1.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 22734,
         "stars": 239,
@@ -3154,7 +3154,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "mph-recomp",
@@ -3206,7 +3207,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "tomba-recomp",
@@ -3259,7 +3261,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "ygofm-recomp",
@@ -3311,7 +3314,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "wwf-nomercy-recomp",
@@ -3363,7 +3367,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "wm2000-recomp",
@@ -3415,7 +3420,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "vpw64-recomp",
@@ -3467,7 +3473,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "wcw-revenge-recomp",
@@ -3519,7 +3526,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "wcw-worldtour-recomp",
@@ -3571,7 +3579,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "ringout-sc2",
@@ -3623,7 +3632,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "silenthill-pc",
@@ -3675,7 +3685,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "tekken3-recomp",
@@ -3727,7 +3738,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "sfa3-recomp",
@@ -3781,7 +3793,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "vandalhearts-pc",
@@ -3835,7 +3848,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "samurai-vs-zombies",
@@ -3850,7 +3864,7 @@
         "repo": "Samurai-Vs-Zombies"
       },
       "release_channel": "stable",
-      "cover_url": "https://cdn.cloudflare.steamstatic.com/steam/apps/224740/header.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/22f748169024cbefbce5c252c5f4b23d.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)pc\\.7z$"
@@ -3887,7 +3901,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "reblue-bluedragon",
@@ -3902,7 +3917,7 @@
         "repo": "reblue"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/f7/Blue_Dragon_Box_Art.jpeg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/28e3bed162f123fc16f3084bbe61d98c.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)-x86_64\\.AppImage$",
@@ -3944,7 +3959,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "opentie",
@@ -4000,7 +4016,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "xmen-ma2-pc",
@@ -4052,7 +4069,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "strider2-recomp",
@@ -4102,7 +4120,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "twistedmetal4-recomp",
@@ -4156,7 +4175,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "dk64-recomp",
@@ -4210,7 +4230,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "tenchu-sa-recomp",
@@ -4262,7 +4283,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "rage-racer-pc",
@@ -4316,7 +4338,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "einhander-recomp",
@@ -4370,7 +4393,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "klonoa-dtp-recomp",
@@ -4424,7 +4448,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "mvc-recomp",
@@ -4478,7 +4503,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "teraskasi-recomp",
@@ -4532,7 +4558,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "metalslugx-recomp",
@@ -4586,7 +4613,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "rampage-tt-recomp",
@@ -4640,7 +4668,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "jpb-recomp",
@@ -4694,7 +4723,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "bomberman-fr-recomp",
@@ -4748,7 +4778,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "bomberman-world-recomp",
@@ -4802,7 +4833,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "bomberman-pe-recomp",
@@ -4856,7 +4888,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "tomba2-recomp",
@@ -4908,7 +4941,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "legaia-recomp",
@@ -4960,7 +4994,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "syphonfilter2-recomp",
@@ -5012,7 +5047,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "rechan-stuntmaster",
@@ -5066,7 +5102,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "mmx6-recomp",
@@ -5120,7 +5157,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "wipeout-phantom",
@@ -5172,7 +5210,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "pgr4-recomp",
@@ -5187,7 +5226,7 @@
         "repo": "PGR4-Recomp"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/90e6b40f3728f30b437e6b71ccda6d0b.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)PGR4-Recomp.*\\.zip$"
@@ -5224,7 +5263,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "eternalsonata-reprise",
@@ -5239,7 +5279,7 @@
         "repo": "EternalSonataReprise"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/8eebd21cc10fece20a43e9b1cc05e4a9.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)windows-x64\\.zip$"
@@ -5274,7 +5314,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "exit1-recomp",
@@ -5289,7 +5330,7 @@
         "repo": "ReXGlue-EXIT"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/a5142b52e3065d077e28875de0f0c934.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)EXIT1-Recomp\\.zip$"
@@ -5326,7 +5367,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "exit2-recomp",
@@ -5341,7 +5383,7 @@
         "repo": "ReXGlue-EXIT"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/c48d7848e187d76c5a72510d5a5ca71e.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)EXIT2-Recomp\\.zip$"
@@ -5378,7 +5420,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "redahm",
@@ -5393,7 +5436,7 @@
         "repo": "reDAHM"
       },
       "release_channel": "rolling",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/493af0ad2d85bdcf47fe9b1f11dc9fe2.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)redahm-win-x64\\.zip$"
@@ -5431,7 +5474,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "rewor-ghwor",
@@ -5446,7 +5490,7 @@
         "repo": "re-wor"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/88d50c805cc1d6cd9e5de1698ac3f346.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)re-wor.*\\.zip$"
@@ -5483,7 +5527,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "downpour-recomp",
@@ -5498,7 +5543,7 @@
         "repo": "DownpourRecomp"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/0595e5860fe9c5eaba82fb617087dbc1.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)DownpourRecomp.*\\.zip$"
@@ -5535,7 +5580,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "ufc3-recomp",
@@ -5550,7 +5596,7 @@
         "repo": "ufc3recomp"
       },
       "release_channel": "stable",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/c6d34619f7844c1a3cfc66708391d44a.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)win-x64\\.zip$"
@@ -5587,7 +5633,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "restuff-inparadise",
@@ -5602,7 +5649,7 @@
         "repo": "restuff_inParadise"
       },
       "release_channel": "rolling",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/fb77a4356523e7d8b9caa618a04fa217.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)win-x64\\.zip$"
@@ -5640,7 +5687,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "ac6-recomp",
@@ -5655,7 +5703,7 @@
         "repo": "AC6_recomp"
       },
       "release_channel": "prerelease",
-      "cover_url": null,
+      "cover_url": "https://cdn2.steamgriddb.com/grid/4d3939e078927ce83662958dd1eb11f0.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)ac6recomp.*\\.zip$"
@@ -5692,7 +5740,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "sssv-recomp",
@@ -5746,7 +5795,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "vpw2-recomp",
@@ -5798,7 +5848,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "papermario-recut",
@@ -5850,7 +5901,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "troublemakers-recomp",
@@ -5904,7 +5956,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "emerald-recomp",
@@ -5956,7 +6009,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "firered-recomp",
@@ -6008,7 +6062,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "leafgreen-recomp",
@@ -6060,7 +6115,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "ruby-recomp",
@@ -6112,7 +6168,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "sapphire-recomp",
@@ -6164,7 +6221,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "acgc-pc",
@@ -6216,7 +6274,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "marioparty4-pc",
@@ -6268,7 +6327,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "mikupan-fatalframe",
@@ -6323,7 +6383,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "opengoal-jak",
@@ -6375,7 +6436,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "goldeneye-recomp",
@@ -6427,7 +6489,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "acx-recomp",
@@ -6479,7 +6542,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "battleship-ssb64",
@@ -6533,7 +6597,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "sfex2plus-recomp",
@@ -6587,7 +6652,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "mksc-recomp",
@@ -6639,7 +6705,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "opennectar-pikmin",
@@ -6689,7 +6756,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "openpete-spyro",
@@ -6745,7 +6813,8 @@
       "developer": "Insomniac Games",
       "genre": "Plataformas",
       "wiki": "Spyro the Dragon (video game)",
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "ctr-high-octane",
@@ -6797,7 +6866,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "roadrash64-recomp",
@@ -6849,7 +6919,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "jetmoto-recomp",
@@ -6900,7 +6971,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "jetmoto2-recomp",
@@ -6951,7 +7023,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "jetmoto3-recomp",
@@ -7002,7 +7075,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "triaevum-oot3d",
@@ -7054,7 +7128,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "snap64-recomp",
@@ -7108,7 +7183,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "perfect-dark-dabs-mod",
@@ -7156,7 +7232,7 @@
       "developer": "Rare",
       "genre": "Disparos en primera persona",
       "wiki": "Perfect Dark",
-      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png",
+      "box_art": null,
       "quality_signals": {
         "downloads": 10376,
         "stars": 139,
@@ -7221,7 +7297,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "strikers-pc",
@@ -7279,7 +7356,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "aerogauge-recomp",
@@ -7333,7 +7411,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "spacechannel5-pc",
@@ -7393,7 +7472,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "spiderman-ps1-recomp",
@@ -7446,7 +7526,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "spiderman2-ps1-recomp",
@@ -7499,7 +7580,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "lostodyssey-recomp",
@@ -7514,7 +7596,7 @@
         "repo": "LostOdysseyRecomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/0/09/Lost_Odyssey_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/c935ae5eb3f0ae34220b8ea163a59d43.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^LostOdysseyRecomp-windows-x64-.*\\.zip$"
@@ -7551,7 +7633,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "racewave46",
@@ -7603,7 +7686,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "paperboat-pm64",
@@ -7660,7 +7744,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "beetle-adventure-racing-recomp",
@@ -7712,7 +7797,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "goldeneye-pc-port",
@@ -7766,7 +7852,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "pilotwings64-recomp",
@@ -7820,7 +7907,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "deadly-premonition-recomp",
@@ -7835,7 +7923,7 @@
         "repo": "DPRecomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/c/c5/Deadly_Premonition_cover_art.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/cd25d94f494c9aad155c867922594c01.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^DPRecomp-.*-win64\\.zip$"
@@ -7872,7 +7960,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "ninja-gaiden-2-recomp",
@@ -7887,7 +7976,7 @@
         "repo": "Ninja-s-Dawn---A-Ninja-Gaiden-2-Recompilation-Project"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/4/4f/Ninja_Gaiden_II.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/952316a1c27f03d5b6cd9d6d530d1ee2.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^ng2recomp-.*-win-amd64\\.zip$"
@@ -7924,7 +8013,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "fable2-recomp",
@@ -7939,7 +8029,7 @@
         "repo": "Fable-2-Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Fable_II_cover_%28cropped%29.png",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/539ef09cdaadc97ead9ad8794efde829.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^Fable[._ ]?2.*\\.zip$"
@@ -7976,7 +8066,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "fable2-legend-never-dies",
@@ -7991,7 +8082,7 @@
         "repo": "A-Legend-Never-dies---Fable-2-Recompilation"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Fable_II_cover_%28cropped%29.png",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/539ef09cdaadc97ead9ad8794efde829.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^fable2recomp-.*-win-amd64\\.zip$"
@@ -8028,7 +8119,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "nfsmw-x360-recomp",
@@ -8043,7 +8135,7 @@
         "repo": "NFSMW-Recompiled"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/8e/Need_for_Speed_Most_Wanted_Box_Art.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/bcee397c146136f405865adcf1655207.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^win-amd64-release\\.zip$"
@@ -8080,7 +8172,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "dr2-case-zero-recomp",
@@ -8095,7 +8188,7 @@
         "repo": "Dead_Rising_2_Case_Zero_Xenon_Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/77/Dead_Rising_2_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/9ba0ccf0a69ae15c85d1b289baa4d494.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^CaseZeroRecomp-linux-x86_64\\.AppImage$",
@@ -8134,7 +8227,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "dr2-case-west-recomp",
@@ -8149,7 +8243,7 @@
         "repo": "Dead_Rising_2_Case_West_Xenon_Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/77/Dead_Rising_2_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/3de080c153a4d3d431cd08028f17bf1f.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^CaseWestRecomp-linux-x86_64\\.AppImage$",
@@ -8188,7 +8282,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "thp8-recomp",
@@ -8203,7 +8298,7 @@
         "repo": "Project8Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/8c/Tony_Hawk%27s_Project_8_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/f4916a3556ed7cd820b7d66f984bdc9f.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^Project8Recomp-.*-linux-x86_64\\.zip$",
@@ -8244,7 +8339,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "darkness-recomp",
@@ -8259,7 +8355,7 @@
         "repo": "The-Darkness-Recomp"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1c/Darkness_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/0838b43cd426373043e340b9f79985bd.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^The-Darkness-Recomp-.*-windows-x64\\.zip$"
@@ -8296,7 +8392,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "hydro-thunder-hurricane-recomp",
@@ -8311,7 +8408,7 @@
         "repo": "htrecomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1e/Hydro-thunder-hurricane-cover-01.png",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/d07ec5ea07081262d33991cea73c964c.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^HydroThunderHurricane-Recompiled-.*\\.zip$"
@@ -8348,7 +8445,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "sonic-free-riders-recomp",
@@ -8363,7 +8461,7 @@
         "repo": "Free-Riders-Recompiled"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/3/3f/Sonic_Free_Riders_Box_Artwork.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/ccc66d981626c1be8f4f49ee64c4a8a8.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^FreeRidersRecompiled-.*-linux-x64\\.tar\\.gz$",
@@ -8402,7 +8500,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "pokemon-stadium-recomp",
@@ -8454,7 +8553,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "ogre-battle-64-recomp",
@@ -8510,7 +8610,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "wave-race-64-recomp",
@@ -8564,7 +8665,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "body-harvest-recomp",
@@ -8618,7 +8720,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "rayman2-n64-recomp",
@@ -8670,7 +8773,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "hybrid-heaven-recomp",
@@ -8724,7 +8828,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "conker64-recomp",
@@ -8776,7 +8881,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "sote-recomp",
@@ -8828,7 +8934,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "turok2-recomp",
@@ -8880,7 +8987,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "army-men-sh64-recomp",
@@ -8932,7 +9040,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "banjo-tooie-recomp",
@@ -8986,7 +9095,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "40-winks-pc-port",
@@ -9040,7 +9150,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "snowboardkids-recomp",
@@ -9094,7 +9205,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "minish-cap-recomp",
@@ -9146,7 +9258,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "megaman-zero-recomp",
@@ -9198,7 +9311,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "dbz-buus-fury-recomp",
@@ -9250,7 +9364,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "valkyrie-profile-recomp",
@@ -9308,7 +9423,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "mmx4-recomp",
@@ -9362,7 +9478,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "crash2-recomp",
@@ -9414,7 +9531,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "opengt-ps1",
@@ -9466,7 +9584,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "xenogears-recomp",
@@ -9520,7 +9639,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "soulblade-recomp",
@@ -9572,7 +9692,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "tekken1-recomp",
@@ -9624,7 +9745,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "wwf-smackdown2-recomp",
@@ -9676,7 +9798,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "toshinden-recomp",
@@ -9730,7 +9853,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "wild9-recomp",
@@ -9788,7 +9912,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "puyo-puyo-box-recomp",
@@ -9840,7 +9965,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "tsumu-light-recomp",
@@ -9894,7 +10020,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "rogue-trip-recomp",
@@ -9946,7 +10073,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "ace-combat-5-recomp",
@@ -9998,7 +10126,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "projectcane-sly1",
@@ -10048,7 +10177,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "sm64ds-recomp",
@@ -10100,7 +10230,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "mp6-native-port",
@@ -10152,7 +10283,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "yakumo-mhp3rd",
@@ -10167,7 +10299,7 @@
         "repo": "Yakumo"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/a/ae/Monster_Hunter_Portable_3rd.png",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%20Portable/Named_Boxarts/Monster%20Hunter%20Portable%203rd%20%28Japan%2C%20Korea%29.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^yakumo-.*-linux-x86_64\\.tar\\.gz$",
@@ -10203,7 +10335,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "aitd-rehaunted",
@@ -10218,7 +10351,7 @@
         "repo": "AloneInTheDarkReHaunted"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/73/Alone_in_the_Dark_boxart.jpg",
+      "cover_url": "https://thumbnails.libretro.com/DOS/Named_Boxarts/Alone%20in%20the%20Dark.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^AITD_REHAUNTED_.*_Win64\\.zip$",
@@ -10256,7 +10389,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "dbz-legacy-of-goku-recomp",
@@ -10308,7 +10442,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "dbz-legacy-of-goku2-recomp",
@@ -10360,7 +10495,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "samurai-shodown-wr-recomp",
@@ -10412,7 +10548,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "bloody-roar-recomp",
@@ -10466,7 +10603,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "macross-dyrl-recomp",
@@ -10481,7 +10619,7 @@
         "repo": "Macross-Do-You-Remember-Love-Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/fa/Ch%C5%8D_Jik%C5%AB_Y%C5%8Dsai_Macross_Ai_Oboete_Imasu_ka_Cover.jpg",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Chou%20Jikuu%20Yousai%20Macross%20-%20Ai%20Oboete%20Imasu%20ka%20%28Japan%29%20%28Disc%201%29.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^Macross.*\\.zip$"
@@ -10518,7 +10656,9 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "cover_name": "Chou Jikuu Yousai Macross - Ai Oboete Imasu ka (Japan) (Disc 1)",
+      "box_art": null
     },
     {
       "id": "rbff-dominated-mind-recomp",
@@ -10570,7 +10710,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "rising-zan-recomp",
@@ -10622,7 +10763,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "raystorm-recomp",
@@ -10674,7 +10816,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "tekken3-recompiled-fishbones",
@@ -10726,7 +10869,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "spyro3-recompiled",
@@ -10778,7 +10922,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "toystory2-recomp",
@@ -10832,7 +10977,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "robox-recompiled",
@@ -10884,7 +11030,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "budokai3-hd-recomp",
@@ -10899,7 +11046,7 @@
         "repo": "DBZ-Budokai-3-HD-Collection"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/f/f0/DBZ_Budokai_3.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/16ed9d22b7fdde24ca7eb7baf3637d8f.png",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^DBZ-Budokai-3-HD-Collection-.*-linux-amd64\\.tar\\.gz$",
@@ -10938,7 +11085,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "openjam-nba-jam-ofe",
@@ -10953,7 +11101,7 @@
         "repo": "OpenJam"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/8/89/Nba_jam_2010_cover.png",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/0dc1a49c77551455f35a216ed5a7e9fd.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^OpenJam-.*-win64\\.zip$"
@@ -10990,7 +11138,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "estacado-darkness-recomp",
@@ -11005,7 +11154,7 @@
         "repo": "Estacado"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1c/Darkness_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/0838b43cd426373043e340b9f79985bd.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^Estacado-.*-windows-x64\\.zip$"
@@ -11042,7 +11191,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "mojorecomp-crash-titans",
@@ -11057,7 +11207,7 @@
         "repo": "MojoRecomp"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/9/98/Crash_of_the_Titans_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/4cde7bfdc2fa8ba457b88daba87f73bf.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^MojoRecomp-Launcher-.*-windows-x64-portable\\.zip$"
@@ -11094,7 +11244,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "mw2-recompiled",
@@ -11109,7 +11260,7 @@
         "repo": "mw2-recompiled"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/5/52/Call_of_Duty_Modern_Warfare_2_%282009%29_cover.png",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/cc96d0754de7d47e9a9a709eb2cd451f.jpg",
       "logo_url": null,
       "asset_rules": {
         "linux-x86_64": "(?i)^mw2-.*-linux-lan\\.tar\\.gz$",
@@ -11148,7 +11299,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "svr2011-recomp",
@@ -11163,7 +11315,7 @@
         "repo": "SVR2011-Recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/79/Wwe_svr_11_cover_art.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/816f5f6b759e7ebdebb05e34a3506308.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^SVR2011-.*\\.zip$"
@@ -11200,7 +11352,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "svr2011-pc",
@@ -11215,7 +11368,7 @@
         "repo": "wwe-svr2011-pc"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/7/79/Wwe_svr_11_cover_art.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/816f5f6b759e7ebdebb05e34a3506308.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^SvR2011-PC-.*\\.zip$"
@@ -11252,7 +11405,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "project-1944-cod3",
@@ -11267,7 +11421,7 @@
         "repo": "project-1944"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/5/51/Call_of_Duty_3_Game_Cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/ebb4cd828b62543f83b337e48b333eb8.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^cod3-pc-full\\.zip$"
@@ -11304,7 +11458,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "nhl-3on3-recomp",
@@ -11319,7 +11474,7 @@
         "repo": "3on3NHL-recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/e/ea/3_on_3_NHL_Arcade_cover.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/ba8bd60d7367bd2c9e281ceddcc56c20.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^3on3NHL-recomp-.*-win64\\.zip$"
@@ -11356,7 +11511,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "timberline-open-season",
@@ -11371,7 +11527,7 @@
         "repo": "TimberlineRecompiled"
       },
       "release_channel": "prerelease",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/9/9e/Open_Season_Wii.jpg",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/6b78e17596d1680966d4908cca632f20.jpg",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^win-amd64-release\\.zip$"
@@ -11408,7 +11564,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "cbfd-recompiled",
@@ -11464,7 +11621,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "snowboardkids-recomp-hikari",
@@ -11518,7 +11676,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "banjo-tooie-recompiled-ssd",
@@ -11570,7 +11729,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "pmd-red-rescue-recomp",
@@ -11628,7 +11788,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "ygo-forbidden-memories-recomp",
@@ -11682,7 +11843,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "sfex-plus-alpha-recomp",
@@ -11735,7 +11897,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "dbgt-final-bout-recomp",
@@ -11787,7 +11950,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "r4-ridge-racer-type4-recomp",
@@ -11843,7 +12007,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "re15pc",
@@ -11947,7 +12112,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "lcs-native",
@@ -11962,7 +12128,7 @@
         "repo": "lcs-recomp"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/e/ea/Grand_Theft_Auto_Liberty_City_Stories_box.jpg",
+      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation%20Portable/Named_Boxarts/Grand%20Theft%20Auto%20-%20Liberty%20City%20Stories%20%28USA%29%20%28En%2CFr%2CDe%2CEs%2CIt%29%20%28v1.05%29.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^LCSNative-.*\\.zip$"
@@ -11999,7 +12165,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "deepsea-wind-waker",
@@ -12051,7 +12218,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "silly-reencounter",
@@ -12066,7 +12234,7 @@
         "repo": "Silly-ReEncounter"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/6/64/Serious_Sam_Next_Encounter.jpg",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Serious%20Sam%20-%20Next%20Encounter%20%28Europe%29%20%28En%2CFr%2CDe%29.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^SillyReEncounter-Public\\.zip$"
@@ -12103,7 +12271,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "moh-frontline-gc-recomp",
@@ -12157,7 +12326,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "sms-launcher",
@@ -12209,7 +12379,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "wiiparty-recomp",
@@ -12263,7 +12434,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "buffy-chaos-bleeds-pc",
@@ -12315,7 +12487,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "ssx-tricky-pc",
@@ -12367,7 +12540,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "doaxbv-re",
@@ -12419,7 +12593,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "curado"
+      "tier": "curado",
+      "box_art": null
     },
     {
       "id": "foxhollow-sfa",
@@ -12469,7 +12644,8 @@
       "developer": "Rare",
       "genre": "Acción-aventura",
       "wiki": "Star Fox Adventures",
-      "tier": "comunidad"
+      "tier": "comunidad",
+      "box_art": null
     },
     {
       "id": "deadcells-ps5-native",
@@ -12484,7 +12660,7 @@
         "repo": "DeadCells-PS5-Native"
       },
       "release_channel": "stable",
-      "cover_url": "https://upload.wikimedia.org/wikipedia/en/1/1f/Dead_cells_cover_art.png",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/f6fa975361cfccc02b55c49305ff2bed.png",
       "logo_url": null,
       "asset_rules": {
         "windows-x86_64": "(?i)^DeadCells-PS5-Native-.*-win64\\.zip$"
@@ -12521,7 +12697,8 @@
         "emu": false,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "wind-waker-recomp",
@@ -12575,7 +12752,8 @@
         "emu": true,
         "checked": "2026-10-01"
       },
-      "tier": "experimental"
+      "tier": "experimental",
+      "box_art": null
     },
     {
       "id": "gen1recomp",
@@ -12621,7 +12799,7 @@
       "developer": "Game Freak",
       "genre": "RPG",
       "wiki": "Pokémon Rojo y Azul",
-      "box_art": "https://cdn2.steamgriddb.com/grid/deaf47d9953d7c0216d9c3aa944fe5ba.png",
+      "box_art": null,
       "exception": "Excepción a la regla de generaciones: reimplementación de Pokémon Gen 1 en Lua querida por la comunidad (476k descargas), con widescreen, mods y co-op; trabajada hasta el extremo.",
       "quality_signals": {
         "downloads": 476617,

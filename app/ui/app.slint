@@ -332,30 +332,6 @@ component RailBtn inherits Rectangle {
     }
 }
 
-// Console chip in the header strip (logo or name, plus count).
-component SysChip inherits Rectangle {
-    in property <image> logo;
-    in property <bool> has-logo;
-    in property <string> name;
-    in property <int> count;
-    in property <bool> active;
-    in property <color> accent: #ffb23e;
-    callback clicked;
-    height: 32px;
-    width: sc-l.preferred-width;
-    border-radius: 8px;
-    background: root.active ? #ffb23e26 : (sc-ta.has-hover ? #ffffff0f : #1c1f28);
-    border-width: 1px; border-color: root.active ? root.accent : #00000000;
-    animate background, border-color { duration: 130ms; easing: ease-out; }
-    sc-l := HorizontalLayout {
-        padding-left: 10px; padding-right: 10px; spacing: 7px;
-        if root.has-logo: Image { source: root.logo; height: 16px; width: 56px; image-fit: contain; }
-        if !root.has-logo: Text { text: root.name; color: white; font-size: 12px; font-weight: 700; vertical-alignment: center; }
-        if root.count > 0: Text { text: "\{root.count}"; color: #ffffff77; font-size: 11px; vertical-alignment: center; }
-    }
-    sc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
-}
-
 export component MainWindow inherits Window {
     in property <[SysRow]> systems;
     in property <[[CardItem]]> rows;
@@ -478,10 +454,10 @@ export component MainWindow inherits Window {
     default-font-family: "DejaVu Sans";
 
     // Responsive column count for the cover grid. Card slot = card-w + 14px gap;
-    // main area = window width minus the 64px icon rail and grid padding.
-    out property <int> cols: max(1, floor((root.width - 64px - 24px) / (root.card-w + 14px)));
+    // main area = window width minus the 64px icon rail, the 244px console sidebar and grid padding.
+    out property <int> cols: max(1, floor((root.width - 308px - 24px) / (root.card-w + 14px)));
     // Pixel width the grid rows can use (Rust packs variable-width cards into it).
-    out property <length> grid-width: root.width - 64px - 24px;
+    out property <length> grid-width: root.width - 308px - 24px;
     changed cols => { root.refresh(); }
 
     VerticalLayout {
@@ -547,6 +523,108 @@ export component MainWindow inherits Window {
                 RailBtn { icon: @image-url("../assets/icons/settings.svg"); tip: "Configuración";
                           active: root.settings-visible;
                           clicked => { root.settings-visible = true; } }
+            }
+        }
+
+        // ── Console sidebar (as before: search, "Todos", one row per system) ──
+        if !root.settings-visible: Rectangle {
+            width: 244px;
+            background: #14161d;
+            VerticalLayout {
+                padding: 12px;
+                spacing: 10px;
+                // Bulk update: visible while something is pending or running.
+                if root.updates-pending > 0 || root.bulk-busy: Rectangle {
+                    height: root.bulk-busy ? 88px : (root.bulk-label != "" ? 62px : 42px);
+                    border-radius: 8px;
+                    background: bulk-ta.has-hover && !root.bulk-busy ? #ffd16630 : #ffd1661c;
+                    border-width: 1px;
+                    border-color: #ffd16655;
+                    animate background { duration: 130ms; easing: ease-out; }
+                    bulk-ta := TouchArea { mouse-cursor: pointer; clicked => { if (!root.bulk-busy) { root.update-all(); } } }
+                    VerticalLayout {
+                        padding: 10px;
+                        spacing: 6px;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            Text { text: root.bulk-busy ? "Actualizando juegos…" : "↑ Actualizar todo";
+                                   color: #ffd166; font-weight: 800; font-size: 13px;
+                                   vertical-alignment: center; horizontal-stretch: 1; }
+                            if !root.bulk-busy: Rectangle {
+                                width: 22px; height: 22px; border-radius: 11px; background: #ffd166;
+                                Text { text: "\{root.updates-pending}"; color: #0b0c10; font-size: 11px; font-weight: 900;
+                                       horizontal-alignment: center; vertical-alignment: center; }
+                            }
+                        }
+                        if root.bulk-busy: VerticalLayout {
+                            spacing: 4px;
+                            Bar { value: root.bulk-progress; fill: #ffd166; }
+                            HorizontalLayout {
+                                spacing: 6px;
+                                Text { text: root.bulk-label; color: #ffffff99; font-size: 10px; overflow: elide;
+                                       vertical-alignment: center; horizontal-stretch: 1; }
+                                Rectangle {
+                                    width: 18px; height: 18px; border-radius: 4px;
+                                    background: bc-ta.has-hover ? #ff5d7333 : #00000000;
+                                    Text { text: "✕"; color: #ff5d73; font-size: 11px; font-weight: 900;
+                                           horizontal-alignment: center; vertical-alignment: center; }
+                                    bc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.cancel-update-all(); } }
+                                }
+                            }
+                        }
+                        if !root.bulk-busy && root.bulk-label != "": Text {
+                            text: root.bulk-label; color: #ffffff99; font-size: 10px; wrap: word-wrap;
+                        }
+                    }
+                }
+                LineEdit {
+                    placeholder-text: "Buscar juego…";
+                    text <=> root.search-text;
+                    edited => { root.refresh(); }
+                }
+                Rectangle {
+                    height: 42px;
+                    border-radius: 8px;
+                    background: root.active-system == "" ? #ffb23e26 : (all-touch.has-hover ? #ffffff0f : #00000000);
+                    animate background { duration: 130ms; easing: ease-out; }
+                    all-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = ""; root.refresh(); } }
+                    HorizontalLayout {
+                        padding-left: 8px;
+                        padding-right: 10px;
+                        spacing: 8px;
+                        Rectangle { width: 4px; border-radius: 2px;
+                                    background: root.active-system == "" ? #ffb23e : #00000000;
+                                    animate background { duration: 160ms; } }
+                        Text { text: "Todos los juegos"; color: white; font-weight: 600; vertical-alignment: center; horizontal-stretch: 1; }
+                    }
+                }
+                ListView {
+                    for s in root.systems: Rectangle {
+                        height: 42px;
+                        border-radius: 8px;
+                        background: root.active-system == s.id ? #ffb23e26 : (row-touch.has-hover ? #ffffff0f : #00000000);
+                        animate background { duration: 130ms; easing: ease-out; }
+                        row-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = s.id; root.refresh(); } }
+                        HorizontalLayout {
+                            padding-left: 8px;
+                            padding-right: 10px;
+                            padding-top: 8px;
+                            padding-bottom: 8px;
+                            spacing: 8px;
+                            Rectangle { width: 4px; border-radius: 2px;
+                                        background: root.active-system == s.id ? s.color : #00000000;
+                                        animate background { duration: 160ms; } }
+                            if s.has-logo: VerticalLayout {
+                                horizontal-stretch: 1;
+                                alignment: center;
+                                Image { source: s.logo; height: 22px;
+                                        image-fit: contain; horizontal-alignment: left; }
+                            }
+                            if !s.has-logo: Text { text: s.name; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                            Text { text: "\{s.count}"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
+                        }
+                    }
+                }
             }
         }
 
@@ -690,61 +768,16 @@ export component MainWindow inherits Window {
             }
             if !root.settings-visible: VerticalLayout {
             Rectangle {
-                height: 104px;
-                VerticalLayout {
+                height: 64px;
+                HorizontalLayout {
                     padding-left: 22px;
                     padding-right: 22px;
-                    padding-top: 12px;
-                    padding-bottom: 4px;
+                    padding-top: 14px;
+                    padding-bottom: 6px;
                     spacing: 10px;
-                    HorizontalLayout {
-                        spacing: 10px;
-                        Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
-                        Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
-                        Rectangle { horizontal-stretch: 1; }
-                        // Bulk update (compact): pending count → one click updates everything.
-                        if root.updates-pending > 0 && !root.bulk-busy: Rectangle {
-                            height: 30px; width: bu-l.preferred-width; border-radius: 8px;
-                            background: bu-ta.has-hover ? #ffd16640 : #ffd1661c; border-width: 1px; border-color: #ffd16655;
-                            bu-l := HorizontalLayout { padding-left: 10px; padding-right: 10px; spacing: 6px;
-                                Text { text: "↑ Actualizar todo"; color: #ffd166; font-weight: 800; font-size: 12px; vertical-alignment: center; }
-                                Rectangle { width: 20px; height: 20px; border-radius: 10px; background: #ffd166; y: 5px;
-                                    Text { text: "\{root.updates-pending}"; color: #0b0c10; font-size: 11px; font-weight: 900;
-                                           horizontal-alignment: center; vertical-alignment: center; } }
-                            }
-                            bu-ta := TouchArea { mouse-cursor: pointer; clicked => { root.update-all(); } }
-                        }
-                        if root.bulk-busy: HorizontalLayout {
-                            spacing: 8px;
-                            VerticalLayout { alignment: center; spacing: 4px; width: 180px;
-                                Text { text: root.bulk-label != "" ? root.bulk-label : "Actualizando juegos…"; color: #ffd166; font-size: 11px; overflow: elide; }
-                                Bar { value: root.bulk-progress; fill: #ffd166; height: 6px; } }
-                            VerticalLayout { alignment: center;
-                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.cancel-update-all(); } } }
-                        }
-                        LineEdit {
-                            width: 240px; height: 30px;
-                            placeholder-text: "Buscar juego…";
-                            text <=> root.search-text;
-                            edited => { root.refresh(); }
-                        }
-                    }
-                    // Console strip: "Todos" + one chip per system with games.
-                    ScrollView {
-                        height: 38px;
-                        viewport-height: 32px;
-                        HorizontalLayout {
-                            spacing: 6px;
-                            alignment: start;
-                            SysChip { has-logo: false; name: "Todos"; count: 0; active: root.active-system == "";
-                                      clicked => { root.active-system = ""; root.refresh(); } }
-                            for sys in root.systems: SysChip {
-                                logo: sys.logo; has-logo: sys.has-logo; name: sys.name; count: sys.count;
-                                active: root.active-system == sys.id; accent: sys.color;
-                                clicked => { root.active-system = sys.id; root.refresh(); }
-                            }
-                        }
-                    }
+                    Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
+                    Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
+                    Rectangle { horizontal-stretch: 1; }
                 }
             }
             // "Nuevas incorporaciones": what landed in the catalog this week,

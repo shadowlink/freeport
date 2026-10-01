@@ -35,8 +35,9 @@ pub async fn refresh_catalog(
         .error_for_status()?
         .text()
         .await?;
-    let catalog: crate::model::Catalog = serde_json::from_str(&text)?;
+    let mut catalog: crate::model::Catalog = serde_json::from_str(&text)?;
     store::save_catalog_cache(paths, &catalog)?;
+    store::attach_orphans(paths, &mut catalog);
     Ok(catalog)
 }
 

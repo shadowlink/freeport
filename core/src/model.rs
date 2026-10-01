@@ -244,10 +244,14 @@ pub struct Config {
     /// installed to run through Wine/Proton.
     #[serde(default)]
     pub show_windows: bool,
-    /// When true, projects tagged `experimental` in the catalog are listed.
-    /// Off by default: the storefront shows only proven ports.
+    /// Legacy global switch (pre-0.2.48). When true and `experimental_systems`
+    /// is empty, experimentals are shown for every system.
     #[serde(default)]
     pub show_experimental: bool,
+    /// Systems (catalog ids) whose `experimental` projects are listed.
+    /// Off by default: the storefront shows only proven ports.
+    #[serde(default)]
+    pub experimental_systems: Vec<String>,
     /// Default runner id for Windows builds (None = auto). See `list_runners`.
     #[serde(default)]
     pub wine_runner: Option<String>,

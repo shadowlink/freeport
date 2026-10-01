@@ -167,8 +167,10 @@ struct App {
     /// Transient per-game launch state shown inline on the Play button:
     /// present+false = "Jugando…", present+true = launch failed.
     launching: RefCell<std::collections::HashMap<String, bool>>,
-    /// Mirror of `Config::show_experimental`, refreshed on every rebuild.
-    show_experimental: std::cell::Cell<bool>,
+    /// Systems whose experimental ports are listed (mirror of the config,
+    /// refreshed on every rebuild); `exp_all` = legacy global switch.
+    exp_systems: RefCell<HashSet<String>>,
+    exp_all: std::cell::Cell<bool>,
     /// What the open version chooser will do with the picked id.
     chooser_mode: RefCell<String>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
@@ -316,10 +318,14 @@ impl App {
         let inst = installed.get(&p.id);
         // Experimental ports stay hidden unless the user opts in — installed ones
         // always show (you can't lose sight of something on your disk).
-        if p.is_experimental() && !self.show_experimental.get() && inst.is_none() {
+        if p.is_experimental() && inst.is_none() && !self.experimental_allowed(&p.system) {
             return (false, false);
         }
         (native || win_ok || inst.is_some(), !native && (win_ok || inst.map(|e| e.windows).unwrap_or(false)))
+    }
+
+    fn experimental_allowed(&self, system: &str) -> bool {
+        self.exp_all.get() || self.exp_systems.borrow().contains(system)
     }
 
     fn find(&self, id: &str) -> Option<Project> {
@@ -353,12 +359,40 @@ fn rebuild(app: &App, win: &MainWindow) {
     let catalog = app.catalog.borrow();
     let cfg = store::load_config(&app.paths).unwrap_or_default();
     let show_windows = cfg.show_windows;
-    app.show_experimental.set(cfg.show_experimental);
+    *app.exp_systems.borrow_mut() = cfg.experimental_systems.iter().cloned().collect();
+    app.exp_all.set(cfg.show_experimental && cfg.experimental_systems.is_empty());
     let favs: std::collections::HashSet<&str> = cfg.favorites.iter().map(|s| s.as_str()).collect();
 
     // Sidebar counts: games (grouped versions) in the catalog, installs in the library.
+    // `settings_rows` lists every system with games (hidden experimentals included)
+    // so the user can switch experimentals on per system.
     let mut sys_rows: Vec<SysRow> = Vec::new();
+    let mut settings_rows: Vec<SysRow> = Vec::new();
     for s in &catalog.systems {
+        // Experimental ports of this system not shown right now (not installed, switch off).
+        let exp_hidden = catalog
+            .projects
+            .iter()
+            .filter(|p| p.system == s.id && p.is_experimental() && !installed.contains_key(&p.id) && !app.experimental_allowed(&s.id))
+            .count();
+        let total_games: HashSet<&str> = catalog.projects.iter().filter(|p| p.system == s.id).map(|p| p.game_key()).collect();
+        if !total_games.is_empty() {
+            let logo = app.logos.get(&s.id).cloned();
+            settings_rows.push(SysRow {
+                id: s.id.clone().into(),
+                name: s.name.clone().into(),
+                count: total_games.len() as i32,
+                color: parse_color(&s.color),
+                logo: logo.clone().unwrap_or_default(),
+                has_logo: logo.is_some(),
+                exp_on: app.experimental_allowed(&s.id),
+                exp_hidden: exp_hidden as i32,
+            });
+        }
+        if active == s.id {
+            win.set_active_exp_on(app.experimental_allowed(&s.id));
+            win.set_active_exp_hidden(exp_hidden as i32);
+        }
         let mut keys: HashSet<&str> = HashSet::new();
         let mut count = 0usize;
         for p in catalog
@@ -383,6 +417,8 @@ fn rebuild(app: &App, win: &MainWindow) {
             color: parse_color(&s.color),
             logo: logo.clone().unwrap_or_default(),
             has_logo: logo.is_some(),
+            exp_on: app.experimental_allowed(&s.id),
+            exp_hidden: exp_hidden as i32,
         });
     }
 
@@ -496,6 +532,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 versions: g.members.len() as i32,
                 aspect: box_aspect(&p.system),
                 card_w: win.get_card_w() as f32 * slot_factor(box_aspect(&p.system)),
+                experimental: p.is_experimental(),
             },
         ));
     }
@@ -592,10 +629,16 @@ fn rebuild(app: &App, win: &MainWindow) {
                     versions: 1,
                     aspect: box_aspect(&p.system),
         card_w: 0.0,
+        experimental: p.is_experimental(),
         });
     }
 
+    if win.get_active_system().is_empty() {
+        win.set_active_exp_on(false);
+        win.set_active_exp_hidden(0);
+    }
     win.set_systems(ModelRc::new(VecModel::from(sys_rows)));
+    win.set_settings_systems(ModelRc::new(VecModel::from(settings_rows)));
     win.set_rows(ModelRc::new(VecModel::from(rows)));
     win.set_header_title(header.into());
     win.set_header_count(count);
@@ -728,6 +771,7 @@ fn build_detail(app: &App, win: &MainWindow) {
                     versions: 1,
                     aspect: box_aspect(&r.system),
         card_w: 0.0,
+        experimental: r.is_experimental(),
         })
         .collect();
 
@@ -1118,6 +1162,7 @@ fn build_tv(app: &App, win: &MainWindow) {
                     versions: 1,
                     aspect: box_aspect(&p.system),
                 card_w: 0.0,
+                experimental: p.is_experimental(),
                 }
             })
             .collect();
@@ -1336,7 +1381,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
-        show_experimental: std::cell::Cell::new(false),
+        exp_systems: RefCell::new(HashSet::new()),
+        exp_all: std::cell::Cell::new(false),
         chooser_mode: RefCell::new(String::new()),
         install_error: RefCell::new(HashSet::new()),
         seen: RefCell::new(std::collections::HashMap::new()),
@@ -1372,7 +1418,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_version(env!("CARGO_PKG_VERSION").into());
         win.set_platform_label(app.triple.clone().into());
         win.set_show_windows(cfg.show_windows);
-        win.set_show_experimental(cfg.show_experimental);
         win.set_crt_visible(cfg.crt);
         if let (Some(u), Some(_)) = (cfg.ra_user.as_ref(), cfg.ra_token.as_ref()) {
             win.set_ra_logged_in(true);
@@ -1466,11 +1511,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    win.on_toggle_experimental({
+    win.on_toggle_experimental_system({
         let app = app.clone();
-        move |v| {
+        move |id, on| {
             if let Ok(mut c) = store::load_config(&app.paths) {
-                c.show_experimental = v;
+                let id = id.to_string();
+                // Leaving the legacy global switch on would override per-system choices.
+                if c.show_experimental && c.experimental_systems.is_empty() {
+                    c.experimental_systems = app.catalog.borrow().systems.iter().map(|s| s.id.clone()).collect();
+                    c.show_experimental = false;
+                }
+                c.experimental_systems.retain(|s| s != &id);
+                if on {
+                    c.experimental_systems.push(id);
+                }
                 let _ = store::save_config(&app.paths, &c);
             }
             ui_refresh();
@@ -2427,6 +2481,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let rows = version_rows(&app, &members, &installed, true, "");
         let title = members.first().map(|m| m.original_game.clone()).unwrap_or_default();
         open_chooser(&app, &win, "play", &format!("Jugar a {title}"), rows);
+    }
+    if let Some(sys) = std::env::var("FREEPORT_DEBUG_SYSTEM").ok().filter(|s| !s.is_empty()) {
+        win.set_active_system(sys.into()); // dev aid: preselect a console
     }
     if std::env::var_os("FREEPORT_DEBUG_SETTINGS").is_some() {
         win.set_settings_visible(true); // dev aid: land on the settings screen

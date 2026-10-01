@@ -114,6 +114,7 @@ mod tests {
             original_game: game.into(),
             game_id: game_id.map(Into::into),
             preferred: false,
+            tier: None,
             system: "n64".into(),
             kind: "native-port".into(),
             repo: RepoRef { host: "github".into(), owner: "o".into(), repo: id.into() },

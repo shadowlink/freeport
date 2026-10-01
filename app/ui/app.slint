@@ -22,6 +22,7 @@ struct CardItem {
     meta: string,        // extra line for the "Seguir jugando" strip ("hace 2h")
     is-new: bool,        // recently added to the catalog
     versions: int,       // projects folded into this card (1 = plain project)
+    aspect: float,       // width/height of the system's original box (1.43 N64, 1.0 PS1, 0.58 PSP…)
 }
 
 // One version of a game in the detail page's selector.
@@ -174,6 +175,7 @@ struct ScreenShot {
 struct TvShelf {
     name: string,
     count: int,
+    card-w: float,       // px: box width at the shelf's 237px height, per system aspect
     games: [CardItem],
 }
 
@@ -221,6 +223,7 @@ struct DetailData {
     ra-beta: bool,
     kind: string,        // "RECOMP" | "PORT"
     tier: string,        // "curado" | "comunidad" | "experimental"
+    aspect: float,       // width/height of the system's original box
     version: string,     // installed tag
     new-version: string, // latest tag when an update is available
     facts: [FactRow],
@@ -831,13 +834,19 @@ export component MainWindow inherits Window {
                     spacing: 14px;
                     padding: 8px;
                     alignment: start;
-                    for c in row: Rectangle {
+                    // Shelf feel: boxes of different heights rest on the same baseline.
+                    for c in row: VerticalLayout {
+                        alignment: end;
+                        gcard := Rectangle {
+                        // The frame takes the shape of the system's box: wide for
+                        // N64, square for PS1, tall for PSP. Width is the slot's.
+                        property <length> box-h: root.card-w / (c.aspect > 0 ? c.aspect : 0.667);
                         width: root.card-w;
-                        height: root.card-w * 1.5 + 90px;
+                        height: self.box-h + 90px;
                         VerticalLayout {
                             spacing: 4px;
                             Rectangle {
-                                height: root.card-w * 1.5;
+                                height: gcard.box-h;
                                 border-radius: 10px;
                                 background: #1c1f28;
                                 clip: true;
@@ -924,6 +933,7 @@ export component MainWindow inherits Window {
                             }
                         }
                     }
+                    }
                 }
             }
             if root.header-count == 0: Rectangle {
@@ -988,7 +998,9 @@ export component MainWindow inherits Window {
                             spacing: 24px;
                             alignment: start;
                             Rectangle {
-                                width: 180px; height: 270px;
+                                // Original box shape, 270px tall, capped at 330px wide.
+                                width: min(330px, 270px * (root.detail.aspect > 0 ? root.detail.aspect : 0.667));
+                                height: self.width / (root.detail.aspect > 0 ? root.detail.aspect : 0.667);
                                 y: parent.height - self.height - 22px;
                                 border-radius: 12px; clip: true;
                                 border-width: 1px; border-color: #ffffff22;
@@ -1162,11 +1174,13 @@ export component MainWindow inherits Window {
                             HorizontalLayout {
                                 spacing: 12px;
                                 alignment: start;
-                                for r in root.detail.related: Rectangle {
-                                    width: 110px; height: 190px;
+                                for r in root.detail.related: rel := Rectangle {
+                                    property <length> rel-w: min(150px, 165px * (r.aspect > 0 ? r.aspect : 0.667));
+                                    width: self.rel-w; height: 190px;
                                     VerticalLayout {
                                         spacing: 4px;
-                                        Rectangle { height: 165px; border-radius: 8px; clip: true;
+                                        alignment: end;
+                                        Rectangle { height: rel.rel-w / (r.aspect > 0 ? r.aspect : 0.667); border-radius: 8px; clip: true;
                                             rel-cover := Cover { width: 100%; height: 100%; source: r.cover; title: r.title; hovered: rel-ta.has-hover; }
                                             rel-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(r.id); } }
                                         }
@@ -1423,14 +1437,14 @@ export component MainWindow inherits Window {
                             Flickable {
                                 interactive: false;
                                 height: 241px;
-                                viewport-width: shelf.count * 170px;
-                                viewport-x: si == root.tv-shelf ? -root.tv-col * 170px : 0px;
+                                viewport-width: shelf.count * (shelf.card-w * 1px + 12px);
+                                viewport-x: si == root.tv-shelf ? -root.tv-col * (shelf.card-w * 1px + 12px) : 0px;
                                 animate viewport-x { duration: 240ms; easing: ease-out; }
                                 HorizontalLayout {
                                     spacing: 12px;
                                     for game[col] in shelf.games: Rectangle {
                                         property <bool> focused: si == root.tv-shelf && col == root.tv-col;
-                                        width: 158px;
+                                        width: shelf.card-w * 1px;
                                         height: 237px;
                                         border-radius: 10px;
                                         clip: true;

@@ -219,6 +219,23 @@ fn supports(p: &Project, triple: &str) -> bool {
     p.supports(triple)
 }
 
+/// Width/height of the original box of each system, as scanned by libretro
+/// (medians measured over the catalog's covers). The grid, the TV shelves and
+/// the game page size their frames with it, so an N64 box is wide, a PS1 jewel
+/// case square and a PSP case tall, like on a real shelf. SteamGridDB systems
+/// (Xbox 360, PS5, PC) use the 2:3 grid format.
+fn box_aspect(system: &str) -> f32 {
+    match system {
+        "n64" => 1.43,
+        "psx" | "gb" | "gba" | "dc" => 1.0,
+        "nds" => 1.11,
+        "3ds" => 1.14,
+        "gc" | "wii" | "ps2" | "xbox" => 0.71,
+        "psp" => 0.58,
+        _ => 0.667,
+    }
+}
+
 /// Human label for an asset triple ("linux-x86_64" → "Linux").
 fn platform_label(triple: &str) -> &'static str {
     if triple.starts_with("linux") {
@@ -442,6 +459,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 meta: if last > 0 { format!("Jugado {}", fmt_ago(last)).into() } else { "".into() },
                 is_new: any_new,
                 versions: g.members.len() as i32,
+                aspect: box_aspect(&p.system),
             },
         ));
     }
@@ -525,6 +543,7 @@ fn rebuild(app: &App, win: &MainWindow) {
             meta: meta.into(),
             is_new: true,
                     versions: 1,
+                    aspect: box_aspect(&p.system),
         });
     }
 
@@ -667,6 +686,7 @@ fn build_detail(app: &App, win: &MainWindow) {
             meta: "".into(),
             is_new: false,
                     versions: 1,
+                    aspect: box_aspect(&r.system),
         })
         .collect();
 
@@ -868,6 +888,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         ra_beta: p.ra_beta,
         kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
         tier: p.tier().into(),
+        aspect: box_aspect(&p.system),
         version: installed_tag.into(),
         new_version: if update { latest_tag.into() } else { "".into() },
         facts: ModelRc::new(VecModel::from(facts)),
@@ -1043,6 +1064,7 @@ fn build_tv(app: &App, win: &MainWindow) {
                     meta: "".into(),
                     is_new: false,
                     versions: 1,
+                    aspect: box_aspect(&p.system),
                 }
             })
             .collect();
@@ -1050,6 +1072,7 @@ fn build_tv(app: &App, win: &MainWindow) {
         shelves.push(TvShelf {
             name: s.name.clone().into(),
             count: cards.len() as i32,
+            card_w: (237.0 * box_aspect(&s.id)).clamp(120.0, 340.0),
             games: ModelRc::new(VecModel::from(cards)),
         });
     }

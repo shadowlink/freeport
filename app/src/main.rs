@@ -86,7 +86,6 @@ const LOGOS: &[(&str, &[u8])] = &[
     ("ps5", include_bytes!("../assets/logos/ps5.svg")),
     ("psp", include_bytes!("../assets/logos/psp.svg")),
     ("psx", include_bytes!("../assets/logos/psx.svg")),
-    ("snes", include_bytes!("../assets/logos/snes.svg")),
     ("wii", include_bytes!("../assets/logos/wii.svg")),
     ("x360", include_bytes!("../assets/logos/x360.svg")),
     ("xbox", include_bytes!("../assets/logos/xbox.svg")),

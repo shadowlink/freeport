@@ -220,6 +220,7 @@ struct DetailData {
     ra-enabled: bool,
     ra-beta: bool,
     kind: string,        // "RECOMP" | "PORT"
+    tier: string,        // "curado" | "comunidad" | "experimental"
     version: string,     // installed tag
     new-version: string, // latest tag when an update is available
     facts: [FactRow],
@@ -361,6 +362,7 @@ export component MainWindow inherits Window {
     // Settings
     in-out property <bool> settings-visible;
     in-out property <bool> show-windows;
+    in-out property <bool> show-experimental;
     in-out property <string> current-runner-label;
     in property <string> version;
     in property <string> platform-label;
@@ -373,6 +375,7 @@ export component MainWindow inherits Window {
     callback ra-login(string, string);
     callback ra-logout();
     callback toggle-windows(bool);
+    callback toggle-experimental(bool);
     callback set-runner(string);
     callback refresh-catalog();
     callback open-tv();
@@ -999,6 +1002,8 @@ export component MainWindow inherits Window {
                                     spacing: 8px;
                                     alignment: start;
                                     KindPill { kind: root.detail.kind; }
+                                    if root.detail.tier == "experimental": Tag { label: "EXPERIMENTAL"; fg: #0b0c10; bg: #ff9f43; height: 18px; }
+                                    if root.detail.tier == "curado": Tag { label: "CURADO"; fg: #0b0c10; bg: #4de1c1; height: 18px; }
                                     if root.detail.is-windows: Tag { label: "WIN · Wine/Proton"; fg: white; bg: #2b6fb3; height: 18px; }
                                     if root.detail.installed && root.detail.version != "": Tag { label: "INSTALADO · \{root.detail.version}"; fg: #0b0c10; bg: #4de1c1; height: 18px; }
                                     if root.detail.update-available && root.detail.new-version != "": Tag { label: "↑ NUEVA \{root.detail.new-version}"; fg: #0b0c10; bg: #ffd166; height: 18px; }
@@ -1290,6 +1295,17 @@ export component MainWindow inherits Window {
                             model: root.runner-labels;
                             current-value <=> root.current-runner-label;
                             selected(v) => { root.set-runner(v); }
+                        }
+                        HorizontalLayout {
+                            spacing: 10px;
+                            CheckBox { checked <=> root.show-experimental; toggled => { root.toggle-experimental(root.show-experimental); } }
+                            VerticalLayout {
+                                spacing: 2px;
+                                horizontal-stretch: 1;
+                                Text { text: "Mostrar ports experimentales"; color: white; vertical-alignment: center; }
+                                Text { text: "Proyectos nuevos, de un solo autor o con pocas descargas. Los curados y de comunidad se muestran siempre.";
+                                       color: #ffffff77; font-size: 11px; wrap: word-wrap; }
+                            }
                         }
                         HorizontalLayout {
                             spacing: 10px;

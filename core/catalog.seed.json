@@ -154,7 +154,18 @@
         "community": "zelda-64-recompiled"
       },
       "box_art": "https://cdn2.steamgriddb.com/grid/958c6e525626a72dc5722a63f638a80b.png",
-      "ra_supported": true
+      "ra_supported": true,
+      "quality_signals": {
+        "downloads": 363811,
+        "stars": 7321,
+        "age_days": 1073,
+        "releases": 7,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "ship-of-harkinian",
@@ -204,7 +215,18 @@
         "source": "gamebanana",
         "community": "16121"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/ed89e6477ff6a465891a5f17f77948ae.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/ed89e6477ff6a465891a5f17f77948ae.png",
+      "quality_signals": {
+        "downloads": 2259750,
+        "stars": 5509,
+        "age_days": 1654,
+        "releases": 51,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "2ship2harkinian",
@@ -254,7 +276,18 @@
         "source": "gamebanana",
         "community": "20371"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/958c6e525626a72dc5722a63f638a80b.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/958c6e525626a72dc5722a63f638a80b.png",
+      "quality_signals": {
+        "downloads": 696974,
+        "stars": 2271,
+        "age_days": 1051,
+        "releases": 16,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "spaghettikart-mk64",
@@ -306,7 +339,18 @@
         "source": "gamebanana",
         "community": "22970"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/bc11db020cb9418782afa3d1e0a1209b.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/bc11db020cb9418782afa3d1e0a1209b.png",
+      "quality_signals": {
+        "downloads": 227799,
+        "stars": 2382,
+        "age_days": 906,
+        "releases": 3,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "perfect-dark-pc",
@@ -355,7 +399,18 @@
       "developer": "Rare",
       "genre": "Disparos en primera persona",
       "wiki": "Perfect Dark",
-      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png",
+      "quality_signals": {
+        "downloads": 11074,
+        "stars": 2028,
+        "age_days": 1167,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "sm64coopdx",
@@ -401,7 +456,18 @@
       "developer": "Nintendo",
       "genre": "Plataformas",
       "wiki": "Super Mario 64",
-      "box_art": "https://cdn2.steamgriddb.com/grid/f293653ffa5c0e53453463a82401dbec.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/f293653ffa5c0e53453463a82401dbec.png",
+      "quality_signals": {
+        "downloads": 1647136,
+        "stars": 1381,
+        "age_days": 1067,
+        "releases": 16,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "redriver2",
@@ -445,7 +511,18 @@
       "developer": "Reflections",
       "genre": "Conducción",
       "wiki": "Driver 2",
-      "box_art": "https://cdn2.steamgriddb.com/grid/eb101d7eef150524b3cd895d08e4f673.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/eb101d7eef150524b3cd895d08e4f673.png",
+      "quality_signals": {
+        "downloads": 69854,
+        "stars": 1363,
+        "age_days": 2157,
+        "releases": 14,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "banjo-recomp",
@@ -498,7 +575,18 @@
         "community": "banjo-recompiled"
       },
       "box_art": "https://cdn2.steamgriddb.com/grid/a154a70f923c579313aa9c47ed7c34e2.png",
-      "ra_supported": true
+      "ra_supported": true,
+      "quality_signals": {
+        "downloads": 138336,
+        "stars": 1989,
+        "age_days": 590,
+        "releases": 3,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "dino-recomp",
@@ -547,7 +635,18 @@
         "source": "thunderstore",
         "community": "dinosaur-planet-recompiled"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/11738c383581f80d010ca13ac005d763.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/11738c383581f80d010ca13ac005d763.png",
+      "quality_signals": {
+        "downloads": 19941,
+        "stars": 318,
+        "age_days": 865,
+        "releases": 8,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "goemon64-recomp",
@@ -595,7 +694,18 @@
       "developer": "Konami",
       "genre": "Acción-aventura",
       "wiki": "Ganbare Goemon: Neo Momoyama Bakufu no Odori",
-      "box_art": "https://cdn2.steamgriddb.com/grid/47e596b1edee7909345c64a4d1a39517.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/47e596b1edee7909345c64a4d1a39517.png",
+      "quality_signals": {
+        "downloads": 21624,
+        "stars": 302,
+        "age_days": 595,
+        "releases": 5,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "megaman64-recomp",
@@ -649,7 +759,18 @@
       },
       "box_art": "https://cdn2.steamgriddb.com/grid/174cbbef75ac1b1b15847299d50f77bf.jpg",
       "ra_supported": true,
-      "ra_beta": true
+      "ra_beta": true,
+      "quality_signals": {
+        "downloads": 13395,
+        "stars": 258,
+        "age_days": 530,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "skate3-recomp",
@@ -695,7 +816,18 @@
       "developer": "EA Black Box",
       "genre": "Deportes",
       "wiki": "Skate 3",
-      "box_art": "https://cdn2.steamgriddb.com/grid/cb5afcadcac972f1c6d743c96936ebe3.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/cb5afcadcac972f1c6d743c96936ebe3.png",
+      "quality_signals": {
+        "downloads": 83185,
+        "stars": 1437,
+        "age_days": 118,
+        "releases": 9,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "nocturne-recomp",
@@ -741,7 +873,18 @@
       "developer": "Konami",
       "genre": "Metroidvania",
       "wiki": "Castlevania: Symphony of the Night",
-      "box_art": "https://cdn2.steamgriddb.com/grid/13e50e203d8be253cc8cd7fbe1509c63.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/13e50e203d8be253cc8cd7fbe1509c63.png",
+      "quality_signals": {
+        "downloads": 19850,
+        "stars": 358,
+        "age_days": 116,
+        "releases": 23,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "severed-chains-lod",
@@ -788,7 +931,18 @@
       "developer": "SCEI",
       "genre": "RPG",
       "wiki": "The Legend of Dragoon",
-      "box_art": "https://cdn2.steamgriddb.com/grid/aa82fd1c7df60df76d515816cbdb76a0.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/aa82fd1c7df60df76d515816cbdb76a0.png",
+      "quality_signals": {
+        "downloads": 21601,
+        "stars": 535,
+        "age_days": 1858,
+        "releases": 6,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "trx-tombraider",
@@ -833,7 +987,18 @@
       "developer": "Core Design",
       "genre": "Acción-aventura",
       "wiki": "Tomb Raider (videojuego de 1996)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/87368138229b6995db6b5c482f90a5bf.jpg"
+      "box_art": "https://cdn2.steamgriddb.com/grid/87368138229b6995db6b5c482f90a5bf.jpg",
+      "quality_signals": {
+        "downloads": 49321,
+        "stars": 1000,
+        "age_days": 2061,
+        "releases": 100,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "sonic-mania-decomp",
@@ -878,7 +1043,18 @@
       "developer": "Christian Whitehead",
       "genre": "Plataformas",
       "wiki": "Sonic Mania",
-      "box_art": "https://cdn2.steamgriddb.com/grid/850dc71b17efabd2c38aa16820445433.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/850dc71b17efabd2c38aa16820445433.png",
+      "quality_signals": {
+        "downloads": 76929,
+        "stars": 802,
+        "age_days": 2422,
+        "releases": 3,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "dethrace-carmageddon",
@@ -922,7 +1098,18 @@
       "developer": "Stainless Games",
       "genre": "Carreras",
       "wiki": "Carmageddon",
-      "box_art": "https://cdn2.steamgriddb.com/grid/0b10574b8240b424056808b793bef04f.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/0b10574b8240b424056808b793bef04f.png",
+      "quality_signals": {
+        "downloads": 8278,
+        "stars": 1199,
+        "age_days": 2528,
+        "releases": 12,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "runescape-classic",
@@ -966,7 +1153,18 @@
       "developer": "Jagex",
       "genre": "MMORPG",
       "wiki": "RuneScape",
-      "box_art": "https://cdn2.steamgriddb.com/grid/0a544b368c0e804e1d704353be3ee0d9.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/0a544b368c0e804e1d704353be3ee0d9.png",
+      "quality_signals": {
+        "downloads": 3204,
+        "stars": 129,
+        "age_days": 1867,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "opentdu",
@@ -1010,7 +1208,18 @@
       "developer": "Eden Games",
       "genre": "Carreras",
       "wiki": "Test Drive Unlimited",
-      "box_art": "https://cdn2.steamgriddb.com/grid/5b776b4aeed9a6abe4c8f6e26aa3b74f.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/5b776b4aeed9a6abe4c8f6e26aa3b74f.png",
+      "quality_signals": {
+        "downloads": 621,
+        "stars": 122,
+        "age_days": 496,
+        "releases": 100,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "devilutionx-diablo",
@@ -1054,7 +1263,18 @@
       "developer": "Blizzard North",
       "genre": "Action RPG",
       "wiki": "Diablo (videojuego)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/cced2922f69c1c789ba9d1c9c4210b1c.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/cced2922f69c1c789ba9d1c9c4210b1c.png",
+      "quality_signals": {
+        "downloads": 593047,
+        "stars": 9775,
+        "age_days": 2981,
+        "releases": 22,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "alive-oddworld",
@@ -1098,7 +1318,18 @@
       "developer": "Oddworld Inhabitants",
       "genre": "Plataformas",
       "wiki": "Oddworld: Abe's Oddysee",
-      "box_art": "https://cdn2.steamgriddb.com/grid/80c1f602065ea6c3e6db56273de523cb.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/80c1f602065ea6c3e6db56273de523cb.png",
+      "quality_signals": {
+        "downloads": 24595,
+        "stars": 437,
+        "age_days": 3039,
+        "releases": 9,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "psydoom",
@@ -1144,7 +1375,18 @@
       "developer": "id Software",
       "genre": "Disparos en primera persona",
       "wiki": "Doom (videojuego de 1993)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/ef58f7ffe086514aa0164c7fc4f6cea8.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/ef58f7ffe086514aa0164c7fc4f6cea8.png",
+      "quality_signals": {
+        "downloads": 25460,
+        "stars": 543,
+        "age_days": 2555,
+        "releases": 27,
+        "contributors": 4,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "dusklight-tp",
@@ -1188,7 +1430,18 @@
       "developer": "Nintendo",
       "genre": "Acción-aventura",
       "wiki": "The Legend of Zelda: Twilight Princess",
-      "box_art": "https://cdn2.steamgriddb.com/grid/36d6a670240681fbbf69cbba0c9065ce.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/36d6a670240681fbbf69cbba0c9065ce.png",
+      "quality_signals": {
+        "downloads": 1252039,
+        "stars": 5604,
+        "age_days": 305,
+        "releases": 24,
+        "contributors": 5,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "bomberman64-recomp",
@@ -1240,7 +1493,18 @@
       },
       "box_art": "https://cdn2.steamgriddb.com/grid/c5b781ce025e8217c23f95f9569a0b96.png",
       "ra_supported": true,
-      "ra_beta": true
+      "ra_beta": true,
+      "quality_signals": {
+        "downloads": 18751,
+        "stars": 282,
+        "age_days": 257,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "bombermanhero-recomp",
@@ -1286,7 +1550,18 @@
       "developer": "Hudson Soft",
       "genre": "Plataformas",
       "wiki": "Bomberman Hero",
-      "box_art": "https://cdn2.steamgriddb.com/grid/0e6e9339d71b9008e8ecd4680608d0ec.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/0e6e9339d71b9008e8ecd4680608d0ec.png",
+      "quality_signals": {
+        "downloads": 9043,
+        "stars": 120,
+        "age_days": 178,
+        "releases": 5,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "harvestmoon64-recomp",
@@ -1338,7 +1613,18 @@
       },
       "box_art": "https://cdn2.steamgriddb.com/grid/cab8fb3904dfe2e30a8579bc38e74ada.png",
       "ra_supported": true,
-      "ra_beta": true
+      "ra_beta": true,
+      "quality_signals": {
+        "downloads": 7704,
+        "stars": 150,
+        "age_days": 176,
+        "releases": 6,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "snowboardkids2-recomp",
@@ -1382,7 +1668,18 @@
       "developer": "Racdym",
       "genre": "Deportes",
       "wiki": "Snowboard Kids 2",
-      "box_art": "https://cdn2.steamgriddb.com/grid/b1a491999695f9df23123c2290041da8.jpg"
+      "box_art": "https://cdn2.steamgriddb.com/grid/b1a491999695f9df23123c2290041da8.jpg",
+      "quality_signals": {
+        "downloads": 6675,
+        "stars": 93,
+        "age_days": 255,
+        "releases": 4,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "kameo-recomp",
@@ -1426,7 +1723,18 @@
       "developer": "Rare",
       "genre": "Acción-aventura",
       "wiki": "Kameo: Elements of Power",
-      "box_art": "https://cdn2.steamgriddb.com/grid/94461b919021d58fa910449500cf8845.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/94461b919021d58fa910449500cf8845.png",
+      "quality_signals": {
+        "downloads": 3768,
+        "stars": 52,
+        "age_days": 160,
+        "releases": 4,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ghostship-sm64",
@@ -1476,7 +1784,18 @@
         "source": "gamebanana",
         "community": "24131"
       },
-      "box_art": "https://cdn2.steamgriddb.com/grid/f293653ffa5c0e53453463a82401dbec.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/f293653ffa5c0e53453463a82401dbec.png",
+      "quality_signals": {
+        "downloads": 111567,
+        "stars": 791,
+        "age_days": 1114,
+        "releases": 5,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "unleashed-recomp",
@@ -1518,7 +1837,18 @@
       "developer": "Sega",
       "genre": "Plataformas",
       "wiki": "Sonic Unleashed",
-      "box_art": "https://cdn2.steamgriddb.com/grid/b80c0932cb6f7be27c8d37b4c847a8bd.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/b80c0932cb6f7be27c8d37b4c847a8bd.png",
+      "quality_signals": {
+        "downloads": 712348,
+        "stars": 5098,
+        "age_days": 730,
+        "releases": 4,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "drmario64-recomp",
@@ -1560,7 +1890,18 @@
       "developer": "Nintendo",
       "genre": "Puzle",
       "wiki": "Dr. Mario 64",
-      "box_art": "https://cdn2.steamgriddb.com/grid/c3884b938f2ccc63708d922671c5ea23.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/c3884b938f2ccc63708d922671c5ea23.png",
+      "quality_signals": {
+        "downloads": 10043,
+        "stars": 146,
+        "age_days": 287,
+        "releases": 1,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "tip-recomp",
@@ -1602,7 +1943,18 @@
       "developer": "Rare",
       "genre": "Simulación",
       "wiki": "Viva Piñata: Trouble in Paradise",
-      "box_art": "https://cdn2.steamgriddb.com/grid/e9437348054c27c0951c7d9d59bac04f.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/e9437348054c27c0951c7d9d59bac04f.png",
+      "quality_signals": {
+        "downloads": 8673,
+        "stars": 184,
+        "age_days": 200,
+        "releases": 4,
+        "contributors": 4,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "recherry-lollipop",
@@ -1644,7 +1996,18 @@
       "developer": "Grasshopper Manufacture",
       "genre": "Hack and slash",
       "wiki": "Lollipop Chainsaw",
-      "box_art": "https://cdn2.steamgriddb.com/grid/7e601e63a48cb33f754d5bd684631118.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/7e601e63a48cb33f754d5bd684631118.png",
+      "quality_signals": {
+        "downloads": 1374,
+        "stars": 35,
+        "age_days": 189,
+        "releases": 1,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "renut-banjo-nb",
@@ -1686,7 +2049,18 @@
       "developer": "Rare",
       "genre": "Plataformas",
       "wiki": "Banjo-Kazooie: Nuts & Bolts",
-      "box_art": "https://cdn2.steamgriddb.com/grid/17faa600670ae46a32ff83f76e83806a.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/17faa600670ae46a32ff83f76e83806a.png",
+      "quality_signals": {
+        "downloads": 12567,
+        "stars": 142,
+        "age_days": 215,
+        "releases": 12,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "restuff-naughtybear",
@@ -1728,7 +2102,18 @@
       "developer": "Behaviour Interactive",
       "genre": "Acción",
       "wiki": "Naughty Bear",
-      "box_art": "https://cdn2.steamgriddb.com/grid/cb9078c5cafe2934e4eceadc54d585c5.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/cb9078c5cafe2934e4eceadc54d585c5.png",
+      "quality_signals": {
+        "downloads": 2933,
+        "stars": 51,
+        "age_days": 176,
+        "releases": 7,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ctr-native",
@@ -1770,7 +2155,18 @@
       "developer": "Naughty Dog",
       "genre": "Carreras",
       "wiki": "Crash Team Racing",
-      "box_art": "https://cdn2.steamgriddb.com/grid/3a6430ccda63161354c5c81e538e7196.jpg"
+      "box_art": "https://cdn2.steamgriddb.com/grid/3a6430ccda63161354c5c81e538e7196.jpg",
+      "quality_signals": {
+        "downloads": 13934,
+        "stars": 376,
+        "age_days": 137,
+        "releases": 9,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "symphony-recomp",
@@ -1816,7 +2212,18 @@
       "developer": "Konami",
       "genre": "Metroidvania",
       "wiki": "Castlevania: Symphony of the Night",
-      "box_art": "https://cdn2.steamgriddb.com/grid/13e50e203d8be253cc8cd7fbe1509c63.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/13e50e203d8be253cc8cd7fbe1509c63.png",
+      "quality_signals": {
+        "downloads": 41955,
+        "stars": 800,
+        "age_days": 89,
+        "releases": 9,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "golden-balloon",
@@ -1862,7 +2269,18 @@
       "developer": "Rare",
       "genre": "Carreras",
       "wiki": "Diddy Kong Racing",
-      "box_art": "https://cdn2.steamgriddb.com/grid/4c38b84197c2e1a8444814d95c2487a8.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/4c38b84197c2e1a8444814d95c2487a8.png",
+      "quality_signals": {
+        "downloads": 16034,
+        "stars": 172,
+        "age_days": 62,
+        "releases": 15,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "lighthouse-banjo",
@@ -1908,7 +2326,18 @@
       "developer": "Rare",
       "genre": "Plataformas",
       "wiki": "Banjo-Kazooie",
-      "box_art": "https://cdn2.steamgriddb.com/grid/a154a70f923c579313aa9c47ed7c34e2.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/a154a70f923c579313aa9c47ed7c34e2.png",
+      "quality_signals": {
+        "downloads": 32468,
+        "stars": 465,
+        "age_days": 672,
+        "releases": 5,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "ape-escape-recomp",
@@ -1950,7 +2379,18 @@
       "developer": "Sony Computer Entertainment",
       "genre": "Plataformas",
       "wiki": "Ape Escape",
-      "box_art": "https://cdn2.steamgriddb.com/grid/41653fbde31f556e57a71ea6edf1efaa.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/41653fbde31f556e57a71ea6edf1efaa.png",
+      "quality_signals": {
+        "downloads": 4859,
+        "stars": 81,
+        "age_days": 115,
+        "releases": 15,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "minish-cap-picori",
@@ -1998,7 +2438,18 @@
       "developer": "Nintendo / Capcom",
       "genre": "Acción-aventura",
       "wiki": "The Legend of Zelda: The Minish Cap",
-      "box_art": "https://cdn2.steamgriddb.com/grid/a687f78b9842c87225e74921765feb1b.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/a687f78b9842c87225e74921765feb1b.png",
+      "quality_signals": {
+        "downloads": 1920,
+        "stars": 440,
+        "age_days": 153,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "kirby-wii-recomp",
@@ -2043,7 +2494,18 @@
       "developer": "HAL Laboratory",
       "genre": "Plataformas",
       "wiki": "Kirby's Return to Dream Land",
-      "box_art": "https://cdn2.steamgriddb.com/grid/e63bb9e9a4b930959b8cc4259afc9ba4.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/e63bb9e9a4b930959b8cc4259afc9ba4.png",
+      "quality_signals": {
+        "downloads": 9369,
+        "stars": 163,
+        "age_days": 98,
+        "releases": 1,
+        "contributors": 4,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "simpsons-game-recomp",
@@ -2087,7 +2549,18 @@
       "developer": "Electronic Arts",
       "genre": "Acción-plataformas",
       "wiki": "The Simpsons Game",
-      "box_art": "https://cdn2.steamgriddb.com/grid/df5ffddf7952e45a242c550a389dfb0b.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/df5ffddf7952e45a242c550a389dfb0b.png",
+      "quality_signals": {
+        "downloads": 11167,
+        "stars": 222,
+        "age_days": 88,
+        "releases": 17,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "automobili-lamborghini-recomp",
@@ -2132,7 +2605,18 @@
       "genre": "Carreras",
       "wiki": "Automobili Lamborghini (video game)",
       "box_art": "https://cdn2.steamgriddb.com/grid/1c7e02e71df12a6cdae7888b9785b38f.png",
-      "rolling_tag": "v0.5.0"
+      "rolling_tag": "v0.5.0",
+      "quality_signals": {
+        "downloads": 3983,
+        "stars": 40,
+        "age_days": 88,
+        "releases": 11,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "condemned2-recomp",
@@ -2174,7 +2658,18 @@
       "developer": "Monolith Productions",
       "genre": "Terror",
       "wiki": "Condemned 2: Bloodshot",
-      "box_art": "https://cdn2.steamgriddb.com/grid/93a77d951ae320600dc9619f3ddeee72.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/93a77d951ae320600dc9619f3ddeee72.png",
+      "quality_signals": {
+        "downloads": 3906,
+        "stars": 181,
+        "age_days": 59,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "quest64-recomp",
@@ -2216,7 +2711,18 @@
       "wiki": "Quest 64",
       "cover_url": "https://cdn2.steamgriddb.com/grid/59e6bb2bb03821bb51050ea6d0a23bb8.png",
       "box_art": "https://cdn2.steamgriddb.com/grid/59e6bb2bb03821bb51050ea6d0a23bb8.png",
-      "logo_url": null
+      "logo_url": null,
+      "quality_signals": {
+        "downloads": 6859,
+        "stars": 270,
+        "age_days": 642,
+        "releases": 1,
+        "contributors": 4,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "chameleontwist-recomp",
@@ -2258,7 +2764,18 @@
       "wiki": "Chameleon Twist",
       "cover_url": "https://cdn2.steamgriddb.com/grid/78ec3e9ba98d856873f1bdb01194eef9.png",
       "box_art": "https://cdn2.steamgriddb.com/grid/78ec3e9ba98d856873f1bdb01194eef9.png",
-      "logo_url": null
+      "logo_url": null,
+      "quality_signals": {
+        "downloads": 4892,
+        "stars": 55,
+        "age_days": 863,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "svr07-recomp",
@@ -2300,7 +2817,18 @@
       "wiki": "WWE SmackDown vs. Raw 2007",
       "cover_url": "https://cdn2.steamgriddb.com/grid/9bcc55f2146b211f2cc87e59ec6b39c2.png",
       "box_art": "https://cdn2.steamgriddb.com/grid/9bcc55f2146b211f2cc87e59ec6b39c2.png",
-      "logo_url": null
+      "logo_url": null,
+      "quality_signals": {
+        "downloads": 11850,
+        "stars": 142,
+        "age_days": 191,
+        "releases": 8,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "cvlod-recomp",
@@ -2346,7 +2874,18 @@
       "developer": "Konami",
       "genre": "Acción-aventura",
       "wiki": "Castlevania: Legacy of Darkness",
-      "box_art": "https://cdn2.steamgriddb.com/grid/363ed890155b2eeda0aa492cc52e3d34.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/363ed890155b2eeda0aa492cc52e3d34.png",
+      "quality_signals": {
+        "downloads": 9264,
+        "stars": 122,
+        "age_days": 249,
+        "releases": 31,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "openxwa",
@@ -2392,7 +2931,18 @@
       "developer": "Totally Games",
       "genre": "Simulador de combate espacial",
       "wiki": "Star Wars: X-Wing Alliance",
-      "box_art": "https://cdn2.steamgriddb.com/grid/3f3a9b160a4e4cbc2f2228e3024dda79.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/3f3a9b160a4e4cbc2f2228e3024dda79.png",
+      "quality_signals": {
+        "downloads": 629,
+        "stars": 139,
+        "age_days": 67,
+        "releases": 16,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "fzerox-gdiffuser",
@@ -2436,7 +2986,18 @@
       "developer": "Nintendo",
       "genre": "Carreras",
       "wiki": "F-Zero X",
-      "box_art": "https://cdn2.steamgriddb.com/grid/652e2fd3b2fa943f2b4ff310e419d7f2.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/652e2fd3b2fa943f2b4ff310e419d7f2.png",
+      "quality_signals": {
+        "downloads": 11625,
+        "stars": 272,
+        "age_days": 102,
+        "releases": 5,
+        "contributors": 2,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "dkr-recomp",
@@ -2480,7 +3041,18 @@
       "developer": "Rare",
       "genre": "Carreras",
       "wiki": "Diddy Kong Racing",
-      "box_art": "https://cdn2.steamgriddb.com/grid/4c38b84197c2e1a8444814d95c2487a8.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/4c38b84197c2e1a8444814d95c2487a8.png",
+      "quality_signals": {
+        "downloads": 13810,
+        "stars": 192,
+        "age_days": 56,
+        "releases": 8,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "crash-recomp",
@@ -2523,7 +3095,18 @@
       "developer": "Naughty Dog",
       "genre": "Plataformas",
       "wiki": "Crash Bandicoot (video game)",
-      "box_art": "https://cdn2.steamgriddb.com/grid/8282b546dda9ec05515966ba0fe3e5d1.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/8282b546dda9ec05515966ba0fe3e5d1.png",
+      "quality_signals": {
+        "downloads": 22734,
+        "stars": 239,
+        "age_days": 69,
+        "releases": 17,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "starship-sf64",
@@ -2566,7 +3149,18 @@
       "year": 1997,
       "developer": "Nintendo",
       "genre": "Matamarcianos",
-      "wiki": "Star Fox 64"
+      "wiki": "Star Fox 64",
+      "quality_signals": {
+        "downloads": 220419,
+        "stars": 2074,
+        "age_days": 863,
+        "releases": 2,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "mph-recomp",
@@ -2607,7 +3201,18 @@
       "year": 2006,
       "developer": "Nintendo (NST)",
       "genre": "Shooter en primera persona",
-      "wiki": "Metroid Prime Hunters"
+      "wiki": "Metroid Prime Hunters",
+      "quality_signals": {
+        "downloads": 8734,
+        "stars": 243,
+        "age_days": 60,
+        "releases": 38,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "tomba-recomp",
@@ -2649,7 +3254,18 @@
       "year": 1997,
       "developer": "Whoopee Camp",
       "genre": "Plataformas",
-      "wiki": "Tomba!"
+      "wiki": "Tomba!",
+      "quality_signals": {
+        "downloads": 3373,
+        "stars": 65,
+        "age_days": 199,
+        "releases": 32,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "ygofm-recomp",
@@ -2690,48 +3306,18 @@
       "year": 1999,
       "developer": "Konami",
       "genre": "Juego de cartas",
-      "wiki": "Yu-Gi-Oh! Forbidden Memories"
-    },
-    {
-      "id": "digimonworld-recomp",
-      "name": "Digimon World Recomp",
-      "original_game": "Digimon World",
-      "game_id": "digimon-world",
-      "system": "psx",
-      "type": "recompilation",
-      "repo": {
-        "host": "github",
-        "owner": "Ethan4love",
-        "repo": "Digimon-world-PSX-RECOMP"
+      "wiki": "Yu-Gi-Oh! Forbidden Memories",
+      "quality_signals": {
+        "downloads": 9751,
+        "stars": 120,
+        "age_days": 42,
+        "releases": 31,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
       },
-      "release_channel": "stable",
-      "cover_url": "https://thumbnails.libretro.com/Sony%20-%20PlayStation/Named_Boxarts/Digimon%20World%20%28USA%29.png",
-      "logo_url": null,
-      "asset_rules": {
-        "windows-x86_64": "(?i)win-x64\\.zip$"
-      },
-      "rom": {
-        "required": true,
-        "mode": "in-app",
-        "expected_filename": null,
-        "subdir": null,
-        "notes": "Al arrancar, pulsa «Browse Disc» y selecciona el .cue de tu Digimon World (PS1, USA). La primera vez construye el juego desde tu disco (10-30 min, solo una vez)."
-      },
-      "launch": {
-        "linux": null,
-        "windows": "Digimon_World_Recompiled.exe"
-      },
-      "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "v0.1.5",
-        "published_at": "2026-08-26T21:58:32Z"
-      },
-      "year": 1999,
-      "developer": "Bandai",
-      "genre": "RPG",
-      "wiki": "Digimon World"
+      "tier": "experimental"
     },
     {
       "id": "wwf-nomercy-recomp",
@@ -2772,7 +3358,18 @@
       "year": 2000,
       "developer": "AKI Corporation / Asmik Ace",
       "genre": "Lucha libre",
-      "wiki": "WWF No Mercy"
+      "wiki": "WWF No Mercy",
+      "quality_signals": {
+        "downloads": 1442,
+        "stars": 22,
+        "age_days": 78,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "wm2000-recomp",
@@ -2813,7 +3410,18 @@
       "year": 1999,
       "developer": "AKI Corporation / Asmik Ace",
       "genre": "Lucha libre",
-      "wiki": "WWF WrestleMania 2000"
+      "wiki": "WWF WrestleMania 2000",
+      "quality_signals": {
+        "downloads": 849,
+        "stars": 13,
+        "age_days": 79,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "vpw64-recomp",
@@ -2854,7 +3462,18 @@
       "year": 1997,
       "developer": "AKI Corporation / Asmik Ace",
       "genre": "Lucha libre",
-      "wiki": "Virtual Pro Wrestling 64"
+      "wiki": "Virtual Pro Wrestling 64",
+      "quality_signals": {
+        "downloads": 528,
+        "stars": 8,
+        "age_days": 80,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "wcw-revenge-recomp",
@@ -2895,7 +3514,18 @@
       "year": 1998,
       "developer": "AKI Corporation / Asmik Ace",
       "genre": "Lucha libre",
-      "wiki": "WCW/nWo Revenge"
+      "wiki": "WCW/nWo Revenge",
+      "quality_signals": {
+        "downloads": 1375,
+        "stars": 24,
+        "age_days": 84,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "wcw-worldtour-recomp",
@@ -2936,7 +3566,18 @@
       "year": 1997,
       "developer": "AKI Corporation / Asmik Ace",
       "genre": "Lucha libre",
-      "wiki": "WCW vs. nWo: World Tour"
+      "wiki": "WCW vs. nWo: World Tour",
+      "quality_signals": {
+        "downloads": 1612,
+        "stars": 38,
+        "age_days": 87,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ringout-sc2",
@@ -2977,7 +3618,18 @@
       "year": 2003,
       "developer": "Namco",
       "genre": "Lucha",
-      "wiki": "Soulcalibur II"
+      "wiki": "Soulcalibur II",
+      "quality_signals": {
+        "downloads": 5663,
+        "stars": 151,
+        "age_days": 38,
+        "releases": 12,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "silenthill-pc",
@@ -3018,7 +3670,18 @@
       "year": 1999,
       "developer": "Konami",
       "genre": "Survival horror",
-      "wiki": "Silent Hill (video game)"
+      "wiki": "Silent Hill (video game)",
+      "quality_signals": {
+        "downloads": 13895,
+        "stars": 605,
+        "age_days": 209,
+        "releases": 11,
+        "contributors": 5,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "tekken3-recomp",
@@ -3059,7 +3722,18 @@
       "year": 1998,
       "developer": "Namco",
       "genre": "Lucha",
-      "wiki": "Tekken 3"
+      "wiki": "Tekken 3",
+      "quality_signals": {
+        "downloads": 5154,
+        "stars": 131,
+        "age_days": 61,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "sfa3-recomp",
@@ -3102,7 +3776,18 @@
       "year": 1998,
       "developer": "Capcom",
       "genre": "Lucha",
-      "wiki": "Street Fighter Alpha 3"
+      "wiki": "Street Fighter Alpha 3",
+      "quality_signals": {
+        "downloads": 3177,
+        "stars": 75,
+        "age_days": 53,
+        "releases": 9,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "vandalhearts-pc",
@@ -3145,7 +3830,18 @@
       "year": 1996,
       "developer": "Konami",
       "genre": "RPG táctico",
-      "wiki": "Vandal Hearts"
+      "wiki": "Vandal Hearts",
+      "quality_signals": {
+        "downloads": 1801,
+        "stars": 42,
+        "age_days": 69,
+        "releases": 14,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "samurai-vs-zombies",
@@ -3186,7 +3882,18 @@
       "year": 2011,
       "developer": "Glu Mobile",
       "genre": "Estrategia",
-      "wiki": "Samurai vs. Zombies Defense"
+      "wiki": "Samurai vs. Zombies Defense",
+      "quality_signals": {
+        "downloads": 7876,
+        "stars": 25,
+        "age_days": 659,
+        "releases": 3,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "reblue-bluedragon",
@@ -3232,7 +3939,18 @@
       "wiki": "Blue Dragon (video game)",
       "launch_env": {
         "SDL_VIDEODRIVER": "x11"
-      }
+      },
+      "quality_signals": {
+        "downloads": 46221,
+        "stars": 728,
+        "age_days": 235,
+        "releases": 19,
+        "contributors": 4,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "opentie",
@@ -3277,7 +3995,18 @@
       "year": 1994,
       "developer": "Totally Games",
       "genre": "Simulador de combate espacial",
-      "wiki": "Star Wars: TIE Fighter"
+      "wiki": "Star Wars: TIE Fighter",
+      "quality_signals": {
+        "downloads": 760,
+        "stars": 315,
+        "age_days": 67,
+        "releases": 6,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "xmen-ma2-pc",
@@ -3318,7 +4047,18 @@
       "year": 2001,
       "developer": "Paradox Development",
       "genre": "Lucha",
-      "wiki": "X-Men: Mutant Academy 2"
+      "wiki": "X-Men: Mutant Academy 2",
+      "quality_signals": {
+        "downloads": 515,
+        "stars": 13,
+        "age_days": 39,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "strider2-recomp",
@@ -3357,7 +4097,18 @@
       "year": 2000,
       "developer": "Capcom",
       "genre": "Acción",
-      "wiki": "Strider 2 (1999 video game)"
+      "wiki": "Strider 2 (1999 video game)",
+      "quality_signals": {
+        "downloads": 1145,
+        "stars": 39,
+        "age_days": 38,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "twistedmetal4-recomp",
@@ -3400,7 +4151,18 @@
       "year": 1999,
       "developer": "989 Studios",
       "genre": "Combate vehicular",
-      "wiki": "Twisted Metal 4"
+      "wiki": "Twisted Metal 4",
+      "quality_signals": {
+        "downloads": 1070,
+        "stars": 22,
+        "age_days": 54,
+        "releases": 12,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dk64-recomp",
@@ -3443,7 +4205,18 @@
       "year": 1999,
       "developer": "Rare",
       "genre": "Plataformas",
-      "wiki": "Donkey Kong 64"
+      "wiki": "Donkey Kong 64",
+      "quality_signals": {
+        "downloads": 37329,
+        "stars": 461,
+        "age_days": 114,
+        "releases": 4,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "tenchu-sa-recomp",
@@ -3484,7 +4257,18 @@
       "year": 1998,
       "developer": "Acquire",
       "genre": "Sigilo",
-      "wiki": "Tenchu: Stealth Assassins"
+      "wiki": "Tenchu: Stealth Assassins",
+      "quality_signals": {
+        "downloads": 269,
+        "stars": 17,
+        "age_days": 39,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rage-racer-pc",
@@ -3527,7 +4311,18 @@
       "year": 1996,
       "developer": "Namco",
       "genre": "Carreras",
-      "wiki": "Rage Racer"
+      "wiki": "Rage Racer",
+      "quality_signals": {
+        "downloads": 5802,
+        "stars": 112,
+        "age_days": 48,
+        "releases": 14,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "einhander-recomp",
@@ -3570,7 +4365,18 @@
       "year": 1997,
       "developer": "Square",
       "genre": "Matamarcianos",
-      "wiki": "Einhänder"
+      "wiki": "Einhänder",
+      "quality_signals": {
+        "downloads": 1708,
+        "stars": 89,
+        "age_days": 41,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "klonoa-dtp-recomp",
@@ -3613,7 +4419,18 @@
       "year": 1997,
       "developer": "Namco",
       "genre": "Plataformas",
-      "wiki": "Klonoa: Door to Phantomile"
+      "wiki": "Klonoa: Door to Phantomile",
+      "quality_signals": {
+        "downloads": 1462,
+        "stars": 36,
+        "age_days": 45,
+        "releases": 4,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "mvc-recomp",
@@ -3656,7 +4473,18 @@
       "year": 1998,
       "developer": "Capcom",
       "genre": "Lucha",
-      "wiki": "Marvel vs. Capcom: Clash of Super Heroes"
+      "wiki": "Marvel vs. Capcom: Clash of Super Heroes",
+      "quality_signals": {
+        "downloads": 750,
+        "stars": 3,
+        "age_days": 54,
+        "releases": 8,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "teraskasi-recomp",
@@ -3699,7 +4527,18 @@
       "year": 1997,
       "developer": "LucasArts",
       "genre": "Lucha",
-      "wiki": "Star Wars: Masters of Teräs Käsi"
+      "wiki": "Star Wars: Masters of Teräs Käsi",
+      "quality_signals": {
+        "downloads": 471,
+        "stars": 5,
+        "age_days": 72,
+        "releases": 8,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "metalslugx-recomp",
@@ -3742,7 +4581,18 @@
       "year": 1999,
       "developer": "SNK",
       "genre": "Run and gun",
-      "wiki": "Metal Slug X"
+      "wiki": "Metal Slug X",
+      "quality_signals": {
+        "downloads": 735,
+        "stars": 5,
+        "age_days": 54,
+        "releases": 8,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rampage-tt-recomp",
@@ -3785,7 +4635,18 @@
       "year": 2000,
       "developer": "Avalanche Software",
       "genre": "Acción",
-      "wiki": "Rampage Through Time"
+      "wiki": "Rampage Through Time",
+      "quality_signals": {
+        "downloads": 521,
+        "stars": 8,
+        "age_days": 52,
+        "releases": 7,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "jpb-recomp",
@@ -3828,7 +4689,18 @@
       "year": 2000,
       "developer": "LucasArts",
       "genre": "Acción",
-      "wiki": "Star Wars Episode I: Jedi Power Battles"
+      "wiki": "Star Wars Episode I: Jedi Power Battles",
+      "quality_signals": {
+        "downloads": 394,
+        "stars": 4,
+        "age_days": 53,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "bomberman-fr-recomp",
@@ -3871,7 +4743,18 @@
       "year": 1998,
       "developer": "Hudson Soft",
       "genre": "Carreras",
-      "wiki": "Bomberman Fantasy Race"
+      "wiki": "Bomberman Fantasy Race",
+      "quality_signals": {
+        "downloads": 469,
+        "stars": 9,
+        "age_days": 54,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "bomberman-world-recomp",
@@ -3914,7 +4797,18 @@
       "year": 1998,
       "developer": "Hudson Soft",
       "genre": "Acción",
-      "wiki": "Bomberman World"
+      "wiki": "Bomberman World",
+      "quality_signals": {
+        "downloads": 536,
+        "stars": 6,
+        "age_days": 53,
+        "releases": 8,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "bomberman-pe-recomp",
@@ -3957,7 +4851,18 @@
       "year": 1998,
       "developer": "Hudson Soft",
       "genre": "Acción",
-      "wiki": "Bomberman Party Edition"
+      "wiki": "Bomberman Party Edition",
+      "quality_signals": {
+        "downloads": 469,
+        "stars": 4,
+        "age_days": 70,
+        "releases": 8,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "tomba2-recomp",
@@ -3998,7 +4903,18 @@
       "year": 1999,
       "developer": "Whoopee Camp",
       "genre": "Plataformas",
-      "wiki": "Tomba! 2: The Evil Swine Return"
+      "wiki": "Tomba! 2: The Evil Swine Return",
+      "quality_signals": {
+        "downloads": 776,
+        "stars": 12,
+        "age_days": 89,
+        "releases": 12,
+        "contributors": 2,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "legaia-recomp",
@@ -4039,7 +4955,18 @@
       "year": 1998,
       "developer": "Contrail",
       "genre": "RPG",
-      "wiki": "Legend of Legaia"
+      "wiki": "Legend of Legaia",
+      "quality_signals": {
+        "downloads": 583,
+        "stars": 11,
+        "age_days": 74,
+        "releases": 7,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "syphonfilter2-recomp",
@@ -4080,7 +5007,18 @@
       "year": 2000,
       "developer": "Eidetic",
       "genre": "Acción/Sigilo",
-      "wiki": "Syphon Filter 2"
+      "wiki": "Syphon Filter 2",
+      "quality_signals": {
+        "downloads": 952,
+        "stars": 33,
+        "age_days": 55,
+        "releases": 5,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rechan-stuntmaster",
@@ -4123,7 +5061,18 @@
       "year": 2000,
       "developer": "Radical Entertainment",
       "genre": "Beat 'em up",
-      "wiki": "Jackie Chan Stuntmaster"
+      "wiki": "Jackie Chan Stuntmaster",
+      "quality_signals": {
+        "downloads": 2880,
+        "stars": 44,
+        "age_days": 185,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "mmx6-recomp",
@@ -4166,7 +5115,18 @@
       "year": 2001,
       "developer": "Capcom",
       "genre": "Plataformas",
-      "wiki": "Mega Man X6"
+      "wiki": "Mega Man X6",
+      "quality_signals": {
+        "downloads": 4254,
+        "stars": 71,
+        "age_days": 118,
+        "releases": 23,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "wipeout-phantom",
@@ -4207,7 +5167,18 @@
       "year": 1995,
       "developer": "Psygnosis",
       "genre": "Carreras",
-      "wiki": "Wipeout (video game)"
+      "wiki": "Wipeout (video game)",
+      "quality_signals": {
+        "downloads": 24030,
+        "stars": 961,
+        "age_days": 1181,
+        "releases": 13,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "pgr4-recomp",
@@ -4248,7 +5219,18 @@
       "year": 2007,
       "developer": "Bizarre Creations",
       "genre": "Carreras",
-      "wiki": "Project Gotham Racing 4"
+      "wiki": "Project Gotham Racing 4",
+      "quality_signals": {
+        "downloads": 3645,
+        "stars": 150,
+        "age_days": 69,
+        "releases": 5,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "eternalsonata-reprise",
@@ -4287,7 +5269,18 @@
       "year": 2007,
       "developer": "tri-Crescendo",
       "genre": "RPG",
-      "wiki": "Eternal Sonata"
+      "wiki": "Eternal Sonata",
+      "quality_signals": {
+        "downloads": 4857,
+        "stars": 109,
+        "age_days": 117,
+        "releases": 12,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "exit1-recomp",
@@ -4328,7 +5321,18 @@
       "year": 2007,
       "developer": "Taito",
       "genre": "Puzzle/Plataformas",
-      "wiki": "Exit (video game)"
+      "wiki": "Exit (video game)",
+      "quality_signals": {
+        "downloads": 469,
+        "stars": 11,
+        "age_days": 87,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "exit2-recomp",
@@ -4369,7 +5373,18 @@
       "year": 2007,
       "developer": "Taito",
       "genre": "Puzzle/Plataformas",
-      "wiki": "Exit (video game)"
+      "wiki": "Exit (video game)",
+      "quality_signals": {
+        "downloads": 469,
+        "stars": 11,
+        "age_days": 87,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "redahm",
@@ -4411,7 +5426,18 @@
       "developer": "Sandblast Games",
       "genre": "Acción",
       "wiki": "Destroy All Humans! Path of the Furon",
-      "rolling_tag": "new"
+      "rolling_tag": "new",
+      "quality_signals": {
+        "downloads": 1834,
+        "stars": 38,
+        "age_days": 190,
+        "releases": 5,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "rewor-ghwor",
@@ -4452,7 +5478,18 @@
       "year": 2010,
       "developer": "Neversoft",
       "genre": "Ritmo",
-      "wiki": "Guitar Hero: Warriors of Rock"
+      "wiki": "Guitar Hero: Warriors of Rock",
+      "quality_signals": {
+        "downloads": 1374,
+        "stars": 36,
+        "age_days": 213,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "downpour-recomp",
@@ -4493,7 +5530,18 @@
       "year": 2012,
       "developer": "Vatra Games",
       "genre": "Survival horror",
-      "wiki": "Silent Hill: Downpour"
+      "wiki": "Silent Hill: Downpour",
+      "quality_signals": {
+        "downloads": 10719,
+        "stars": 251,
+        "age_days": 103,
+        "releases": 10,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "ufc3-recomp",
@@ -4534,7 +5582,18 @@
       "year": 2012,
       "developer": "Yuke's",
       "genre": "Lucha",
-      "wiki": "UFC Undisputed 3"
+      "wiki": "UFC Undisputed 3",
+      "quality_signals": {
+        "downloads": 1390,
+        "stars": 23,
+        "age_days": 31,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "restuff-inparadise",
@@ -4576,7 +5635,18 @@
       "developer": "Behaviour Interactive",
       "genre": "Acción",
       "wiki": "Naughty Bear: Panic in Paradise",
-      "rolling_tag": "release"
+      "rolling_tag": "release",
+      "quality_signals": {
+        "downloads": 592,
+        "stars": 5,
+        "age_days": 105,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ac6-recomp",
@@ -4617,7 +5687,18 @@
       "year": 2007,
       "developer": "Project Aces",
       "genre": "Combate aéreo",
-      "wiki": "Ace Combat 6: Fires of Liberation"
+      "wiki": "Ace Combat 6: Fires of Liberation",
+      "quality_signals": {
+        "downloads": 12584,
+        "stars": 475,
+        "age_days": 183,
+        "releases": 3,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "sssv-recomp",
@@ -4660,7 +5741,18 @@
       "year": 1998,
       "developer": "DMA Design",
       "genre": "Plataformas/Puzzle",
-      "wiki": "Space Station Silicon Valley"
+      "wiki": "Space Station Silicon Valley",
+      "quality_signals": {
+        "downloads": 4122,
+        "stars": 99,
+        "age_days": 240,
+        "releases": 6,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "vpw2-recomp",
@@ -4701,7 +5793,18 @@
       "year": 2000,
       "developer": "AKI Corporation",
       "genre": "Lucha libre",
-      "wiki": "Virtual Pro Wrestling 2: Ōdō Keishō"
+      "wiki": "Virtual Pro Wrestling 2: Ōdō Keishō",
+      "quality_signals": {
+        "downloads": 589,
+        "stars": 6,
+        "age_days": 75,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "papermario-recut",
@@ -4742,7 +5845,18 @@
       "year": 2000,
       "developer": "Intelligent Systems",
       "genre": "RPG",
-      "wiki": "Paper Mario (video game)"
+      "wiki": "Paper Mario (video game)",
+      "quality_signals": {
+        "downloads": 9321,
+        "stars": 313,
+        "age_days": 130,
+        "releases": 2,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "troublemakers-recomp",
@@ -4785,7 +5899,18 @@
       "year": 1997,
       "developer": "Treasure",
       "genre": "Plataformas",
-      "wiki": "Mischief Makers"
+      "wiki": "Mischief Makers",
+      "quality_signals": {
+        "downloads": 5170,
+        "stars": 90,
+        "age_days": 83,
+        "releases": 17,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "emerald-recomp",
@@ -4826,7 +5951,18 @@
       "year": 2004,
       "developer": "Game Freak",
       "genre": "RPG",
-      "wiki": "Pokémon Emerald"
+      "wiki": "Pokémon Emerald",
+      "quality_signals": {
+        "downloads": 1992,
+        "stars": 26,
+        "age_days": 100,
+        "releases": 9,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "firered-recomp",
@@ -4867,7 +6003,18 @@
       "year": 2004,
       "developer": "Game Freak",
       "genre": "RPG",
-      "wiki": "Pokémon FireRed and LeafGreen"
+      "wiki": "Pokémon FireRed and LeafGreen",
+      "quality_signals": {
+        "downloads": 1534,
+        "stars": 16,
+        "age_days": 100,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "leafgreen-recomp",
@@ -4908,7 +6055,18 @@
       "year": 2004,
       "developer": "Game Freak",
       "genre": "RPG",
-      "wiki": "Pokémon FireRed and LeafGreen"
+      "wiki": "Pokémon FireRed and LeafGreen",
+      "quality_signals": {
+        "downloads": 1534,
+        "stars": 16,
+        "age_days": 100,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ruby-recomp",
@@ -4949,7 +6107,18 @@
       "year": 2002,
       "developer": "Game Freak",
       "genre": "RPG",
-      "wiki": "Pokémon Ruby and Sapphire"
+      "wiki": "Pokémon Ruby and Sapphire",
+      "quality_signals": {
+        "downloads": 1205,
+        "stars": 13,
+        "age_days": 100,
+        "releases": 4,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "sapphire-recomp",
@@ -4990,7 +6159,18 @@
       "year": 2002,
       "developer": "Game Freak",
       "genre": "RPG",
-      "wiki": "Pokémon Ruby and Sapphire"
+      "wiki": "Pokémon Ruby and Sapphire",
+      "quality_signals": {
+        "downloads": 1205,
+        "stars": 13,
+        "age_days": 100,
+        "releases": 4,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "acgc-pc",
@@ -5031,7 +6211,18 @@
       "year": 2001,
       "developer": "Nintendo",
       "genre": "Simulación social",
-      "wiki": "Animal Crossing (video game)"
+      "wiki": "Animal Crossing (video game)",
+      "quality_signals": {
+        "downloads": 29842,
+        "stars": 1458,
+        "age_days": 205,
+        "releases": 9,
+        "contributors": 4,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "marioparty4-pc",
@@ -5072,7 +6263,18 @@
       "year": 2002,
       "developer": "Hudson Soft",
       "genre": "Party",
-      "wiki": "Mario Party 4"
+      "wiki": "Mario Party 4",
+      "quality_signals": {
+        "downloads": 8434,
+        "stars": 858,
+        "age_days": 1045,
+        "releases": 6,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "mikupan-fatalframe",
@@ -5116,7 +6318,18 @@
       "developer": "Tecmo",
       "genre": "Survival horror",
       "wiki": "Fatal Frame (video game)",
-      "rolling_tag": "nightly"
+      "rolling_tag": "nightly",
+      "quality_signals": {
+        "downloads": 32,
+        "stars": 93,
+        "age_days": 331,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "opengoal-jak",
@@ -5157,7 +6370,18 @@
       "year": 2001,
       "developer": "Naughty Dog",
       "genre": "Plataformas",
-      "wiki": "Jak and Daxter: The Precursor Legacy"
+      "wiki": "Jak and Daxter: The Precursor Legacy",
+      "quality_signals": {
+        "downloads": 484154,
+        "stars": 231,
+        "age_days": 1511,
+        "releases": 89,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "goldeneye-recomp",
@@ -5198,7 +6422,18 @@
       "year": 1997,
       "developer": "Rare",
       "genre": "Shooter en primera persona",
-      "wiki": "GoldenEye 007 (1997 video game)"
+      "wiki": "GoldenEye 007 (1997 video game)",
+      "quality_signals": {
+        "downloads": 40668,
+        "stars": 869,
+        "age_days": 110,
+        "releases": 7,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "acx-recomp",
@@ -5239,7 +6474,18 @@
       "year": 2006,
       "developer": "Project Aces",
       "genre": "Combate aéreo",
-      "wiki": "Ace Combat X: Skies of Deception"
+      "wiki": "Ace Combat X: Skies of Deception",
+      "quality_signals": {
+        "downloads": 1462,
+        "stars": 70,
+        "age_days": 59,
+        "releases": 7,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "battleship-ssb64",
@@ -5282,7 +6528,18 @@
       "year": 1999,
       "developer": "HAL Laboratory",
       "genre": "Lucha",
-      "wiki": "Super Smash Bros. (video game)"
+      "wiki": "Super Smash Bros. (video game)",
+      "quality_signals": {
+        "downloads": 52235,
+        "stars": 456,
+        "age_days": 179,
+        "releases": 33,
+        "contributors": 5,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "sfex2plus-recomp",
@@ -5325,7 +6582,18 @@
       "year": 1999,
       "developer": "Arika",
       "genre": "Lucha",
-      "wiki": "Street Fighter EX2"
+      "wiki": "Street Fighter EX2",
+      "quality_signals": {
+        "downloads": 1082,
+        "stars": 22,
+        "age_days": 32,
+        "releases": 1,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "mksc-recomp",
@@ -5366,7 +6634,18 @@
       "year": 2001,
       "developer": "Intelligent Systems",
       "genre": "Carreras",
-      "wiki": "Mario Kart: Super Circuit"
+      "wiki": "Mario Kart: Super Circuit",
+      "quality_signals": {
+        "downloads": 3028,
+        "stars": 64,
+        "age_days": 62,
+        "releases": 6,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "opennectar-pikmin",
@@ -5405,7 +6684,18 @@
       "year": 2001,
       "developer": "Nintendo",
       "genre": "Estrategia en tiempo real",
-      "wiki": "Pikmin (video game)"
+      "wiki": "Pikmin (video game)",
+      "quality_signals": {
+        "downloads": 10216,
+        "stars": 180,
+        "age_days": 27,
+        "releases": 17,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "openpete-spyro",
@@ -5460,7 +6750,8 @@
       "year": 1998,
       "developer": "Insomniac Games",
       "genre": "Plataformas",
-      "wiki": "Spyro the Dragon (video game)"
+      "wiki": "Spyro the Dragon (video game)",
+      "tier": "comunidad"
     },
     {
       "id": "ctr-high-octane",
@@ -5501,7 +6792,18 @@
       "year": 1999,
       "developer": "Naughty Dog",
       "genre": "Carreras",
-      "wiki": "Crash Team Racing"
+      "wiki": "Crash Team Racing",
+      "quality_signals": {
+        "downloads": 4311,
+        "stars": 166,
+        "age_days": 101,
+        "releases": 7,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "roadrash64-recomp",
@@ -5542,7 +6844,18 @@
       "year": 1999,
       "developer": "Pacific Coast Power & Light",
       "genre": "Carreras",
-      "wiki": "Road Rash 64"
+      "wiki": "Road Rash 64",
+      "quality_signals": {
+        "downloads": 2225,
+        "stars": 57,
+        "age_days": 23,
+        "releases": 8,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "jetmoto-recomp",
@@ -5582,7 +6895,18 @@
       "year": 1996,
       "developer": "SingleTrac",
       "genre": "Carreras",
-      "wiki": "Jet Moto (video game)"
+      "wiki": "Jet Moto (video game)",
+      "quality_signals": {
+        "downloads": 14,
+        "stars": 0,
+        "age_days": 7,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "jetmoto2-recomp",
@@ -5622,7 +6946,18 @@
       "year": 1997,
       "developer": "SingleTrac",
       "genre": "Carreras",
-      "wiki": "Jet Moto 2"
+      "wiki": "Jet Moto 2",
+      "quality_signals": {
+        "downloads": 14,
+        "stars": 0,
+        "age_days": 7,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "jetmoto3-recomp",
@@ -5662,7 +6997,18 @@
       "year": 1999,
       "developer": "SingleTrac",
       "genre": "Carreras",
-      "wiki": "Jet Moto 3"
+      "wiki": "Jet Moto 3",
+      "quality_signals": {
+        "downloads": 14,
+        "stars": 0,
+        "age_days": 7,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "triaevum-oot3d",
@@ -5703,7 +7049,18 @@
       "year": 2011,
       "developer": "Grezzo / Nintendo",
       "genre": "Acción-aventura",
-      "wiki": "The Legend of Zelda: Ocarina of Time 3D"
+      "wiki": "The Legend of Zelda: Ocarina of Time 3D",
+      "quality_signals": {
+        "downloads": 19855,
+        "stars": 455,
+        "age_days": 23,
+        "releases": 8,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "snap64-recomp",
@@ -5746,7 +7103,18 @@
       "year": 1999,
       "developer": "HAL Laboratory / Pax Softnica",
       "genre": "Fotografía sobre raíles",
-      "wiki": "Pokémon Snap"
+      "wiki": "Pokémon Snap",
+      "quality_signals": {
+        "downloads": 4145,
+        "stars": 91,
+        "age_days": 25,
+        "releases": 11,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "perfect-dark-dabs-mod",
@@ -5794,7 +7162,18 @@
       "developer": "Rare",
       "genre": "Disparos en primera persona",
       "wiki": "Perfect Dark",
-      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png"
+      "box_art": "https://cdn2.steamgriddb.com/grid/f2eaa301f9c53bb10fb8e5b9d3d0ea9c.png",
+      "quality_signals": {
+        "downloads": 10376,
+        "stars": 139,
+        "age_days": 29,
+        "releases": 24,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "melee-pc",
@@ -5837,7 +7216,18 @@
       "year": 2001,
       "developer": "HAL Laboratory",
       "genre": "Lucha",
-      "wiki": "Super Smash Bros. Melee"
+      "wiki": "Super Smash Bros. Melee",
+      "quality_signals": {
+        "downloads": 22459,
+        "stars": 400,
+        "age_days": 17,
+        "releases": 15,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "strikers-pc",
@@ -5884,7 +7274,18 @@
       "year": 2005,
       "developer": "Next Level Games",
       "genre": "Deportes",
-      "wiki": "Super Mario Strikers"
+      "wiki": "Super Mario Strikers",
+      "quality_signals": {
+        "downloads": 9697,
+        "stars": 277,
+        "age_days": 20,
+        "releases": 7,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "aerogauge-recomp",
@@ -5927,7 +7328,18 @@
       "year": 1997,
       "developer": "ASCII Corporation",
       "genre": "Carreras",
-      "wiki": "AeroGauge"
+      "wiki": "AeroGauge",
+      "quality_signals": {
+        "downloads": 1788,
+        "stars": 35,
+        "age_days": 82,
+        "releases": 6,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "spacechannel5-pc",
@@ -5976,7 +7388,18 @@
       "year": 1999,
       "developer": "United Game Artists",
       "genre": "Ritmo",
-      "wiki": "Space Channel 5"
+      "wiki": "Space Channel 5",
+      "quality_signals": {
+        "downloads": 323,
+        "stars": 18,
+        "age_days": 18,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "spiderman-ps1-recomp",
@@ -6018,7 +7441,18 @@
       "year": 2000,
       "developer": "Neversoft",
       "genre": "Acción-aventura",
-      "wiki": "Spider-Man (2000 video game)"
+      "wiki": "Spider-Man (2000 video game)",
+      "quality_signals": {
+        "downloads": 1162,
+        "stars": 6,
+        "age_days": 33,
+        "releases": 5,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "spiderman2-ps1-recomp",
@@ -6060,7 +7494,18 @@
       "year": 2001,
       "developer": "Vicarious Visions",
       "genre": "Acción-aventura",
-      "wiki": "Spider-Man 2: Enter Electro"
+      "wiki": "Spider-Man 2: Enter Electro",
+      "quality_signals": {
+        "downloads": 1162,
+        "stars": 6,
+        "age_days": 33,
+        "releases": 5,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "lostodyssey-recomp",
@@ -6101,7 +7546,18 @@
       "year": 2007,
       "developer": "Mistwalker / feelplus",
       "genre": "RPG",
-      "wiki": "Lost Odyssey"
+      "wiki": "Lost Odyssey",
+      "quality_signals": {
+        "downloads": 19765,
+        "stars": 433,
+        "age_days": 25,
+        "releases": 41,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "racewave46",
@@ -6142,7 +7598,18 @@
       "year": 1996,
       "developer": "Nintendo EAD",
       "genre": "Carreras",
-      "wiki": "Wave Race 64"
+      "wiki": "Wave Race 64",
+      "quality_signals": {
+        "downloads": 3662,
+        "stars": 104,
+        "age_days": 14,
+        "releases": 1,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "paperboat-pm64",
@@ -6188,7 +7655,18 @@
       "year": 2000,
       "developer": "Intelligent Systems",
       "genre": "RPG",
-      "wiki": "Paper Mario (video game)"
+      "wiki": "Paper Mario (video game)",
+      "quality_signals": {
+        "downloads": 22838,
+        "stars": 411,
+        "age_days": 208,
+        "releases": 3,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "beetle-adventure-racing-recomp",
@@ -6229,7 +7707,18 @@
       "year": 1999,
       "developer": "Paradigm Entertainment",
       "genre": "Carreras",
-      "wiki": "Beetle Adventure Racing!"
+      "wiki": "Beetle Adventure Racing!",
+      "quality_signals": {
+        "downloads": 2252,
+        "stars": 58,
+        "age_days": 24,
+        "releases": 6,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "goldeneye-pc-port",
@@ -6272,7 +7761,18 @@
       "year": 1997,
       "developer": "Rare",
       "genre": "Disparos en primera persona",
-      "wiki": "GoldenEye 007 (1997 video game)"
+      "wiki": "GoldenEye 007 (1997 video game)",
+      "quality_signals": {
+        "downloads": 7407,
+        "stars": 189,
+        "age_days": 31,
+        "releases": 6,
+        "contributors": 3,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "pilotwings64-recomp",
@@ -6315,7 +7815,18 @@
       "year": 1996,
       "developer": "Paradigm Simulation",
       "genre": "Simulación",
-      "wiki": "Pilotwings 64"
+      "wiki": "Pilotwings 64",
+      "quality_signals": {
+        "downloads": 2312,
+        "stars": 66,
+        "age_days": 16,
+        "releases": 2,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "deadly-premonition-recomp",
@@ -6356,7 +7867,18 @@
       "year": 2010,
       "developer": "Access Games",
       "genre": "Survival horror",
-      "wiki": "Deadly Premonition"
+      "wiki": "Deadly Premonition",
+      "quality_signals": {
+        "downloads": 2619,
+        "stars": 153,
+        "age_days": 108,
+        "releases": 32,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ninja-gaiden-2-recomp",
@@ -6397,7 +7919,18 @@
       "year": 2008,
       "developer": "Team Ninja",
       "genre": "Hack and slash",
-      "wiki": "Ninja Gaiden II"
+      "wiki": "Ninja Gaiden II",
+      "quality_signals": {
+        "downloads": 5544,
+        "stars": 128,
+        "age_days": 26,
+        "releases": 25,
+        "contributors": 2,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "fable2-recomp",
@@ -6438,7 +7971,18 @@
       "year": 2008,
       "developer": "Lionhead Studios",
       "genre": "Action RPG",
-      "wiki": "Fable II"
+      "wiki": "Fable II",
+      "quality_signals": {
+        "downloads": 10973,
+        "stars": 314,
+        "age_days": 31,
+        "releases": 6,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "fable2-legend-never-dies",
@@ -6479,7 +8023,18 @@
       "year": 2008,
       "developer": "Lionhead Studios",
       "genre": "Action RPG",
-      "wiki": "Fable II"
+      "wiki": "Fable II",
+      "quality_signals": {
+        "downloads": 169,
+        "stars": 5,
+        "age_days": 17,
+        "releases": 38,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "nfsmw-x360-recomp",
@@ -6520,7 +8075,18 @@
       "year": 2005,
       "developer": "EA Black Box",
       "genre": "Carreras",
-      "wiki": "Need for Speed: Most Wanted (2005 video game)"
+      "wiki": "Need for Speed: Most Wanted (2005 video game)",
+      "quality_signals": {
+        "downloads": 760,
+        "stars": 74,
+        "age_days": 20,
+        "releases": 2,
+        "contributors": 3,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dr2-case-zero-recomp",
@@ -6563,7 +8129,18 @@
       "year": 2010,
       "developer": "Blue Castle Games",
       "genre": "Acción-aventura",
-      "wiki": "Dead Rising 2: Case Zero"
+      "wiki": "Dead Rising 2: Case Zero",
+      "quality_signals": {
+        "downloads": 1789,
+        "stars": 66,
+        "age_days": 57,
+        "releases": 6,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dr2-case-west-recomp",
@@ -6606,7 +8183,18 @@
       "year": 2010,
       "developer": "Blue Castle Games",
       "genre": "Acción-aventura",
-      "wiki": "Dead Rising 2: Case West"
+      "wiki": "Dead Rising 2: Case West",
+      "quality_signals": {
+        "downloads": 1223,
+        "stars": 45,
+        "age_days": 46,
+        "releases": 4,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "thp8-recomp",
@@ -6651,7 +8239,18 @@
       "year": 2006,
       "developer": "Neversoft",
       "genre": "Deportes",
-      "wiki": "Tony Hawk's Project 8"
+      "wiki": "Tony Hawk's Project 8",
+      "quality_signals": {
+        "downloads": 725,
+        "stars": 26,
+        "age_days": 44,
+        "releases": 4,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "darkness-recomp",
@@ -6692,7 +8291,18 @@
       "year": 2007,
       "developer": "Starbreeze Studios",
       "genre": "Disparos en primera persona",
-      "wiki": "The Darkness (video game)"
+      "wiki": "The Darkness (video game)",
+      "quality_signals": {
+        "downloads": 2998,
+        "stars": 169,
+        "age_days": 15,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "hydro-thunder-hurricane-recomp",
@@ -6733,7 +8343,18 @@
       "year": 2010,
       "developer": "Vector Unit",
       "genre": "Carreras",
-      "wiki": "Hydro Thunder Hurricane"
+      "wiki": "Hydro Thunder Hurricane",
+      "quality_signals": {
+        "downloads": 9,
+        "stars": 3,
+        "age_days": 28,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "sonic-free-riders-recomp",
@@ -6776,7 +8397,18 @@
       "year": 2010,
       "developer": "Sonic Team",
       "genre": "Carreras",
-      "wiki": "Sonic Free Riders"
+      "wiki": "Sonic Free Riders",
+      "quality_signals": {
+        "downloads": 1906,
+        "stars": 57,
+        "age_days": 9,
+        "releases": 15,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "pokemon-stadium-recomp",
@@ -6817,7 +8449,18 @@
       "year": 1999,
       "developer": "Nintendo EAD / HAL Laboratory",
       "genre": "Estrategia",
-      "wiki": "Pokémon Stadium"
+      "wiki": "Pokémon Stadium",
+      "quality_signals": {
+        "downloads": 8797,
+        "stars": 121,
+        "age_days": 150,
+        "releases": 9,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "ogre-battle-64-recomp",
@@ -6862,7 +8505,18 @@
       "year": 1999,
       "developer": "Quest",
       "genre": "RPG táctico",
-      "wiki": "Ogre Battle 64: Person of Lordly Caliber"
+      "wiki": "Ogre Battle 64: Person of Lordly Caliber",
+      "quality_signals": {
+        "downloads": 596,
+        "stars": 67,
+        "age_days": 37,
+        "releases": 10,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "wave-race-64-recomp",
@@ -6905,7 +8559,18 @@
       "year": 1996,
       "developer": "Nintendo EAD",
       "genre": "Carreras",
-      "wiki": "Wave Race 64"
+      "wiki": "Wave Race 64",
+      "quality_signals": {
+        "downloads": 2062,
+        "stars": 74,
+        "age_days": 27,
+        "releases": 17,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "body-harvest-recomp",
@@ -6948,7 +8613,18 @@
       "year": 1998,
       "developer": "DMA Design",
       "genre": "Acción-aventura",
-      "wiki": "Body Harvest"
+      "wiki": "Body Harvest",
+      "quality_signals": {
+        "downloads": 178,
+        "stars": 14,
+        "age_days": 15,
+        "releases": 1,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rayman2-n64-recomp",
@@ -6989,7 +8665,18 @@
       "year": 1999,
       "developer": "Ubi Pictures",
       "genre": "Plataformas",
-      "wiki": "Rayman 2: The Great Escape"
+      "wiki": "Rayman 2: The Great Escape",
+      "quality_signals": {
+        "downloads": 65,
+        "stars": 5,
+        "age_days": 23,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "hybrid-heaven-recomp",
@@ -7032,7 +8719,18 @@
       "year": 1999,
       "developer": "Konami",
       "genre": "Action RPG",
-      "wiki": "Hybrid Heaven"
+      "wiki": "Hybrid Heaven",
+      "quality_signals": {
+        "downloads": 52,
+        "stars": 4,
+        "age_days": 15,
+        "releases": 2,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "conker64-recomp",
@@ -7073,7 +8771,18 @@
       "year": 2001,
       "developer": "Rare",
       "genre": "Plataformas",
-      "wiki": "Conker's Bad Fur Day"
+      "wiki": "Conker's Bad Fur Day",
+      "quality_signals": {
+        "downloads": 239,
+        "stars": 24,
+        "age_days": 42,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "sote-recomp",
@@ -7114,7 +8823,18 @@
       "year": 1996,
       "developer": "LucasArts",
       "genre": "Acción",
-      "wiki": "Star Wars: Shadows of the Empire (video game)"
+      "wiki": "Star Wars: Shadows of the Empire (video game)",
+      "quality_signals": {
+        "downloads": 1298,
+        "stars": 23,
+        "age_days": 59,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "turok2-recomp",
@@ -7155,7 +8875,18 @@
       "year": 1998,
       "developer": "Iguana Entertainment",
       "genre": "Disparos en primera persona",
-      "wiki": "Turok 2: Seeds of Evil"
+      "wiki": "Turok 2: Seeds of Evil",
+      "quality_signals": {
+        "downloads": 7,
+        "stars": 1,
+        "age_days": 25,
+        "releases": 2,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "army-men-sh64-recomp",
@@ -7196,7 +8927,18 @@
       "year": 1999,
       "developer": "The 3DO Company",
       "genre": "Acción",
-      "wiki": "Army Men: Sarge's Heroes"
+      "wiki": "Army Men: Sarge's Heroes",
+      "quality_signals": {
+        "downloads": 5,
+        "stars": 1,
+        "age_days": 29,
+        "releases": 2,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "banjo-tooie-recomp",
@@ -7239,7 +8981,18 @@
       "year": 2000,
       "developer": "Rare",
       "genre": "Plataformas",
-      "wiki": "Banjo-Tooie"
+      "wiki": "Banjo-Tooie",
+      "quality_signals": {
+        "downloads": 53,
+        "stars": 3,
+        "age_days": 15,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "40-winks-pc-port",
@@ -7282,7 +9035,18 @@
       "year": 1999,
       "developer": "Eurocom",
       "genre": "Plataformas",
-      "wiki": "40 Winks (video game)"
+      "wiki": "40 Winks (video game)",
+      "quality_signals": {
+        "downloads": 29,
+        "stars": 0,
+        "age_days": 50,
+        "releases": 8,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "snowboardkids-recomp",
@@ -7325,7 +9089,18 @@
       "year": 1997,
       "developer": "Racdym",
       "genre": "Carreras",
-      "wiki": "Snowboard Kids"
+      "wiki": "Snowboard Kids",
+      "quality_signals": {
+        "downloads": 10,
+        "stars": 0,
+        "age_days": 15,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "minish-cap-recomp",
@@ -7366,7 +9141,18 @@
       "year": 2004,
       "developer": "Nintendo / Capcom",
       "genre": "Acción-aventura",
-      "wiki": "The Legend of Zelda: The Minish Cap"
+      "wiki": "The Legend of Zelda: The Minish Cap",
+      "quality_signals": {
+        "downloads": 220,
+        "stars": 15,
+        "age_days": 129,
+        "releases": 5,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "megaman-zero-recomp",
@@ -7407,7 +9193,18 @@
       "year": 2002,
       "developer": "Inti Creates",
       "genre": "Acción-plataformas",
-      "wiki": "Mega Man Zero (video game)"
+      "wiki": "Mega Man Zero (video game)",
+      "quality_signals": {
+        "downloads": 475,
+        "stars": 11,
+        "age_days": 78,
+        "releases": 6,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dbz-buus-fury-recomp",
@@ -7448,7 +9245,18 @@
       "year": 2004,
       "developer": "Webfoot Technologies",
       "genre": "Action RPG",
-      "wiki": "Dragon Ball Z: Buu's Fury"
+      "wiki": "Dragon Ball Z: Buu's Fury",
+      "quality_signals": {
+        "downloads": 503,
+        "stars": 20,
+        "age_days": 59,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "valkyrie-profile-recomp",
@@ -7495,7 +9303,18 @@
       "year": 1999,
       "developer": "tri-Ace",
       "genre": "RPG",
-      "wiki": "Valkyrie Profile"
+      "wiki": "Valkyrie Profile",
+      "quality_signals": {
+        "downloads": 2960,
+        "stars": 102,
+        "age_days": 31,
+        "releases": 2,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "mmx4-recomp",
@@ -7538,7 +9357,18 @@
       "year": 1997,
       "developer": "Capcom",
       "genre": "Plataformas",
-      "wiki": "Mega Man X4"
+      "wiki": "Mega Man X4",
+      "quality_signals": {
+        "downloads": 2921,
+        "stars": 86,
+        "age_days": 87,
+        "releases": 7,
+        "contributors": 2,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "crash2-recomp",
@@ -7579,7 +9409,18 @@
       "year": 1997,
       "developer": "Naughty Dog",
       "genre": "Plataformas",
-      "wiki": "Crash Bandicoot 2: Cortex Strikes Back"
+      "wiki": "Crash Bandicoot 2: Cortex Strikes Back",
+      "quality_signals": {
+        "downloads": 2838,
+        "stars": 81,
+        "age_days": 32,
+        "releases": 6,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "opengt-ps1",
@@ -7620,7 +9461,18 @@
       "year": 1999,
       "developer": "Polyphony Digital",
       "genre": "Carreras",
-      "wiki": "Gran Turismo 2"
+      "wiki": "Gran Turismo 2",
+      "quality_signals": {
+        "downloads": 0,
+        "stars": 0,
+        "age_days": 0,
+        "releases": 0,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "xenogears-recomp",
@@ -7663,7 +9515,18 @@
       "year": 1998,
       "developer": "Square",
       "genre": "RPG",
-      "wiki": "Xenogears"
+      "wiki": "Xenogears",
+      "quality_signals": {
+        "downloads": 362,
+        "stars": 52,
+        "age_days": 70,
+        "releases": 12,
+        "contributors": 3,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "soulblade-recomp",
@@ -7704,7 +9567,18 @@
       "year": 1996,
       "developer": "Namco",
       "genre": "Lucha",
-      "wiki": "Soul Edge"
+      "wiki": "Soul Edge",
+      "quality_signals": {
+        "downloads": 348,
+        "stars": 28,
+        "age_days": 35,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "tekken1-recomp",
@@ -7745,7 +9619,18 @@
       "year": 1994,
       "developer": "Namco",
       "genre": "Lucha",
-      "wiki": "Tekken (video game)"
+      "wiki": "Tekken (video game)",
+      "quality_signals": {
+        "downloads": 108,
+        "stars": 4,
+        "age_days": 62,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "wwf-smackdown2-recomp",
@@ -7786,7 +9671,18 @@
       "year": 2000,
       "developer": "Yuke's",
       "genre": "Lucha libre",
-      "wiki": "WWF SmackDown! 2: Know Your Role"
+      "wiki": "WWF SmackDown! 2: Know Your Role",
+      "quality_signals": {
+        "downloads": 27,
+        "stars": 0,
+        "age_days": 36,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "toshinden-recomp",
@@ -7829,7 +9725,18 @@
       "year": 1995,
       "developer": "Tamsoft",
       "genre": "Lucha",
-      "wiki": "Battle Arena Toshinden"
+      "wiki": "Battle Arena Toshinden",
+      "quality_signals": {
+        "downloads": 158,
+        "stars": 10,
+        "age_days": 23,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "wild9-recomp",
@@ -7876,7 +9783,18 @@
       "year": 1998,
       "developer": "Shiny Entertainment",
       "genre": "Plataformas",
-      "wiki": "Wild 9"
+      "wiki": "Wild 9",
+      "quality_signals": {
+        "downloads": 50,
+        "stars": 4,
+        "age_days": 19,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "puyo-puyo-box-recomp",
@@ -7917,7 +9835,18 @@
       "year": 2000,
       "developer": "Compile",
       "genre": "Puzle",
-      "wiki": "Puyo Puyo Box"
+      "wiki": "Puyo Puyo Box",
+      "quality_signals": {
+        "downloads": 63,
+        "stars": 9,
+        "age_days": 24,
+        "releases": 1,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "tsumu-light-recomp",
@@ -7960,7 +9889,18 @@
       "year": 1999,
       "developer": "Japan Media Programming",
       "genre": "Puzle",
-      "wiki": null
+      "wiki": null,
+      "quality_signals": {
+        "downloads": 65,
+        "stars": 6,
+        "age_days": 86,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rogue-trip-recomp",
@@ -8001,7 +9941,18 @@
       "year": 1998,
       "developer": "SingleTrac",
       "genre": "Combate vehicular",
-      "wiki": "Rogue Trip: Vacation 2012"
+      "wiki": "Rogue Trip: Vacation 2012",
+      "quality_signals": {
+        "downloads": 0,
+        "stars": 0,
+        "age_days": 23,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "ace-combat-5-recomp",
@@ -8042,7 +9993,18 @@
       "year": 2004,
       "developer": "Project Aces",
       "genre": "Combate aéreo",
-      "wiki": "Ace Combat 5: The Unsung War"
+      "wiki": "Ace Combat 5: The Unsung War",
+      "quality_signals": {
+        "downloads": 1471,
+        "stars": 62,
+        "age_days": 15,
+        "releases": 4,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "projectcane-sly1",
@@ -8081,7 +10043,18 @@
       "year": 2002,
       "developer": "Sucker Punch Productions",
       "genre": "Plataformas",
-      "wiki": "Sly Cooper and the Thievius Raccoonus"
+      "wiki": "Sly Cooper and the Thievius Raccoonus",
+      "quality_signals": {
+        "downloads": 257,
+        "stars": 95,
+        "age_days": 1124,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "sm64ds-recomp",
@@ -8122,7 +10095,18 @@
       "year": 2004,
       "developer": "Nintendo EAD",
       "genre": "Plataformas",
-      "wiki": "Super Mario 64 DS"
+      "wiki": "Super Mario 64 DS",
+      "quality_signals": {
+        "downloads": 85,
+        "stars": 7,
+        "age_days": 77,
+        "releases": 3,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "mp6-native-port",
@@ -8163,7 +10147,18 @@
       "year": 2004,
       "developer": "Hudson Soft",
       "genre": "Party",
-      "wiki": "Mario Party 6"
+      "wiki": "Mario Party 6",
+      "quality_signals": {
+        "downloads": 28,
+        "stars": 5,
+        "age_days": 75,
+        "releases": 4,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "yakumo-mhp3rd",
@@ -8203,7 +10198,18 @@
       "year": 2010,
       "developer": "Capcom",
       "genre": "Action RPG",
-      "wiki": "Monster Hunter Portable 3rd"
+      "wiki": "Monster Hunter Portable 3rd",
+      "quality_signals": {
+        "downloads": 14931,
+        "stars": 345,
+        "age_days": 12,
+        "releases": 12,
+        "contributors": 2,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "aitd-rehaunted",
@@ -8245,7 +10251,18 @@
       "year": 1992,
       "developer": "Infogrames",
       "genre": "Survival horror",
-      "wiki": "Alone in the Dark (1992 video game)"
+      "wiki": "Alone in the Dark (1992 video game)",
+      "quality_signals": {
+        "downloads": 1778,
+        "stars": 113,
+        "age_days": 209,
+        "releases": 15,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "comunidad"
     },
     {
       "id": "dbz-legacy-of-goku-recomp",
@@ -8286,7 +10303,18 @@
       "year": 2002,
       "developer": "Webfoot Technologies",
       "genre": "Action RPG",
-      "wiki": "Dragon Ball Z: The Legacy of Goku"
+      "wiki": "Dragon Ball Z: The Legacy of Goku",
+      "quality_signals": {
+        "downloads": 59,
+        "stars": 5,
+        "age_days": 60,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dbz-legacy-of-goku2-recomp",
@@ -8327,7 +10355,18 @@
       "year": 2003,
       "developer": "Webfoot Technologies",
       "genre": "Action RPG",
-      "wiki": "Dragon Ball Z: The Legacy of Goku II"
+      "wiki": "Dragon Ball Z: The Legacy of Goku II",
+      "quality_signals": {
+        "downloads": 60,
+        "stars": 2,
+        "age_days": 59,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "samurai-shodown-wr-recomp",
@@ -8368,7 +10407,18 @@
       "year": 1999,
       "developer": "SNK",
       "genre": "Lucha",
-      "wiki": "Samurai Shodown: Warriors Rage"
+      "wiki": "Samurai Shodown: Warriors Rage",
+      "quality_signals": {
+        "downloads": 64,
+        "stars": 5,
+        "age_days": 23,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "bloody-roar-recomp",
@@ -8411,7 +10461,18 @@
       "year": 1997,
       "developer": "Raizing / Eighting",
       "genre": "Lucha",
-      "wiki": "Bloody Roar (video game)"
+      "wiki": "Bloody Roar (video game)",
+      "quality_signals": {
+        "downloads": 19,
+        "stars": 2,
+        "age_days": 24,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "macross-dyrl-recomp",
@@ -8452,7 +10513,18 @@
       "year": 1999,
       "developer": "Bandai / Sega",
       "genre": "Matamarcianos",
-      "wiki": null
+      "wiki": null,
+      "quality_signals": {
+        "downloads": 9,
+        "stars": 0,
+        "age_days": 25,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rbff-dominated-mind-recomp",
@@ -8493,7 +10565,18 @@
       "year": 1998,
       "developer": "SNK",
       "genre": "Lucha",
-      "wiki": "Real Bout Fatal Fury Special: Dominated Mind"
+      "wiki": "Real Bout Fatal Fury Special: Dominated Mind",
+      "quality_signals": {
+        "downloads": 6,
+        "stars": 0,
+        "age_days": 23,
+        "releases": 1,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "rising-zan-recomp",
@@ -8534,7 +10617,18 @@
       "year": 1999,
       "developer": "UEP Systems",
       "genre": "Hack and slash",
-      "wiki": "Rising Zan: The Samurai Gunman"
+      "wiki": "Rising Zan: The Samurai Gunman",
+      "quality_signals": {
+        "downloads": 11,
+        "stars": 0,
+        "age_days": 24,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "raystorm-recomp",
@@ -8575,7 +10669,18 @@
       "year": 1996,
       "developer": "Taito",
       "genre": "Matamarcianos",
-      "wiki": "RayStorm"
+      "wiki": "RayStorm",
+      "quality_signals": {
+        "downloads": 12,
+        "stars": 0,
+        "age_days": 24,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "tekken3-recompiled-fishbones",
@@ -8616,7 +10721,18 @@
       "year": 1997,
       "developer": "Namco",
       "genre": "Lucha",
-      "wiki": "Tekken 3"
+      "wiki": "Tekken 3",
+      "quality_signals": {
+        "downloads": 2028,
+        "stars": 32,
+        "age_days": 17,
+        "releases": 5,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "spyro3-recompiled",
@@ -8657,7 +10773,18 @@
       "year": 2000,
       "developer": "Insomniac Games",
       "genre": "Plataformas",
-      "wiki": "Spyro: Year of the Dragon"
+      "wiki": "Spyro: Year of the Dragon",
+      "quality_signals": {
+        "downloads": 31,
+        "stars": 3,
+        "age_days": 60,
+        "releases": 4,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "toystory2-recomp",
@@ -8700,7 +10827,18 @@
       "year": 1999,
       "developer": "Traveller's Tales",
       "genre": "Plataformas",
-      "wiki": "Toy Story 2: Buzz Lightyear to the Rescue"
+      "wiki": "Toy Story 2: Buzz Lightyear to the Rescue",
+      "quality_signals": {
+        "downloads": 53,
+        "stars": 6,
+        "age_days": 63,
+        "releases": 1,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "robox-recompiled",
@@ -8741,7 +10879,18 @@
       "year": 2010,
       "developer": "Dreambox Games",
       "genre": "Plataformas",
-      "wiki": "Robox"
+      "wiki": "Robox",
+      "quality_signals": {
+        "downloads": 14,
+        "stars": 2,
+        "age_days": 67,
+        "releases": 9,
+        "contributors": 1,
+        "ai": true,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "budokai3-hd-recomp",
@@ -8784,7 +10933,18 @@
       "year": 2012,
       "developer": "Dimps",
       "genre": "Lucha",
-      "wiki": "Dragon Ball Z: Budokai HD Collection"
+      "wiki": "Dragon Ball Z: Budokai HD Collection",
+      "quality_signals": {
+        "downloads": 4816,
+        "stars": 125,
+        "age_days": 43,
+        "releases": 21,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "openjam-nba-jam-ofe",
@@ -8825,7 +10985,18 @@
       "year": 2011,
       "developer": "EA Sports",
       "genre": "Deportes",
-      "wiki": "NBA Jam: On Fire Edition"
+      "wiki": "NBA Jam: On Fire Edition",
+      "quality_signals": {
+        "downloads": 176,
+        "stars": 19,
+        "age_days": 13,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "estacado-darkness-recomp",
@@ -8866,7 +11037,18 @@
       "year": 2007,
       "developer": "Starbreeze Studios",
       "genre": "Disparos en primera persona",
-      "wiki": "The Darkness (video game)"
+      "wiki": "The Darkness (video game)",
+      "quality_signals": {
+        "downloads": 152,
+        "stars": 17,
+        "age_days": 1,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "mojorecomp-crash-titans",
@@ -8907,7 +11089,18 @@
       "year": 2007,
       "developer": "Radical Entertainment",
       "genre": "Plataformas",
-      "wiki": "Crash of the Titans"
+      "wiki": "Crash of the Titans",
+      "quality_signals": {
+        "downloads": 457,
+        "stars": 16,
+        "age_days": 2,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "mw2-recompiled",
@@ -8950,7 +11143,18 @@
       "year": 2009,
       "developer": "Infinity Ward",
       "genre": "Disparos en primera persona",
-      "wiki": "Call of Duty: Modern Warfare 2"
+      "wiki": "Call of Duty: Modern Warfare 2",
+      "quality_signals": {
+        "downloads": 137,
+        "stars": 13,
+        "age_days": 4,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "svr2011-recomp",
@@ -8991,7 +11195,18 @@
       "year": 2010,
       "developer": "Yuke's",
       "genre": "Lucha libre",
-      "wiki": "WWE SmackDown vs. Raw 2011"
+      "wiki": "WWE SmackDown vs. Raw 2011",
+      "quality_signals": {
+        "downloads": 176,
+        "stars": 8,
+        "age_days": 2,
+        "releases": 5,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "svr2011-pc",
@@ -9032,7 +11247,18 @@
       "year": 2010,
       "developer": "Yuke's",
       "genre": "Lucha libre",
-      "wiki": "WWE SmackDown vs. Raw 2011"
+      "wiki": "WWE SmackDown vs. Raw 2011",
+      "quality_signals": {
+        "downloads": 376,
+        "stars": 3,
+        "age_days": 2,
+        "releases": 11,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "project-1944-cod3",
@@ -9073,7 +11299,18 @@
       "year": 2006,
       "developer": "Treyarch",
       "genre": "Disparos en primera persona",
-      "wiki": "Call of Duty 3"
+      "wiki": "Call of Duty 3",
+      "quality_signals": {
+        "downloads": 62,
+        "stars": 5,
+        "age_days": 5,
+        "releases": 4,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "nhl-3on3-recomp",
@@ -9114,7 +11351,18 @@
       "year": 2009,
       "developer": "EA Canada",
       "genre": "Deportes",
-      "wiki": "3 on 3 NHL Arcade"
+      "wiki": "3 on 3 NHL Arcade",
+      "quality_signals": {
+        "downloads": 8,
+        "stars": 1,
+        "age_days": 1,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "timberline-open-season",
@@ -9155,7 +11403,18 @@
       "year": 2006,
       "developer": "Ubisoft Montreal",
       "genre": "Plataformas",
-      "wiki": "Open Season (video game)"
+      "wiki": "Open Season (video game)",
+      "quality_signals": {
+        "downloads": 1,
+        "stars": 0,
+        "age_days": 1,
+        "releases": 1,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "cbfd-recompiled",
@@ -9200,7 +11459,18 @@
       "year": 2001,
       "developer": "Rare",
       "genre": "Plataformas",
-      "wiki": "Conker's Bad Fur Day"
+      "wiki": "Conker's Bad Fur Day",
+      "quality_signals": {
+        "downloads": 6048,
+        "stars": 198,
+        "age_days": 5,
+        "releases": 6,
+        "contributors": 5,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "snowboardkids-recomp-hikari",
@@ -9243,7 +11513,18 @@
       "year": 1997,
       "developer": "Racdym",
       "genre": "Carreras",
-      "wiki": "Snowboard Kids"
+      "wiki": "Snowboard Kids",
+      "quality_signals": {
+        "downloads": 5,
+        "stars": 2,
+        "age_days": 7,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "banjo-tooie-recompiled-ssd",
@@ -9284,7 +11565,18 @@
       "year": 2000,
       "developer": "Rare",
       "genre": "Plataformas",
-      "wiki": "Banjo-Tooie"
+      "wiki": "Banjo-Tooie",
+      "quality_signals": {
+        "downloads": 28,
+        "stars": 2,
+        "age_days": 3,
+        "releases": 3,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "pmd-red-rescue-recomp",
@@ -9331,7 +11623,18 @@
       "year": 2005,
       "developer": "Chunsoft",
       "genre": "RPG",
-      "wiki": "Pokémon Mystery Dungeon: Red Rescue Team and Blue Rescue Team"
+      "wiki": "Pokémon Mystery Dungeon: Red Rescue Team and Blue Rescue Team",
+      "quality_signals": {
+        "downloads": 32,
+        "stars": 6,
+        "age_days": 9,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "ygo-forbidden-memories-recomp",
@@ -9374,7 +11677,18 @@
       "year": 1999,
       "developer": "Konami",
       "genre": "Juego de cartas",
-      "wiki": "Yu-Gi-Oh! Forbidden Memories"
+      "wiki": "Yu-Gi-Oh! Forbidden Memories",
+      "quality_signals": {
+        "downloads": 6320,
+        "stars": 95,
+        "age_days": 9,
+        "releases": 8,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "sfex-plus-alpha-recomp",
@@ -9416,7 +11730,18 @@
       "year": 1997,
       "developer": "Arika",
       "genre": "Lucha",
-      "wiki": "Street Fighter EX"
+      "wiki": "Street Fighter EX",
+      "quality_signals": {
+        "downloads": 1201,
+        "stars": 37,
+        "age_days": 41,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dbgt-final-bout-recomp",
@@ -9457,7 +11782,18 @@
       "year": 1997,
       "developer": "TOSE",
       "genre": "Lucha",
-      "wiki": "Dragon Ball GT: Final Bout"
+      "wiki": "Dragon Ball GT: Final Bout",
+      "quality_signals": {
+        "downloads": 320,
+        "stars": 28,
+        "age_days": 43,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "r4-ridge-racer-type4-recomp",
@@ -9502,7 +11838,18 @@
       "year": 1998,
       "developer": "Namco",
       "genre": "Carreras",
-      "wiki": "R4: Ridge Racer Type 4"
+      "wiki": "R4: Ridge Racer Type 4",
+      "quality_signals": {
+        "downloads": 7,
+        "stars": 0,
+        "age_days": 5,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "re15pc",
@@ -9543,7 +11890,18 @@
       "year": 1996,
       "developer": "Capcom",
       "genre": "Survival horror",
-      "wiki": "Resident Evil 1.5"
+      "wiki": "Resident Evil 1.5",
+      "quality_signals": {
+        "downloads": 1,
+        "stars": 0,
+        "age_days": 4,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "dark-cloud-2-recomp",
@@ -9584,7 +11942,18 @@
       "year": 2002,
       "developer": "Level-5",
       "genre": "Action RPG",
-      "wiki": "Dark Chronicle"
+      "wiki": "Dark Chronicle",
+      "quality_signals": {
+        "downloads": 229,
+        "stars": 25,
+        "age_days": 100,
+        "releases": 5,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "lcs-native",
@@ -9625,7 +11994,18 @@
       "year": 2005,
       "developer": "Rockstar Leeds",
       "genre": "Acción-aventura",
-      "wiki": "Grand Theft Auto: Liberty City Stories"
+      "wiki": "Grand Theft Auto: Liberty City Stories",
+      "quality_signals": {
+        "downloads": 2526,
+        "stars": 173,
+        "age_days": 6,
+        "releases": 6,
+        "contributors": 3,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "deepsea-wind-waker",
@@ -9666,7 +12046,18 @@
       "year": 2002,
       "developer": "Nintendo EAD",
       "genre": "Acción-aventura",
-      "wiki": "The Legend of Zelda: The Wind Waker"
+      "wiki": "The Legend of Zelda: The Wind Waker",
+      "quality_signals": {
+        "downloads": 28,
+        "stars": 6,
+        "age_days": 5,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "silly-reencounter",
@@ -9707,7 +12098,18 @@
       "year": 2004,
       "developer": "Climax Solent",
       "genre": "Disparos en primera persona",
-      "wiki": "Serious Sam: Next Encounter"
+      "wiki": "Serious Sam: Next Encounter",
+      "quality_signals": {
+        "downloads": 114,
+        "stars": 10,
+        "age_days": 3,
+        "releases": 1,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "moh-frontline-gc-recomp",
@@ -9750,7 +12152,18 @@
       "year": 2002,
       "developer": "EA Los Angeles",
       "genre": "Disparos en primera persona",
-      "wiki": "Medal of Honor: Frontline"
+      "wiki": "Medal of Honor: Frontline",
+      "quality_signals": {
+        "downloads": 6,
+        "stars": 4,
+        "age_days": 44,
+        "releases": 2,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "sms-launcher",
@@ -9791,7 +12204,18 @@
       "year": 2002,
       "developer": "Nintendo EAD",
       "genre": "Plataformas",
-      "wiki": "Super Mario Sunshine"
+      "wiki": "Super Mario Sunshine",
+      "quality_signals": {
+        "downloads": 173,
+        "stars": 0,
+        "age_days": 4,
+        "releases": 33,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "wiiparty-recomp",
@@ -9834,7 +12258,18 @@
       "year": 2010,
       "developer": "Nd Cube",
       "genre": "Party",
-      "wiki": "Wii Party"
+      "wiki": "Wii Party",
+      "quality_signals": {
+        "downloads": 54,
+        "stars": 5,
+        "age_days": 11,
+        "releases": 3,
+        "contributors": 2,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "buffy-chaos-bleeds-pc",
@@ -9875,7 +12310,18 @@
       "year": 2003,
       "developer": "Eurocom",
       "genre": "Acción-aventura",
-      "wiki": "Buffy the Vampire Slayer: Chaos Bleeds"
+      "wiki": "Buffy the Vampire Slayer: Chaos Bleeds",
+      "quality_signals": {
+        "downloads": 67,
+        "stars": 10,
+        "age_days": 5,
+        "releases": 5,
+        "contributors": 1,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "ssx-tricky-pc",
@@ -9916,7 +12362,18 @@
       "year": 2001,
       "developer": "EA Canada",
       "genre": "Deportes",
-      "wiki": "SSX Tricky"
+      "wiki": "SSX Tricky",
+      "quality_signals": {
+        "downloads": 8,
+        "stars": 0,
+        "age_days": 1,
+        "releases": 2,
+        "contributors": 2,
+        "ai": true,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "doaxbv-re",
@@ -9957,7 +12414,18 @@
       "year": 2003,
       "developer": "Team Ninja",
       "genre": "Deportes",
-      "wiki": "Dead or Alive Xtreme Beach Volleyball"
+      "wiki": "Dead or Alive Xtreme Beach Volleyball",
+      "quality_signals": {
+        "downloads": 14586,
+        "stars": 71,
+        "age_days": 45,
+        "releases": 16,
+        "contributors": 1,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "foxhollow-sfa",
@@ -10006,7 +12474,8 @@
       "year": 2002,
       "developer": "Rare",
       "genre": "Acción-aventura",
-      "wiki": "Star Fox Adventures"
+      "wiki": "Star Fox Adventures",
+      "tier": "comunidad"
     },
     {
       "id": "deadcells-ps5-native",
@@ -10047,7 +12516,18 @@
       "year": 2018,
       "developer": "Motion Twin / Evil Empire",
       "genre": "Acción-plataformas",
-      "wiki": "Dead Cells"
+      "wiki": "Dead Cells",
+      "quality_signals": {
+        "downloads": 435,
+        "stars": 62,
+        "age_days": 4,
+        "releases": 1,
+        "contributors": 4,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "wind-waker-recomp",
@@ -10090,7 +12570,18 @@
       "year": 2002,
       "developer": "Nintendo EAD",
       "genre": "Acción-aventura",
-      "wiki": "The Legend of Zelda: The Wind Waker"
+      "wiki": "The Legend of Zelda: The Wind Waker",
+      "quality_signals": {
+        "downloads": 2054,
+        "stars": 161,
+        "age_days": 2,
+        "releases": 8,
+        "contributors": 1,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "experimental"
     },
     {
       "id": "gen1recomp",
@@ -10137,7 +12628,18 @@
       "genre": "RPG",
       "wiki": "Pokémon Rojo y Azul",
       "box_art": "https://cdn2.steamgriddb.com/grid/deaf47d9953d7c0216d9c3aa944fe5ba.png",
-      "exception": "Excepción a la regla de generaciones: reimplementación de Pokémon Gen 1 en Lua querida por la comunidad (476k descargas), con widescreen, mods y co-op; trabajada hasta el extremo."
+      "exception": "Excepción a la regla de generaciones: reimplementación de Pokémon Gen 1 en Lua querida por la comunidad (476k descargas), con widescreen, mods y co-op; trabajada hasta el extremo.",
+      "quality_signals": {
+        "downloads": 476617,
+        "stars": 3811,
+        "age_days": 75,
+        "releases": 100,
+        "contributors": 5,
+        "ai": false,
+        "emu": false,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     },
     {
       "id": "zelda3-pc",
@@ -10180,7 +12682,18 @@
       "cover_url": "https://cdn2.steamgriddb.com/grid/7edaadde50012f0860952123564eb1ba.jpg",
       "box_art": "https://cdn2.steamgriddb.com/grid/7edaadde50012f0860952123564eb1ba.jpg",
       "logo_url": null,
-      "exception": "Excepción a la regla de generaciones: port nativo de A Link to the Past desde el decomp de snesrev, maduro y muy jugado (20k descargas), con widescreen y mejoras."
+      "exception": "Excepción a la regla de generaciones: port nativo de A Link to the Past desde el decomp de snesrev, maduro y muy jugado (20k descargas), con widescreen y mejoras.",
+      "quality_signals": {
+        "downloads": 20766,
+        "stars": 4820,
+        "age_days": 1512,
+        "releases": 1,
+        "contributors": 5,
+        "ai": false,
+        "emu": true,
+        "checked": "2026-10-01"
+      },
+      "tier": "curado"
     }
   ]
 }

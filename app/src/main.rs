@@ -168,6 +168,8 @@ struct App {
     /// Transient per-game launch state shown inline on the Play button:
     /// present+false = "Jugando…", present+true = launch failed.
     launching: RefCell<std::collections::HashMap<String, bool>>,
+    /// Mirror of `Config::show_experimental`, refreshed on every rebuild.
+    show_experimental: std::cell::Cell<bool>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
     /// Catalog ids → first-seen epoch (drives NUEVO badge + newcomers strip).
@@ -239,6 +241,11 @@ impl App {
             && p.asset_rules.contains_key("windows-x86_64")
             && supports(p, "windows-x86_64");
         let inst = installed.get(&p.id);
+        // Experimental ports stay hidden unless the user opts in — installed ones
+        // always show (you can't lose sight of something on your disk).
+        if p.is_experimental() && !self.show_experimental.get() && inst.is_none() {
+            return (false, false);
+        }
         (native || win_ok || inst.is_some(), !native && (win_ok || inst.map(|e| e.windows).unwrap_or(false)))
     }
 
@@ -277,6 +284,7 @@ fn rebuild(app: &App, win: &MainWindow) {
     let catalog = app.catalog.borrow();
     let cfg = store::load_config(&app.paths).unwrap_or_default();
     let show_windows = cfg.show_windows;
+    app.show_experimental.set(cfg.show_experimental);
     let favs: std::collections::HashSet<&str> = cfg.favorites.iter().map(|s| s.as_str()).collect();
 
     // Sidebar counts: games (grouped versions) in the catalog, installs in the library.
@@ -600,6 +608,20 @@ fn build_detail(app: &App, win: &MainWindow) {
     }
     fact("Desarrollador", p.developer.clone().unwrap_or_default(), white);
     fact("Género", p.genre.clone().unwrap_or_default(), white);
+    fact(
+        "Nivel",
+        match p.tier() {
+            "curado" => "Curado — probado y muy usado",
+            "experimental" => "Experimental — nuevo o poco probado",
+            _ => "Comunidad — funciona, con recorrido",
+        }
+        .into(),
+        match p.tier() {
+            "curado" => parse_color("#4de1c1"),
+            "experimental" => parse_color("#ff9f43"),
+            _ => white,
+        },
+    );
     if !installed_tag.is_empty() {
         fact("Versión instalada", installed_tag.clone(), parse_color("#4de1c1"));
     }
@@ -846,6 +868,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         ra_enabled: p.ra_supported && freeport_core::ra_mod::is_enabled(&p),
         ra_beta: p.ra_beta,
         kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
+        tier: p.tier().into(),
         version: installed_tag.into(),
         new_version: if update { latest_tag.into() } else { "".into() },
         facts: ModelRc::new(VecModel::from(facts)),
@@ -1238,6 +1261,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
+        show_experimental: std::cell::Cell::new(false),
         install_error: RefCell::new(HashSet::new()),
         seen: RefCell::new(std::collections::HashMap::new()),
         ra_cache: RefCell::new(std::collections::HashMap::new()),
@@ -1273,6 +1297,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_version(env!("CARGO_PKG_VERSION").into());
         win.set_platform_label(app.triple.clone().into());
         win.set_show_windows(cfg.show_windows);
+        win.set_show_experimental(cfg.show_experimental);
         win.set_crt_visible(cfg.crt);
         if let (Some(u), Some(_)) = (cfg.ra_user.as_ref(), cfg.ra_token.as_ref()) {
             win.set_ra_logged_in(true);
@@ -1360,6 +1385,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         move |v| {
             if let Ok(mut c) = store::load_config(&app.paths) {
                 c.show_windows = v;
+                let _ = store::save_config(&app.paths, &c);
+            }
+            ui_refresh();
+        }
+    });
+
+    win.on_toggle_experimental({
+        let app = app.clone();
+        move |v| {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.show_experimental = v;
                 let _ = store::save_config(&app.paths, &c);
             }
             ui_refresh();

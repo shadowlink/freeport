@@ -39,6 +39,10 @@ pub struct Project {
     /// Version shown by default inside its group (optional, catalog-curated).
     #[serde(default)]
     pub preferred: bool,
+    /// Quality tier from the catalog: "curado" | "comunidad" | "experimental"
+    /// (see freeport-catalog/tools/quality.py). Missing = treated as "comunidad".
+    #[serde(default)]
+    pub tier: Option<String>,
     pub system: String,
     /// "recompilation" | "native-port"
     #[serde(rename = "type", default)]
@@ -125,6 +129,15 @@ pub struct ModSource {
 }
 
 impl Project {
+    /// Quality tier, defaulting to "comunidad" when the catalog has none.
+    pub fn tier(&self) -> &str {
+        self.tier.as_deref().filter(|t| !t.is_empty()).unwrap_or("comunidad")
+    }
+
+    pub fn is_experimental(&self) -> bool {
+        self.tier() == "experimental"
+    }
+
     /// Key that groups versions of the same game (`game_id`, else `id`).
     pub fn game_key(&self) -> &str {
         match &self.game_id {
@@ -231,6 +244,10 @@ pub struct Config {
     /// installed to run through Wine/Proton.
     #[serde(default)]
     pub show_windows: bool,
+    /// When true, projects tagged `experimental` in the catalog are listed.
+    /// Off by default: the storefront shows only proven ports.
+    #[serde(default)]
+    pub show_experimental: bool,
     /// Default runner id for Windows builds (None = auto). See `list_runners`.
     #[serde(default)]
     pub wine_runner: Option<String>,

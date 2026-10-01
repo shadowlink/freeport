@@ -337,10 +337,10 @@ fn load_logos(dir: &Path) -> std::collections::HashMap<String, Image> {
     let _ = std::fs::create_dir_all(dir);
     let mut map = std::collections::HashMap::new();
     for (id, bytes) in LOGOS {
+        // Always rewrite: the bundled set changes between releases (e.g. the
+        // switch to monochrome logos) and a stale cached file would win otherwise.
         let f = dir.join(format!("{id}.svg"));
-        if !f.exists() {
-            let _ = std::fs::write(&f, bytes);
-        }
+        let _ = std::fs::write(&f, bytes);
         if let Ok(img) = Image::load_from_path(&f) {
             map.insert((*id).to_string(), img);
         }

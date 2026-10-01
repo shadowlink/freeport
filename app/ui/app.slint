@@ -600,9 +600,9 @@ export component MainWindow inherits Window {
                     all-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = ""; root.refresh(); } }
                     HorizontalLayout {
                         padding-left: 8px; padding-right: 10px; spacing: 10px;
-                        Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #eef0f5;
+                        Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #0e1016; border-width: 1px; border-color: #2b2f3a;
                             Image { source: @image-url("../assets/icons/catalog.svg"); width: 18px; height: 18px;
-                                    x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; colorize: #0b0c10; } }
+                                    x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; colorize: #ffffff; } }
                         Text { text: "Todos los juegos"; color: white; font-weight: 700; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
                     }
                 }
@@ -619,10 +619,10 @@ export component MainWindow inherits Window {
                             HorizontalLayout {
                                 padding-left: 8px; padding-right: 10px; spacing: 10px;
                                 // Light plate so every logo (dark ones included) reads the same.
-                                Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #eef0f5;
+                                Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #0e1016; border-width: 1px; border-color: #2b2f3a;
                                     if s.has-logo: Image { source: s.logo; width: 66px; height: 22px;
                                             x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; image-fit: contain; }
-                                    if !s.has-logo: Text { text: s.name; color: #0b0c10; font-size: 10px; font-weight: 900;
+                                    if !s.has-logo: Text { text: s.name; color: white; font-size: 10px; font-weight: 900;
                                             horizontal-alignment: center; vertical-alignment: center; width: 100%; height: 100%; overflow: elide; }
                                 }
                                 Text { text: s.name; color: white; font-size: 13px; font-weight: 700; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }

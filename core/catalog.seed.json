@@ -16,6 +16,12 @@
       "color": "#7f8cc9"
     },
     {
+      "id": "gb",
+      "name": "Game Boy",
+      "short": "GB",
+      "color": "#7bb661"
+    },
+    {
       "id": "x360",
       "name": "Xbox 360",
       "short": "X360",
@@ -28,16 +34,16 @@
       "color": "#e0a13a"
     },
     {
-      "id": "amiga",
-      "name": "Amiga",
-      "short": "AMIGA",
-      "color": "#d0567a"
-    },
-    {
       "id": "gc",
       "name": "GameCube",
       "short": "GCN",
       "color": "#6a5acd"
+    },
+    {
+      "id": "snes",
+      "name": "Super Nintendo",
+      "short": "SNES",
+      "color": "#8f8fd8"
     },
     {
       "id": "gba",
@@ -1005,50 +1011,6 @@
       "genre": "Carreras",
       "wiki": "Test Drive Unlimited",
       "box_art": "https://cdn2.steamgriddb.com/grid/5b776b4aeed9a6abe4c8f6e26aa3b74f.png"
-    },
-    {
-      "id": "ambermoon-net",
-      "name": "Ambermoon.net",
-      "original_game": "Ambermoon",
-      "game_id": "ambermoon",
-      "system": "amiga",
-      "type": "native-port",
-      "repo": {
-        "host": "github",
-        "owner": "Pyrdacor",
-        "repo": "Ambermoon.net"
-      },
-      "release_channel": "stable",
-      "cover_url": "https://cdn2.steamgriddb.com/grid/fa540b3545829bc68d6922545dd0e2ff.jpg",
-      "logo_url": null,
-      "asset_rules": {
-        "linux-x86_64": "(?i)Linux\\.tar\\.gz$",
-        "windows-x86_64": "(?i)Windows"
-      },
-      "rom": {
-        "required": false,
-        "mode": "none",
-        "expected_filename": null,
-        "subdir": null,
-        "notes": "No necesita aportar datos."
-      },
-      "launch": {
-        "linux": null,
-        "windows": null
-      },
-      "cached": {
-        "platforms": [
-          "linux-x86_64",
-          "windows-x86_64"
-        ],
-        "latest_tag": "v1.13.7",
-        "published_at": "2026-08-10T07:21:36Z"
-      },
-      "year": 1993,
-      "developer": "Thalion Software",
-      "genre": "RPG",
-      "wiki": "Ambermoon",
-      "box_art": "https://cdn2.steamgriddb.com/grid/fa540b3545829bc68d6922545dd0e2ff.jpg"
     },
     {
       "id": "devilutionx-diablo",
@@ -10129,6 +10091,96 @@
       "developer": "Nintendo EAD",
       "genre": "Acción-aventura",
       "wiki": "The Legend of Zelda: The Wind Waker"
+    },
+    {
+      "id": "gen1recomp",
+      "name": "Gen1Recomp",
+      "original_game": "Pokémon Red / Blue",
+      "game_id": "pokemon-red-blue",
+      "system": "gb",
+      "type": "native-port",
+      "repo": {
+        "host": "github",
+        "owner": "bryanthaboi",
+        "repo": "gen1recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20Game%20Boy/Named_Boxarts/Pokemon%20-%20Red%20Version%20%28USA%2C%20Europe%29%20%28SGB%20Enhanced%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "linux-x86_64": "(?i)-linux-x86_64\\.AppImage$",
+        "windows-x86_64": "(?i)-windows\\.zip$",
+        "macos-x86_64": "(?i)-macos\\.zip$"
+      },
+      "rom": {
+        "required": false,
+        "mode": "none",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "No necesita ROM."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "linux-x86_64",
+          "macos-x86_64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3.37",
+        "published_at": "2026-09-30T10:05:04Z"
+      },
+      "year": 1996,
+      "developer": "Game Freak",
+      "genre": "RPG",
+      "wiki": "Pokémon Rojo y Azul",
+      "box_art": "https://cdn2.steamgriddb.com/grid/deaf47d9953d7c0216d9c3aa944fe5ba.png",
+      "exception": "Excepción a la regla de generaciones: reimplementación de Pokémon Gen 1 en Lua querida por la comunidad (476k descargas), con widescreen, mods y co-op; trabajada hasta el extremo."
+    },
+    {
+      "id": "zelda3-pc",
+      "name": "A Link to the Past (PC)",
+      "original_game": "The Legend of Zelda: A Link to the Past",
+      "game_id": "the-legend-of-zelda-a-link-to-the-past",
+      "system": "snes",
+      "type": "port",
+      "repo": {
+        "host": "github",
+        "owner": "snesrev",
+        "repo": "zelda3"
+      },
+      "release_channel": "stable",
+      "asset_rules": {
+        "windows-x86_64": "(?i)zelda3.*\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "copy",
+        "expected_filename": "zelda3.sfc",
+        "subdir": null,
+        "notes": "Necesita tu ROM de A Link to the Past (US); se copiará como zelda3.sfc junto al ejecutable."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.3",
+        "published_at": "2023-08-17T01:18:40Z"
+      },
+      "year": 1991,
+      "developer": "Nintendo",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: A Link to the Past",
+      "cover_url": "https://cdn2.steamgriddb.com/grid/7edaadde50012f0860952123564eb1ba.jpg",
+      "box_art": "https://cdn2.steamgriddb.com/grid/7edaadde50012f0860952123564eb1ba.jpg",
+      "logo_url": null,
+      "exception": "Excepción a la regla de generaciones: port nativo de A Link to the Past desde el decomp de snesrev, maduro y muy jugado (20k descargas), con widescreen y mejoras."
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-30",
+  "updated_at": "2026-10-01",
   "source": "probed",
   "systems": [
     {
@@ -599,8 +599,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.31",
-        "published_at": "2026-09-29T09:33:23Z"
+        "latest_tag": "v0.3.37",
+        "published_at": "2026-09-30T10:05:04Z"
       },
       "year": 1996,
       "developer": "Game Freak",
@@ -1386,8 +1386,8 @@
           "linux-aarch64",
           "linux-x86_64"
         ],
-        "latest_tag": "v2.0.2",
-        "published_at": "2026-09-25T07:21:33Z"
+        "latest_tag": "v2.0.3",
+        "published_at": "2026-09-30T07:06:44Z"
       },
       "year": 2006,
       "developer": "Nintendo",
@@ -2762,8 +2762,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "Version1.0.5beta10",
-        "published_at": "2026-09-16T10:20:40Z"
+        "latest_tag": "Version1.0.5beta12",
+        "published_at": "2026-09-29T12:45:19Z"
       },
       "year": 1997,
       "developer": "Rare",
@@ -3810,8 +3810,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "1.0.2",
-        "published_at": "2026-09-02T02:37:41Z"
+        "latest_tag": "v1.0.3",
+        "published_at": "2026-09-30T00:21:10Z"
       },
       "year": 1999,
       "developer": "Rare",
@@ -5192,11 +5192,10 @@
       },
       "cached": {
         "platforms": [
-          "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.6.6",
-        "published_at": "2026-09-25T00:33:08Z"
+        "latest_tag": "zero-v0.0.1",
+        "published_at": "2026-09-29T16:45:56Z"
       },
       "year": 1993,
       "developer": "Capcom",
@@ -6077,11 +6076,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "jetmoto-v1.2.0",
-        "published_at": "2026-08-28T01:30:10Z"
+        "platforms": [],
+        "latest_tag": "v1.0",
+        "published_at": "2026-09-29T18:29:06Z"
       },
       "year": 1996,
       "developer": "SingleTrac",
@@ -6119,11 +6116,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "jetmoto2-v1.2.0",
-        "published_at": "2026-08-28T01:30:16Z"
+        "platforms": [],
+        "latest_tag": "v1.0",
+        "published_at": "2026-09-29T18:29:06Z"
       },
       "year": 1997,
       "developer": "SingleTrac",
@@ -6161,11 +6156,9 @@
         "windows": null
       },
       "cached": {
-        "platforms": [
-          "windows-x86_64"
-        ],
-        "latest_tag": "jetmoto3-v1.1.0",
-        "published_at": "2026-08-28T01:30:21Z"
+        "platforms": [],
+        "latest_tag": "v1.0",
+        "published_at": "2026-09-29T18:29:06Z"
       },
       "year": 1999,
       "developer": "SingleTrac",
@@ -6295,8 +6288,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v3.10.0",
-        "published_at": "2026-09-29T06:24:19Z"
+        "latest_tag": "v3.11.0",
+        "published_at": "2026-09-30T01:04:08Z"
       },
       "year": 2000,
       "developer": "Rare",
@@ -6603,8 +6596,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.7.15",
-        "published_at": "2026-09-29T00:26:14Z"
+        "latest_tag": "v0.7.20",
+        "published_at": "2026-09-30T04:46:36Z"
       },
       "year": 2007,
       "developer": "Mistwalker / feelplus",
@@ -7068,8 +7061,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.1.5",
-        "published_at": "2026-09-29T04:57:00Z"
+        "latest_tag": "v1.1.7",
+        "published_at": "2026-09-30T04:46:09Z"
       },
       "year": 2008,
       "developer": "Team Ninja",
@@ -7150,8 +7143,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v1.3.5",
-        "published_at": "2026-09-29T08:59:54Z"
+        "latest_tag": "v1.3.7",
+        "published_at": "2026-09-30T05:50:34Z"
       },
       "year": 2008,
       "developer": "Lionhead Studios",
@@ -7234,8 +7227,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v1.1.1",
-        "published_at": "2026-09-17T05:07:18Z"
+        "latest_tag": "v1.1.2",
+        "published_at": "2026-09-30T06:50:46Z"
       },
       "year": 2010,
       "developer": "Blue Castle Games",
@@ -7447,8 +7440,8 @@
           "linux-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.0",
-        "published_at": "2026-09-28T15:15:19Z"
+        "latest_tag": "v0.4.2",
+        "published_at": "2026-09-30T03:24:56Z"
       },
       "year": 2010,
       "developer": "Sonic Team",
@@ -8762,8 +8755,8 @@
           "macos-x86_64",
           "windows-x86_64"
         ],
-        "latest_tag": "v0.7.94",
-        "published_at": "2026-09-29T07:44:35Z"
+        "latest_tag": "v0.7.97",
+        "published_at": "2026-09-30T04:25:31Z"
       },
       "year": 1999,
       "developer": "Game Freak",
@@ -9100,8 +9093,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.9.4",
-        "published_at": "2026-09-21T13:15:37Z"
+        "latest_tag": "v0.9.5",
+        "published_at": "2026-09-29T12:40:18Z"
       },
       "year": 1997,
       "developer": "Naughty Dog",
@@ -9602,8 +9595,8 @@
       },
       "cached": {
         "platforms": [],
-        "latest_tag": "v0.2.0-beta.1",
-        "published_at": "2026-09-28T11:49:13Z"
+        "latest_tag": "v0.3.0-beta.1",
+        "published_at": "2026-09-30T08:54:34Z"
       },
       "year": 2002,
       "developer": "Sucker Punch Productions",
@@ -11857,8 +11850,8 @@
         "platforms": [
           "windows-x86_64"
         ],
-        "latest_tag": "v0.3.0",
-        "published_at": "2026-09-30T02:45:45Z"
+        "latest_tag": "v0.4.0",
+        "published_at": "2026-09-30T09:28:42Z"
       },
       "year": 2003,
       "developer": "Eurocom",
@@ -12036,6 +12029,49 @@
       "developer": "Motion Twin / Evil Empire",
       "genre": "Acción-plataformas",
       "wiki": "Dead Cells"
+    },
+    {
+      "id": "wind-waker-recomp",
+      "name": "Wind Waker Recomp",
+      "original_game": "The Legend of Zelda: The Wind Waker",
+      "game_id": "the-legend-of-zelda-the-wind-waker",
+      "system": "gc",
+      "type": "recompilation",
+      "repo": {
+        "host": "github",
+        "owner": "elliotttate",
+        "repo": "Wind-Waker-Recomp"
+      },
+      "release_channel": "stable",
+      "cover_url": "https://thumbnails.libretro.com/Nintendo%20-%20GameCube/Named_Boxarts/Legend%20of%20Zelda%2C%20The%20-%20The%20Wind%20Waker%20%28USA%29.png",
+      "logo_url": null,
+      "asset_rules": {
+        "windows-x86_64": "(?i)^WindWakerRecomp-.*-windows-x64\\.zip$",
+        "macos-aarch64": "(?i)^WindWakerRecomp-.*-macos-arm64\\.zip$"
+      },
+      "rom": {
+        "required": true,
+        "mode": "in-app",
+        "expected_filename": null,
+        "subdir": null,
+        "notes": "Al primer arranque elige tu imagen de The Wind Waker (GameCube, USA GZLE01 rev. 0; .iso, .gcm o .rvz) y la verifica. 60/120 fps, widescreen, save states, ratón y teclado. Fork de BlueWake por el autor de DKC1/DKC3 Recomp; listo para jugar, sin compilar (a diferencia de Deep Sea)."
+      },
+      "launch": {
+        "linux": null,
+        "windows": null
+      },
+      "cached": {
+        "platforms": [
+          "macos-aarch64",
+          "windows-x86_64"
+        ],
+        "latest_tag": "v0.2.2",
+        "published_at": "2026-10-01T03:17:31Z"
+      },
+      "year": 2002,
+      "developer": "Nintendo EAD",
+      "genre": "Acción-aventura",
+      "wiki": "The Legend of Zelda: The Wind Waker"
     }
   ]
 }

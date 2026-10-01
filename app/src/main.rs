@@ -360,6 +360,9 @@ fn rebuild(app: &App, win: &MainWindow) {
     let cfg = store::load_config(&app.paths).unwrap_or_default();
     let show_windows = cfg.show_windows;
     *app.exp_systems.borrow_mut() = cfg.experimental_systems.iter().cloned().collect();
+    if let Ok(x) = std::env::var("FREEPORT_DEBUG_EXP") {
+        app.exp_systems.borrow_mut().insert(x); // dev aid: show experimentals for a system without saving
+    }
     app.exp_all.set(cfg.show_experimental && cfg.experimental_systems.is_empty());
     let favs: std::collections::HashSet<&str> = cfg.favorites.iter().map(|s| s.as_str()).collect();
 
@@ -552,25 +555,39 @@ fn rebuild(app: &App, win: &MainWindow) {
     let count = cards.len() as i32;
     // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
     // the art isn't tiny, so rows hold a variable number of cards. The usable
-    // width comes from the UI (window minus sidebar and padding).
+    // width comes from the UI (window minus rail, sidebar and padding).
     let base_w = win.get_card_w() as f32;
     let avail = (win.get_grid_width() as f32 - 16.0).max(base_w);
     let gap = 14.0;
-    let mut rows: Vec<ModelRc<CardItem>> = Vec::new();
-    let mut row: Vec<CardItem> = Vec::new();
-    let mut used = 0.0f32;
-    for c in cards {
-        let w = c.card_w;
-        let need = if row.is_empty() { w } else { used + gap + w };
-        if !row.is_empty() && need > avail {
-            rows.push(ModelRc::new(VecModel::from(std::mem::take(&mut row))));
-            used = 0.0;
+    let pack = |cards: Vec<CardItem>, rows: &mut Vec<GridRow>| {
+        let mut row: Vec<CardItem> = Vec::new();
+        let mut used = 0.0f32;
+        for c in cards {
+            let w = c.card_w;
+            let need = if row.is_empty() { w } else { used + gap + w };
+            if !row.is_empty() && need > avail {
+                rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(std::mem::take(&mut row))) });
+                used = 0.0;
+            }
+            used = if row.is_empty() { w } else { used + gap + w };
+            row.push(c);
         }
-        used = if row.is_empty() { w } else { used + gap + w };
-        row.push(c);
-    }
-    if !row.is_empty() {
-        rows.push(ModelRc::new(VecModel::from(row)));
+        if !row.is_empty() {
+            rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(row)) });
+        }
+    };
+    // Stable ports first; experimental ones together in their own section below,
+    // so the unstable stuff is easy to find and easy to ignore.
+    let (experimental, stable): (Vec<CardItem>, Vec<CardItem>) = cards.into_iter().partition(|c| c.experimental);
+    let mut rows: Vec<GridRow> = Vec::new();
+    pack(stable, &mut rows);
+    if !experimental.is_empty() {
+        let n = experimental.len();
+        rows.push(GridRow {
+            header: format!("⚠ Experimentales · {n}").into(),
+            cards: ModelRc::new(VecModel::from(Vec::<CardItem>::new())),
+        });
+        pack(experimental, &mut rows);
     }
 
     let header = if !active.is_empty() {

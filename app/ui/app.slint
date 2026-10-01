@@ -27,6 +27,12 @@ struct CardItem {
     experimental: bool,  // tier experimental: shown with a warning badge
 }
 
+// A grid row: either a section header or a packed row of cards.
+struct GridRow {
+    header: string,     // non-empty = section header row (no cards)
+    cards: [CardItem],
+}
+
 // One version of a game in the detail page's selector.
 struct VersionRow {
     id: string,
@@ -331,7 +337,7 @@ component RailBtn inherits Rectangle {
 
 export component MainWindow inherits Window {
     in property <[SysRow]> systems;
-    in property <[[CardItem]]> rows;
+    in property <[GridRow]> rows;
     in property <string> header-title;
     in property <int> header-count;
     in-out property <string> active-system;
@@ -505,7 +511,7 @@ export component MainWindow inherits Window {
         // ── Icon rail ───────────────────────────
         Rectangle {
             width: 64px;
-            background: #14161d;
+            background: #0e1016;
             VerticalLayout {
                 padding-top: 10px; padding-bottom: 12px; padding-left: 10px; padding-right: 10px;
                 spacing: 6px;
@@ -528,7 +534,8 @@ export component MainWindow inherits Window {
             }
         }
 
-        // ── Console sidebar (as before: search, "Todos", one row per system) ──
+        Rectangle { width: 1px; background: #2b2f3a; }
+        // ── Console sidebar (search, "Todos", one tile per system) ──
         if !root.settings-visible: Rectangle {
             width: 244px;
             background: #14161d;
@@ -585,51 +592,49 @@ export component MainWindow inherits Window {
                     edited => { root.refresh(); }
                 }
                 Rectangle {
-                    height: 42px;
-                    border-radius: 8px;
-                    background: root.active-system == "" ? #ffb23e26 : (all-touch.has-hover ? #ffffff0f : #00000000);
-                    animate background { duration: 130ms; easing: ease-out; }
+                    height: 46px;
+                    border-radius: 10px;
+                    background: root.active-system == "" ? #ffb23e1f : (all-touch.has-hover ? #ffffff0a : #1a1d26);
+                    border-width: 1px; border-color: root.active-system == "" ? #ffb23e : #262a35;
+                    animate background, border-color { duration: 130ms; easing: ease-out; }
                     all-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = ""; root.refresh(); } }
                     HorizontalLayout {
-                        padding-left: 8px;
-                        padding-right: 10px;
-                        spacing: 8px;
-                        Rectangle { width: 4px; border-radius: 2px;
-                                    background: root.active-system == "" ? #ffb23e : #00000000;
-                                    animate background { duration: 160ms; } }
-                        Text { text: "Todos los juegos"; color: white; font-weight: 600; vertical-alignment: center; horizontal-stretch: 1; }
+                        padding-left: 8px; padding-right: 10px; spacing: 10px;
+                        Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #eef0f5;
+                            Image { source: @image-url("../assets/icons/catalog.svg"); width: 18px; height: 18px;
+                                    x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; colorize: #0b0c10; } }
+                        Text { text: "Todos los juegos"; color: white; font-weight: 700; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
                     }
                 }
                 ListView {
                     for s in root.systems: Rectangle {
-                        height: 42px;
-                        border-radius: 8px;
-                        background: root.active-system == s.id ? #ffb23e26 : (row-touch.has-hover ? #ffffff0f : #00000000);
-                        animate background { duration: 130ms; easing: ease-out; }
-                        row-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = s.id; root.refresh(); } }
-                        HorizontalLayout {
-                            padding-left: 8px;
-                            padding-right: 10px;
-                            padding-top: 8px;
-                            padding-bottom: 8px;
-                            spacing: 8px;
-                            Rectangle { width: 4px; border-radius: 2px;
-                                        background: root.active-system == s.id ? s.color : #00000000;
-                                        animate background { duration: 160ms; } }
-                            if s.has-logo: VerticalLayout {
-                                horizontal-stretch: 1;
-                                alignment: center;
-                                Image { source: s.logo; height: 22px;
-                                        image-fit: contain; horizontal-alignment: left; }
+                        height: 50px;
+                        Rectangle {
+                            y: 2px; height: 46px; width: parent.width;
+                            border-radius: 10px;
+                            background: root.active-system == s.id ? #ffb23e1f : (row-touch.has-hover ? #ffffff0a : #1a1d26);
+                            border-width: 1px; border-color: root.active-system == s.id ? s.color : #262a35;
+                            animate background, border-color { duration: 130ms; easing: ease-out; }
+                            row-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = s.id; root.refresh(); } }
+                            HorizontalLayout {
+                                padding-left: 8px; padding-right: 10px; spacing: 10px;
+                                // Light plate so every logo (dark ones included) reads the same.
+                                Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #eef0f5;
+                                    if s.has-logo: Image { source: s.logo; width: 66px; height: 22px;
+                                            x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; image-fit: contain; }
+                                    if !s.has-logo: Text { text: s.name; color: #0b0c10; font-size: 10px; font-weight: 900;
+                                            horizontal-alignment: center; vertical-alignment: center; width: 100%; height: 100%; overflow: elide; }
+                                }
+                                Text { text: s.name; color: white; font-size: 13px; font-weight: 700; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
+                                Text { text: "\{s.count}"; color: #ffffff77; font-size: 12px; vertical-alignment: center; }
                             }
-                            if !s.has-logo: Text { text: s.name; color: white; vertical-alignment: center; horizontal-stretch: 1; }
-                            Text { text: "\{s.count}"; color: #ffffff88; font-size: 12px; vertical-alignment: center; }
                         }
                     }
                 }
             }
         }
 
+        Rectangle { width: 1px; background: #2b2f3a; }
         // ── Main ────────────────────────────────
         VerticalLayout {
             if root.update-available: Rectangle {
@@ -932,12 +937,17 @@ export component MainWindow inherits Window {
             Rectangle {
             vertical-stretch: 1;
             ListView {
-                for row in root.rows: HorizontalLayout {
+                for row in root.rows: VerticalLayout {
+                    if row.header != "": HorizontalLayout {
+                        padding-left: 14px; padding-right: 14px; padding-top: 18px; padding-bottom: 4px;
+                        SectionHeader { label: row.header; accent: #ff9f43; }
+                    }
+                    if row.cards.length > 0: HorizontalLayout {
                     spacing: 14px;
                     padding: 8px;
                     alignment: start;
                     // Shelf feel: boxes of different heights rest on the same baseline.
-                    for c in row: VerticalLayout {
+                    for c in row.cards: VerticalLayout {
                         alignment: end;
                         gcard := Rectangle {
                         // The frame takes the shape of the system's box: wide for
@@ -1043,6 +1053,7 @@ export component MainWindow inherits Window {
                                 clicked => { root.install(c.id); }
                             }
                         }
+                    }
                     }
                     }
                 }

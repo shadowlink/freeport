@@ -1,12 +1,103 @@
-//! Procedural low-poly consoles for the immersive carousel: every system is
-//! built from a handful of cuboids and cylinders at (roughly) real-world
-//! proportions, in a flat, toy-like style that stays coherent across the
-//! whole set, with rounded edges and smooth shading (no paper-box look). No external assets needed; a glTF in the models dir still wins.
+//! Low-poly consoles for the immersive carousel, in the "low poly + pixel art
+//! texture" style: hard-edged geometry with faithful silhouettes (tapered
+//! blocks, humps, handles) and small procedurally painted textures (vents,
+//! ports, buttons, logos) sampled without filtering so the pixels show.
 //!
-//! Coordinates: centimetres, y up, +z towards the viewer (the "front" of the
-//! console). `scene` normalises the result like any other model.
+//! Coordinates: centimetres, y up, +z towards the viewer (front). `scene`
+//! normalises the result like any other model. Texture scale: 3 texels/cm.
 
-use crate::box3d::cube;
+use std::f32::consts::TAU;
+
+/// A painted pixel texture (RGBA8, row 0 = top).
+pub struct Canvas {
+    pub w: u32,
+    pub h: u32,
+    pub px: Vec<u8>,
+}
+
+fn rgb(hex: u32) -> [f32; 3] {
+    [((hex >> 16) & 255) as f32 / 255.0, ((hex >> 8) & 255) as f32 / 255.0, (hex & 255) as f32 / 255.0]
+}
+
+impl Canvas {
+    pub fn new(w: u32, h: u32, color: u32) -> Self {
+        let mut c = Self { w, h, px: vec![0; (w * h * 4) as usize] };
+        c.rect(0, 0, w as i32, h as i32, color);
+        c
+    }
+    /// Canvas sized for a face of `w_cm × h_cm` at `TEXELS_PER_CM`.
+    pub fn for_face(w_cm: f32, h_cm: f32, color: u32) -> Self {
+        Self::new(((w_cm * TEXELS_PER_CM).round() as u32).max(2), ((h_cm * TEXELS_PER_CM).round() as u32).max(2), color)
+    }
+    pub fn px(&mut self, x: i32, y: i32, color: u32) {
+        if x < 0 || y < 0 || x >= self.w as i32 || y >= self.h as i32 {
+            return;
+        }
+        let i = ((y as u32 * self.w + x as u32) * 4) as usize;
+        self.px[i] = ((color >> 16) & 255) as u8;
+        self.px[i + 1] = ((color >> 8) & 255) as u8;
+        self.px[i + 2] = (color & 255) as u8;
+        self.px[i + 3] = 255;
+    }
+    pub fn rect(&mut self, x: i32, y: i32, w: i32, h: i32, color: u32) {
+        for yy in y..y + h {
+            for xx in x..x + w {
+                self.px(xx, yy, color);
+            }
+        }
+    }
+    pub fn disc(&mut self, cx: i32, cy: i32, r: i32, color: u32) {
+        for yy in -r..=r {
+            for xx in -r..=r {
+                if xx * xx + yy * yy <= r * r {
+                    self.px(cx + xx, cy + yy, color);
+                }
+            }
+        }
+    }
+    /// One-texel-wide circle outline.
+    pub fn ring(&mut self, cx: i32, cy: i32, r: i32, color: u32) {
+        let inner = (r - 1).max(0);
+        for yy in -r..=r {
+            for xx in -r..=r {
+                let d = xx * xx + yy * yy;
+                if d <= r * r && d > inner * inner {
+                    self.px(cx + xx, cy + yy, color);
+                }
+            }
+        }
+    }
+    /// Horizontal vent slots: `n` lines of `w` texels, `gap` rows apart.
+    pub fn vents_h(&mut self, x: i32, y: i32, w: i32, n: i32, gap: i32, color: u32) {
+        for i in 0..n {
+            self.rect(x, y + i * gap, w, 1, color);
+        }
+    }
+    /// Vertical vent slots.
+    pub fn vents_v(&mut self, x: i32, y: i32, h: i32, n: i32, gap: i32, color: u32) {
+        for i in 0..n {
+            self.rect(x + i * gap, y, 1, h, color);
+        }
+    }
+    /// Dotted grid (speaker / mesh).
+    pub fn dots(&mut self, x: i32, y: i32, cols: i32, rows: i32, gap: i32, color: u32) {
+        for r in 0..rows {
+            for c in 0..cols {
+                self.px(x + c * gap, y + r * gap, color);
+            }
+        }
+    }
+    /// Round controller port: dark hole with a lighter rim.
+    pub fn port(&mut self, cx: i32, cy: i32, r: i32, rim: u32, hole: u32) {
+        self.disc(cx, cy, r, rim);
+        self.disc(cx, cy, r - 1, hole);
+    }
+    /// Framed slot (memory cards, discs, cartridges).
+    pub fn slot(&mut self, x: i32, y: i32, w: i32, h: i32, frame: u32, inner: u32) {
+        self.rect(x, y, w, h, frame);
+        self.rect(x + 1, y + 1, w - 2, (h - 2).max(1), inner);
+    }
+}
 
 pub struct Part {
     pub color: [f32; 3],
@@ -14,95 +105,68 @@ pub struct Part {
     pub gloss: f32,
     /// Interleaved pos3 / nrm3 / uv2.
     pub verts: Vec<f32>,
+    /// Pixel texture mapped on this part (uv 0..1), or None for flat colour.
+    pub tex: Option<Canvas>,
 }
 
-fn rgb(hex: u32) -> [f32; 3] {
-    [((hex >> 16) & 255) as f32 / 255.0, ((hex >> 8) & 255) as f32 / 255.0, (hex & 255) as f32 / 255.0]
+/// Six faces of a tapered block (bottom rectangle `bw × bd` at `y0`, top
+/// rectangle `tw × td` at `y0 + h`, centred on `cx, cz`), each as its own
+/// quad with a flat normal and uv 0..1 (u left→right, v top→bottom as seen
+/// from outside; the top face is seen from above with the front at the bottom).
+pub struct Block {
+    pub faces: [Vec<f32>; 6], // front, back, left, right, top, bottom
 }
 
-/// Axis-aligned cuboid centred at `c` with full size `s`.
-fn cuboid(c: [f32; 3], s: [f32; 3]) -> Vec<f32> {
-    let mut v = cube(1.0, 1.0); // unit cube, height 1, centred
-    for i in (0..v.len()).step_by(8) {
-        v[i] = v[i] * s[0] + c[0];
-        v[i + 1] = v[i + 1] * s[1] + c[1];
-        v[i + 2] = v[i + 2] * s[2] + c[2];
+fn quad(p: [[f32; 3]; 4]) -> Vec<f32> {
+    // p: BL, BR, TR, TL (CCW from outside), uv BL(0,1) BR(1,1) TR(1,0) TL(0,0).
+    let u = [p[1][0] - p[0][0], p[1][1] - p[0][1], p[1][2] - p[0][2]];
+    let v = [p[3][0] - p[0][0], p[3][1] - p[0][1], p[3][2] - p[0][2]];
+    let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+    let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-6);
+    let n = [n[0] / l, n[1] / l, n[2] / l];
+    let uv = [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]];
+    let mut out = Vec::with_capacity(48);
+    for i in [0, 1, 2, 0, 2, 3] {
+        out.extend_from_slice(&p[i]);
+        out.extend_from_slice(&n);
+        out.extend_from_slice(&uv[i]);
     }
-    v
+    out
 }
 
-/// Cuboid with rounded edges and corners (radius `r`), smooth-shaded: every
-/// face is a grid whose points are projected onto the rounded-box surface.
-fn rounded_box(c: [f32; 3], s: [f32; 3], r: f32, n: usize) -> Vec<f32> {
-    let h = [s[0] / 2.0, s[1] / 2.0, s[2] / 2.0];
-    let r = r.min(h[0]).min(h[1]).min(h[2]).max(0.0);
-    let inner = [h[0] - r, h[1] - r, h[2] - r];
-    // Point on the unit-cube surface → (position, normal) on the rounded box.
-    let surf = |u: [f32; 3]| -> ([f32; 3], [f32; 3]) {
-        let q = [u[0] * h[0], u[1] * h[1], u[2] * h[2]];
-        let k = [
-            q[0].clamp(-inner[0], inner[0]),
-            q[1].clamp(-inner[1], inner[1]),
-            q[2].clamp(-inner[2], inner[2]),
-        ];
-        let d = [q[0] - k[0], q[1] - k[1], q[2] - k[2]];
-        let l = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
-        if l < 1e-6 {
-            return ([k[0] + c[0], k[1] + c[1], k[2] + c[2]], [0.0, 1.0, 0.0]);
-        }
-        let nrm = [d[0] / l, d[1] / l, d[2] / l];
-        ([k[0] + nrm[0] * r + c[0], k[1] + nrm[1] * r + c[1], k[2] + nrm[2] * r + c[2]], nrm)
-    };
-    // Each face: axis, sign, and the two tangent axes (ordered for CCW winding).
-    let faces: [(usize, f32, usize, usize); 6] = [
-        (2, 1.0, 0, 1),  // +z front
-        (2, -1.0, 1, 0), // -z back
-        (0, 1.0, 1, 2),  // +x
-        (0, -1.0, 2, 1), // -x
-        (1, 1.0, 2, 0),  // +y top
-        (1, -1.0, 0, 2), // -y bottom
-    ];
-    let mut v = Vec::with_capacity(6 * n * n * 6 * 8);
-    let mut push = |u: [f32; 3]| {
-        let (p, nrm) = surf(u);
-        v.extend_from_slice(&p);
-        v.extend_from_slice(&nrm);
-        v.extend_from_slice(&[0.0, 0.0]);
-    };
-    for (ax, sign, ta, tb) in faces {
-        for i in 0..n {
-            for j in 0..n {
-                let (a0, a1) = (i as f32 / n as f32 * 2.0 - 1.0, (i + 1) as f32 / n as f32 * 2.0 - 1.0);
-                let (b0, b1) = (j as f32 / n as f32 * 2.0 - 1.0, (j + 1) as f32 / n as f32 * 2.0 - 1.0);
-                let mk = |a: f32, b: f32| {
-                    let mut u = [0.0; 3];
-                    u[ax] = sign;
-                    u[ta] = a;
-                    u[tb] = b;
-                    u
-                };
-                push(mk(a0, b0));
-                push(mk(a1, b0));
-                push(mk(a1, b1));
-                push(mk(a0, b0));
-                push(mk(a1, b1));
-                push(mk(a0, b1));
-            }
-        }
+#[allow(clippy::too_many_arguments)]
+pub fn block(cx: f32, y0: f32, cz: f32, bw: f32, bd: f32, tw: f32, td: f32, h: f32) -> Block {
+    let (bx, bz, tx, tz) = (bw / 2.0, bd / 2.0, tw / 2.0, td / 2.0);
+    let y1 = y0 + h;
+    // Corners: [-x,-z], [+x,-z], [+x,+z], [-x,+z] at the bottom (b) and top (t).
+    let b = [[cx - bx, y0, cz - bz], [cx + bx, y0, cz - bz], [cx + bx, y0, cz + bz], [cx - bx, y0, cz + bz]];
+    let t = [[cx - tx, y1, cz - tz], [cx + tx, y1, cz - tz], [cx + tx, y1, cz + tz], [cx - tx, y1, cz + tz]];
+    Block {
+        faces: [
+            quad([b[3], b[2], t[2], t[3]]), // front (+z)
+            quad([b[1], b[0], t[0], t[1]]), // back (-z)
+            quad([b[0], b[3], t[3], t[0]]), // left (-x), u towards +z
+            quad([b[2], b[1], t[1], t[2]]), // right (+x), u towards -z
+            quad([t[3], t[2], t[1], t[0]]), // top: BL = front-left, TL = back-left
+            quad([b[0], b[1], b[2], b[3]]), // bottom
+        ],
     }
-    v
 }
+
+pub const FRONT: usize = 0;
+pub const BACK: usize = 1;
+pub const LEFT: usize = 2;
+pub const RIGHT: usize = 3;
+pub const TOP: usize = 4;
 
 #[derive(Clone, Copy)]
-enum Axis {
+pub enum Axis {
     X,
     Y,
-    Z,
 }
 
-/// Closed cylinder centred at `c`, radius `r`, length `h` along `axis`.
-fn cylinder(c: [f32; 3], r: f32, h: f32, axis: Axis, seg: usize) -> Vec<f32> {
-    // Build along Y, then swap axes.
+/// Closed cylinder along `axis` (flat-shaded facets), untextured.
+pub fn cylinder(c: [f32; 3], r: f32, h: f32, axis: Axis, seg: usize) -> Vec<f32> {
     let mut v: Vec<f32> = Vec::with_capacity(seg * 12 * 8);
     let (y0, y1) = (-h / 2.0, h / 2.0);
     let mut push = |p: [f32; 3], n: [f32; 3]| {
@@ -111,25 +175,22 @@ fn cylinder(c: [f32; 3], r: f32, h: f32, axis: Axis, seg: usize) -> Vec<f32> {
         v.extend_from_slice(&[0.0, 0.0]);
     };
     for i in 0..seg {
-        let a0 = i as f32 / seg as f32 * std::f32::consts::TAU;
-        let a1 = (i + 1) as f32 / seg as f32 * std::f32::consts::TAU;
+        let a0 = i as f32 / seg as f32 * TAU;
+        let a1 = (i + 1) as f32 / seg as f32 * TAU;
         let (s0, c0) = a0.sin_cos();
         let (s1, c1) = a1.sin_cos();
         let p00 = [r * c0, y0, -r * s0];
         let p01 = [r * c1, y0, -r * s1];
         let p10 = [r * c0, y1, -r * s0];
         let p11 = [r * c1, y1, -r * s1];
-        // Smooth side normals.
-        let n0 = [c0, 0.0, -s0];
-        let n1 = [c1, 0.0, -s1];
-        // Side quad (CCW seen from outside).
-        push(p00, n0);
-        push(p01, n1);
-        push(p11, n1);
-        push(p00, n0);
-        push(p11, n1);
-        push(p10, n0);
-        // Top cap (normal +y) and bottom cap (normal -y).
+        let am = (a0 + a1) / 2.0;
+        let n = [am.cos(), 0.0, -am.sin()];
+        push(p00, n);
+        push(p01, n);
+        push(p11, n);
+        push(p00, n);
+        push(p11, n);
+        push(p10, n);
         push([0.0, y1, 0.0], [0.0, 1.0, 0.0]);
         push(p10, [0.0, 1.0, 0.0]);
         push(p11, [0.0, 1.0, 0.0]);
@@ -142,8 +203,7 @@ fn cylinder(c: [f32; 3], r: f32, h: f32, axis: Axis, seg: usize) -> Vec<f32> {
         let (nx, ny, nz) = (v[i + 3], v[i + 4], v[i + 5]);
         let (p, n) = match axis {
             Axis::Y => ([x, y, z], [nx, ny, nz]),
-            Axis::X => ([y, x, z], [ny, nx, nz]), // swap x/y (mirror; winding fixed below)
-            Axis::Z => ([x, z, y], [nx, nz, ny]), // swap y/z
+            Axis::X => ([y, x, z], [ny, nx, nz]),
         };
         v[i] = p[0] + c[0];
         v[i + 1] = p[1] + c[1];
@@ -152,9 +212,8 @@ fn cylinder(c: [f32; 3], r: f32, h: f32, axis: Axis, seg: usize) -> Vec<f32> {
         v[i + 4] = n[1];
         v[i + 5] = n[2];
     }
-    if !matches!(axis, Axis::Y) {
-        // An axis swap mirrors the geometry: flip triangle winding so culling
-        // keeps the outside faces.
+    if matches!(axis, Axis::X) {
+        // The axis swap mirrors the geometry: flip winding so culling keeps the outside.
         for t in (0..v.len()).step_by(24) {
             let (a, b) = (t + 8, t + 16);
             for k in 0..8 {
@@ -181,26 +240,6 @@ fn rotate_x_about(mut verts: Vec<f32>, a: f32, pivot: [f32; 3]) -> Vec<f32> {
     verts
 }
 
-/// Rotates `verts` around the Z axis by `a` radians about `pivot`.
-fn rotate_z_about(mut verts: Vec<f32>, a: f32, pivot: [f32; 3]) -> Vec<f32> {
-    let (s, c) = a.sin_cos();
-    for i in (0..verts.len()).step_by(8) {
-        let x = verts[i] - pivot[0];
-        let y = verts[i + 1] - pivot[1];
-        verts[i] = x * c - y * s + pivot[0];
-        verts[i + 1] = x * s + y * c + pivot[1];
-        let nx = verts[i + 3];
-        let ny = verts[i + 4];
-        verts[i + 3] = nx * c - ny * s;
-        verts[i + 4] = nx * s + ny * c;
-    }
-    verts
-}
-
-fn auto_radius(s: [f32; 3]) -> f32 {
-    (s[0].min(s[1]).min(s[2]) * 0.34).min(0.9)
-}
-
 struct Builder {
     parts: Vec<Part>,
 }
@@ -210,228 +249,448 @@ impl Builder {
         Self { parts: Vec::new() }
     }
     fn add(&mut self, color: [f32; 3], gloss: f32, verts: Vec<f32>) -> &mut Self {
-        self.parts.push(Part { color, gloss, verts });
+        self.parts.push(Part { color, gloss, verts, tex: None });
         self
     }
-    /// Rounded box with an automatic edge radius (a third of the thinnest side,
-    /// capped), the default look of every part.
-    fn boxp(&mut self, color: [f32; 3], c: [f32; 3], s: [f32; 3]) -> &mut Self {
-        self.add(color, 0.0, rounded_box(c, s, auto_radius(s), 6))
+    fn add_tex(&mut self, verts: Vec<f32>, tex: Canvas, gloss: f32) -> &mut Self {
+        self.parts.push(Part { color: [1.0, 1.0, 1.0], gloss, verts, tex: Some(tex) });
+        self
     }
-    fn boxg(&mut self, color: [f32; 3], c: [f32; 3], s: [f32; 3]) -> &mut Self {
-        self.add(color, 1.0, rounded_box(c, s, auto_radius(s), 6))
+    /// Whole block in one colour.
+    fn block(&mut self, color: u32, b: &Block) -> &mut Self {
+        let mut v = Vec::new();
+        for f in &b.faces {
+            v.extend_from_slice(f);
+        }
+        self.add(rgb(color), 0.0, v)
     }
-    /// Rounded box with an explicit radius (bodies with softer edges).
-    fn boxr(&mut self, color: [f32; 3], c: [f32; 3], s: [f32; 3], r: f32) -> &mut Self {
-        self.add(color, 0.0, rounded_box(c, s, r, 8))
+    /// Block in one colour except the faces given a painted canvas.
+    fn block_skins(&mut self, color: u32, b: Block, skins: Vec<(usize, Canvas)>) -> &mut Self {
+        let mut plain = Vec::new();
+        let mut used = [false; 6];
+        for (i, c) in skins {
+            used[i] = true;
+            self.add_tex(b.faces[i].clone(), c, 0.0);
+        }
+        for (i, f) in b.faces.iter().enumerate() {
+            if !used[i] {
+                plain.extend_from_slice(f);
+            }
+        }
+        if !plain.is_empty() {
+            self.add(rgb(color), 0.0, plain);
+        }
+        self
     }
-    fn cyl(&mut self, color: [f32; 3], c: [f32; 3], r: f32, h: f32, axis: Axis) -> &mut Self {
-        self.add(color, 0.0, cylinder(c, r, h, axis, 36))
+    fn cyl(&mut self, color: u32, c: [f32; 3], r: f32, h: f32, axis: Axis) -> &mut Self {
+        self.add(rgb(color), 0.0, cylinder(c, r, h, axis, 14))
     }
 }
 
-// Shared palette (keeps the set coherent).
-const PORT: u32 = 0x1a1a1f; // controller ports / slots
+// Shared palette.
+const HOLE: u32 = 0x101014;
+const RIM: u32 = 0x6b6b74;
+const LED_GREEN: u32 = 0x4fdc4f;
+const LED_RED: u32 = 0xe04040;
 const SCREEN: u32 = 0x1d2433;
+
+const TEXELS_PER_CM: f32 = 3.0;
+
+/// cm → texel.
+fn t(cm: f32) -> i32 {
+    (cm * TEXELS_PER_CM).round() as i32
+}
 
 /// Builds the console of `system`, or None for unknown ids.
 pub fn build(system: &str) -> Option<Vec<Part>> {
     let mut b = Builder::new();
     match system {
-        "n64" => {
-            let body = rgb(0x4a4a53);
-            b.boxr(body, [0.0, 0.0, 0.0], [26.0, 5.5, 19.0], 1.4);
-            // Shoulders either side of the cartridge bay.
-            b.boxr(body, [-8.5, 3.6, -2.0], [8.5, 2.6, 13.0], 1.2);
-            b.boxr(body, [8.5, 3.6, -2.0], [8.5, 2.6, 13.0], 1.2);
-            b.boxp(rgb(0x33333a), [0.0, 3.4, -2.0], [8.5, 2.2, 13.0]); // bay
-            b.boxp(rgb(0x8d8d93), [0.0, 6.4, -2.0], [7.4, 3.2, 2.0]); // cartridge
-            b.boxp(rgb(0xd33a3a), [0.0, 6.4, -0.9], [5.0, 2.0, 0.3]); // label
-            // Front: four controller ports, power/reset on top-left.
-            for x in [-7.5, -2.5, 2.5, 7.5] {
-                b.cyl(rgb(PORT), [x, -0.3, 9.6], 1.3, 0.6, Axis::Z);
-            }
-            b.boxp(rgb(0x55565e), [-9.5, 2.9, 5.5], [3.5, 0.5, 2.2]);
-            b.boxp(rgb(0x55565e), [-5.0, 2.9, 5.5], [2.4, 0.5, 2.2]);
-            b.boxp(rgb(0x4fa64f), [9.0, 2.9, 6.5], [2.2, 0.3, 2.2]); // logo chip
-        }
-        "psx" => {
-            let body = rgb(0xcfccc3);
-            b.boxr(body, [0.0, 0.0, 0.0], [27.0, 6.0, 19.0], 1.6);
-            b.cyl(rgb(0xd8d5cc), [3.0, 3.3, -1.0], 7.6, 0.6, Axis::Y); // lid
-            b.boxp(rgb(0x8e8c85), [-9.5, 3.2, 5.5], [3.2, 0.4, 2.0]); // power
-            b.boxp(rgb(0x8e8c85), [-9.5, 3.2, 2.0], [3.2, 0.4, 2.0]); // reset
-            b.boxp(rgb(0x8e8c85), [-9.5, 3.2, -3.0], [3.2, 0.4, 2.0]); // open
-            for x in [-7.0, -2.0] {
-                b.boxp(rgb(PORT), [x, -0.8, 9.6], [4.2, 2.4, 0.4]); // pads
-                b.boxp(rgb(PORT), [x, 1.6, 9.6], [4.2, 0.9, 0.4]); // memory cards
-            }
-        }
-        "ps2" => {
-            let body = rgb(0x17171d);
-            b.boxr(body, [0.0, 0.0, 0.0], [30.0, 7.8, 18.0], 0.8);
-            b.boxp(rgb(0x2244cc), [-13.4, 0.0, 9.1], [1.6, 7.8, 0.4]); // blue edge
-            b.boxp(rgb(0x2a2a33), [4.0, 2.4, 9.1], [17.0, 1.4, 0.4]); // tray
-            for x in [-7.0, -2.5] {
-                b.boxp(rgb(PORT), [x, -1.6, 9.1], [3.6, 2.0, 0.4]);
-            }
-            for i in 0..4 {
-                let y = -3.2 + i as f32 * 0.9; // horizontal grooves on the front
-                b.boxp(rgb(0x202027), [2.0, y, 9.2], [24.0, 0.25, 0.2]);
-            }
-            b.cyl(rgb(0x3a3a44), [9.0, -2.0, 9.2], 0.8, 0.3, Axis::Z); // reset
-            b.cyl(rgb(0x3a3a44), [11.5, -2.0, 9.2], 0.8, 0.3, Axis::Z); // eject
-        }
-        "gc" => {
-            let body = rgb(0x4a3e93);
-            b.boxr(body, [0.0, 0.0, 0.0], [15.0, 11.0, 16.0], 1.6);
-            b.boxp(rgb(0x5d50ad), [0.0, 5.7, 0.5], [12.5, 0.4, 12.5]); // lid
-            b.cyl(rgb(0x3e3480), [0.0, 6.05, 0.5], 4.6, 0.3, Axis::Y); // disc dome
-            // Handle at the back.
-            b.boxp(rgb(0x3e3480), [-4.5, 2.0, -9.0], [1.6, 6.0, 1.6]);
-            b.boxp(rgb(0x3e3480), [4.5, 2.0, -9.0], [1.6, 6.0, 1.6]);
-            b.boxp(rgb(0x3e3480), [0.0, 5.5, -9.0], [10.6, 1.6, 1.6]);
-            for x in [-4.5, -1.5, 1.5, 4.5] {
-                b.cyl(rgb(PORT), [x, 2.6, 8.1], 1.1, 0.4, Axis::Z);
-            }
-            b.boxp(rgb(PORT), [-3.0, -1.5, 8.1], [3.0, 1.2, 0.4]);
-            b.boxp(rgb(PORT), [3.0, -1.5, 8.1], [3.0, 1.2, 0.4]);
-            b.cyl(rgb(0x8e8ab8), [6.0, 5.8, 6.0], 0.7, 0.3, Axis::Y); // power
-        }
-        "wii" => {
-            b.boxr(rgb(0xeef0f3), [0.0, 0.0, 0.0], [4.4, 21.5, 15.7], 0.8);
-            b.boxp(rgb(0x7fb8ff), [0.0, 5.0, 7.95], [0.4, 12.0, 0.3]); // disc slot glow
-            b.boxp(rgb(0xd8dbe0), [0.0, -5.0, 7.95], [3.6, 2.4, 0.2]); // sd door
-            b.cyl(rgb(0xc9cdd3), [0.0, -8.5, 7.95], 0.5, 0.2, Axis::Z); // power
-            b.boxp(rgb(0xcfd3d8), [0.0, -11.3, 0.0], [10.0, 1.2, 12.0]); // stand
-        }
-        "xbox" => {
-            b.boxr(rgb(0x121214), [0.0, 0.0, 0.0], [32.0, 10.0, 26.0], 2.0);
-            b.cyl(rgb(0x1a1a1e), [0.0, 5.1, -2.0], 7.0, 0.4, Axis::Y); // raised ring
-            b.cyl(rgb(0x5cc230), [0.0, 5.3, -2.0], 4.6, 0.4, Axis::Y); // jewel
-            for x in [-11.0, -5.0, 5.0, 11.0] {
-                b.cyl(rgb(PORT), [x, -1.5, 13.1], 1.5, 0.5, Axis::Z);
-            }
-            b.boxp(rgb(0x202024), [0.0, 2.6, 13.1], [20.0, 1.6, 0.4]); // tray
-            b.cyl(rgb(0x5cc230), [13.0, 2.6, 13.2], 1.0, 0.4, Axis::Z); // power
-            b.cyl(rgb(0x3a3a40), [-13.0, 2.6, 13.2], 1.0, 0.4, Axis::Z); // eject
-        }
-        "x360" => {
-            b.boxr(rgb(0xe9e9ec), [0.0, 0.0, 0.0], [31.0, 8.3, 26.0], 1.8);
-            b.boxr(rgb(0xc9cbd0), [0.0, 0.0, 12.9], [29.4, 7.4, 1.2], 1.0); // faceplate
-            b.boxr(rgb(0x9fa2a8), [0.0, 0.0, -12.9], [28.0, 6.5, 0.6], 0.3); // back vents
-            b.boxp(rgb(0x3a3a40), [-4.0, 1.8, 13.5], [17.0, 1.6, 0.2]); // tray
-            b.cyl(rgb(0xdfe1e6), [9.5, 0.0, 13.6], 2.3, 0.3, Axis::Z); // ring
-            b.cyl(rgb(0x58c843), [9.5, 0.0, 13.8], 1.4, 0.2, Axis::Z); // power led
-            for x in [-11.0, -7.5] {
-                b.boxp(rgb(PORT), [x, -2.0, 13.5], [2.4, 1.6, 0.2]); // memory units
-            }
-        }
-        "dc" => {
-            b.boxr(rgb(0xeeeeee), [0.0, 0.0, 0.0], [19.0, 7.6, 19.5], 2.2);
-            b.cyl(rgb(0xf4f4f4), [0.0, 4.1, -1.0], 7.6, 0.6, Axis::Y); // lid
-            b.cyl(rgb(0xf27a1a), [0.0, 4.55, -1.0], 1.7, 0.3, Axis::Y); // swirl
-            for x in [-6.0, -2.0, 2.0, 6.0] {
-                b.cyl(rgb(PORT), [x, -1.2, 9.9], 1.2, 0.5, Axis::Z);
-            }
-            b.boxp(rgb(0xd3d3d3), [-7.5, 4.0, 6.5], [3.0, 0.4, 2.0]); // power
-            b.boxp(rgb(0xd3d3d3), [7.5, 4.0, 6.5], [3.0, 0.4, 2.0]); // open
-            b.cyl(rgb(0xf27a1a), [-7.5, 4.3, 3.0], 0.4, 0.3, Axis::Y); // led
-        }
-        "gb" => {
-            b.boxr(rgb(0xc7c6c0), [0.0, 0.0, 0.0], [9.0, 14.8, 3.2], 1.0);
-            b.boxp(rgb(0x3c3c48), [0.0, 3.4, 1.7], [7.6, 5.8, 0.3]); // bezel
-            b.boxg(rgb(0x8fa44a), [-0.4, 3.4, 1.9], [4.6, 4.1, 0.2]); // screen
-            b.boxp(rgb(0x6e1f3f), [0.0, 6.0, 1.9], [7.6, 0.25, 0.15]); // purple stripe
-            b.boxp(rgb(PORT), [-2.4, -2.3, 1.8], [2.6, 0.9, 0.5]); // d-pad
-            b.boxp(rgb(PORT), [-2.4, -2.3, 1.8], [0.9, 2.6, 0.5]);
-            b.cyl(rgb(0xa8356b), [1.7, -2.9, 1.9], 0.6, 0.5, Axis::Z); // B
-            b.cyl(rgb(0xa8356b), [3.2, -2.1, 1.9], 0.6, 0.5, Axis::Z); // A
-            b.boxp(rgb(0x7a7a80), [-0.9, -5.3, 1.7], [1.4, 0.45, 0.3]); // select
-            b.boxp(rgb(0x7a7a80), [0.9, -5.3, 1.7], [1.4, 0.45, 0.3]); // start
-        }
-        "gba" => {
-            b.boxr(rgb(0x5a4fa8), [0.0, 0.0, 0.0], [14.5, 8.2, 2.5], 1.1);
-            b.boxp(rgb(0x2a2a35), [0.0, 0.5, 1.3], [7.2, 5.4, 0.3]); // bezel
-            b.boxg(rgb(0x9aa3b8), [0.0, 0.5, 1.5], [6.0, 4.0, 0.2]); // screen
-            b.boxp(rgb(PORT), [-5.6, 0.4, 1.4], [2.4, 0.8, 0.4]); // d-pad
-            b.boxp(rgb(PORT), [-5.6, 0.4, 1.4], [0.8, 2.4, 0.4]);
-            b.cyl(rgb(0xc7c3e3), [5.1, -0.1, 1.5], 0.55, 0.4, Axis::Z); // B
-            b.cyl(rgb(0xc7c3e3), [6.4, 0.7, 1.5], 0.55, 0.4, Axis::Z); // A
-            b.boxp(rgb(0x3f3870), [-5.4, 4.3, -0.2], [4.0, 0.5, 1.6]); // L
-            b.boxp(rgb(0x3f3870), [5.4, 4.3, -0.2], [4.0, 0.5, 1.6]); // R
-            b.boxp(rgb(0xc7c3e3), [-3.0, -2.6, 1.35], [1.3, 0.4, 0.2]);
-            b.boxp(rgb(0xc7c3e3), [-3.0, -3.4, 1.35], [1.3, 0.4, 0.2]);
-        }
-        "nds" | "3ds" => {
-            let is3 = system == "3ds";
-            let shell = if is3 { rgb(0xb7202e) } else { rgb(0xf2f2f4) };
-            let inner = if is3 { rgb(0x202024) } else { rgb(0xf7f7f9) };
-            let (w, d, lid_h) = if is3 { (13.4, 7.4, 7.4) } else { (13.3, 7.4, 7.4) };
-            b.boxr(shell, [0.0, 0.0, 0.0], [w, 1.1, d], 0.5); // bottom half
-            b.boxp(inner, [0.0, 0.58, 0.0], [w - 0.8, 0.1, d - 0.8]); // inner face
-            b.boxg(rgb(SCREEN), [0.0, 0.66, 0.2], [if is3 { 5.6 } else { 5.6 }, 0.1, 4.2]); // bottom screen
-            b.boxp(rgb(PORT), [-4.6, 0.7, 0.4], [2.2, 0.15, 0.7]); // d-pad
-            b.boxp(rgb(PORT), [-4.6, 0.7, 0.4], [0.7, 0.15, 2.2]);
-            for (x, z) in [(4.0, 0.4), (5.1, -0.6), (5.1, 1.4), (6.2, 0.4)] {
-                b.cyl(rgb(if is3 { 0x3a3a40 } else { 0x9aa0a8 }), [x, 0.72, z], 0.45, 0.15, Axis::Y);
-            }
-            if is3 {
-                b.cyl(rgb(0x46464c), [-4.6, 0.75, -2.0], 0.9, 0.2, Axis::Y); // circle pad
-            }
-            // Lid, hinged at the back and tilted ~110°.
-            let hinge = [0.0, 0.55, -d / 2.0];
-            let tilt = -0.42f32; // leaning back ~25° from upright
-            let lid = rounded_box([0.0, 0.55 + lid_h / 2.0, -d / 2.0 + 0.55], [w, lid_h, 1.1], 0.5, 8);
-            b.add(shell, 0.0, rotate_x_about(lid, tilt, hinge));
-            let face = cuboid([0.0, 0.55 + lid_h / 2.0, -d / 2.0 + 1.11], [w - 0.8, lid_h - 0.8, 0.05]);
-            b.add(inner, 0.0, rotate_x_about(face, tilt, hinge));
-            let scr_w = if is3 { 7.7 } else { 5.6 };
-            let screen = cuboid([0.0, 0.55 + lid_h / 2.0, -d / 2.0 + 1.16], [scr_w, 4.3, 0.05]);
-            b.add(rgb(SCREEN), 1.0, rotate_x_about(screen, tilt, hinge));
-            b.cyl(shell, hinge, 0.6, w - 1.0, Axis::X);
-        }
-        "psp" => {
-            b.boxr(rgb(0x15151a), [0.0, 0.0, 0.0], [17.0, 7.4, 2.3], 1.1);
-            b.boxg(rgb(0x2a3350), [0.0, 0.35, 1.2], [9.6, 5.4, 0.2]); // screen
-            b.boxp(rgb(PORT), [-6.6, 0.8, 1.25], [2.2, 0.7, 0.3]); // d-pad
-            b.boxp(rgb(PORT), [-6.6, 0.8, 1.25], [0.7, 2.2, 0.3]);
-            b.cyl(rgb(0x55555c), [-6.6, -2.3, 1.3], 0.75, 0.4, Axis::Z); // analog nub
-            for (x, y) in [(6.6, 1.9), (5.4, 0.8), (7.8, 0.8), (6.6, -0.3)] {
-                b.cyl(rgb(0xb9b9c0), [x, y, 1.3], 0.45, 0.3, Axis::Z);
-            }
-            b.boxp(rgb(0x2a2a30), [-6.5, 3.75, 0.2], [3.5, 0.3, 1.4]); // L
-            b.boxp(rgb(0x2a2a30), [6.5, 3.75, 0.2], [3.5, 0.3, 1.4]); // R
-            b.boxp(rgb(0xb9b9c0), [4.5, -2.8, 1.2], [1.2, 0.3, 0.2]); // start
-            b.boxp(rgb(0xb9b9c0), [2.8, -2.8, 1.2], [1.2, 0.3, 0.2]); // select
-        }
-        "ps5" => {
-            b.boxr(rgb(0x111115), [0.0, 0.0, 0.0], [8.0, 38.0, 24.0], 2.5); // core
-            // White side plates, flared outwards at the top.
-            let l = rounded_box([-4.7, 0.0, 0.0], [1.6, 40.0, 26.0], 0.8, 8);
-            b.add(rgb(0xf4f4f6), 0.0, rotate_z_about(l, 0.035, [-4.0, -19.0, 0.0]));
-            let r = rounded_box([4.7, 0.0, 0.0], [1.6, 40.0, 26.0], 0.8, 8);
-            b.add(rgb(0xf4f4f6), 0.0, rotate_z_about(r, -0.035, [4.0, -19.0, 0.0]));
-            b.boxg(rgb(0x4f8cff), [0.0, 19.3, 0.0], [7.4, 0.5, 22.0]); // light strip
-            b.cyl(rgb(0x1a1a1f), [0.0, -19.6, 0.0], 7.0, 0.9, Axis::Y); // stand
-            b.boxp(rgb(0x2a2a30), [0.0, 8.0, 12.05], [1.2, 14.0, 0.3]); // disc slot
-        }
-        "pc" => {
-            b.boxr(rgb(0x1c1d22), [0.0, 0.0, 0.0], [21.0, 45.0, 45.0], 1.2);
-            b.boxg(rgb(0x2a3a5a), [10.6, 1.0, 0.0], [0.3, 40.0, 41.0]); // glass side
-            b.boxp(rgb(0x26272d), [0.0, 0.0, 22.6], [19.5, 43.0, 0.3]); // front mesh
-            for y in [-13.0, 0.0, 13.0] {
-                b.cyl(rgb(0x3ad6c8), [0.0, y, 22.9], 5.6, 0.3, Axis::Z); // RGB fans
-                b.cyl(rgb(0x1c1d22), [0.0, y, 23.05], 2.0, 0.3, Axis::Z);
-            }
-            b.cyl(rgb(0x3ad6c8), [4.0, 22.6, 14.0], 1.0, 0.3, Axis::Y); // power
-            for (x, z) in [(-8.0, -18.0), (8.0, -18.0), (-8.0, 18.0), (8.0, 18.0)] {
-                b.boxp(rgb(0x111114), [x, -23.0, z], [3.0, 1.2, 4.0]); // feet
-            }
-        }
+        "n64" => n64(&mut b),
+        "psx" => psx(&mut b),
+        "ps2" => ps2(&mut b),
+        "gc" => gc(&mut b),
+        "wii" => wii(&mut b),
+        "xbox" => xbox(&mut b),
+        "x360" => x360(&mut b),
+        "dc" => dc(&mut b),
+        "gb" => gb(&mut b),
+        "gba" => gba(&mut b),
+        "nds" => ds(&mut b, false),
+        "3ds" => ds(&mut b, true),
+        "psp" => psp(&mut b),
+        "ps5" => ps5(&mut b),
+        "pc" => pc(&mut b),
         _ => return None,
     }
     Some(b.parts)
+}
+
+fn n64(b: &mut Builder) {
+    let body = 0x3d3d45;
+    let dark = 0x2c2c33;
+    let light = 0x55555e;
+    // Base: wide tapered block (26 × 19 cm footprint, 4 cm tall).
+    let base = block(0.0, 0.0, 0.0, 26.0, 19.0, 23.6, 17.2, 4.0);
+    // Top of the base: vents on both wings, power switch + reset at the front-left.
+    let mut top = Canvas::for_face(23.6, 17.2, body);
+    top.vents_h(t(1.2), t(2.0), t(5.5), 9, 2, dark);
+    top.vents_h(t(23.6 - 6.7), t(2.0), t(5.5), 9, 2, dark);
+    top.slot(t(1.6), t(11.5), t(3.2), t(1.4), light, dark); // power switch
+    top.slot(t(1.6), t(14.0), t(2.4), t(1.2), light, dark); // reset
+    top.px(t(5.6), t(12.0), LED_RED);
+    // Front of the base: four controller ports + the four-colour logo.
+    let mut front = Canvas::for_face(26.0, 4.0, body);
+    for x in [-8.0f32, -3.0, 3.0, 8.0] {
+        front.port(t(13.0 + x), t(2.1), t(1.3), RIM, HOLE);
+    }
+    front.rect(t(13.0) - 2, t(1.0), 2, 2, 0xe04040);
+    front.rect(t(13.0), t(1.0), 2, 2, 0x4fa64f);
+    front.rect(t(13.0) - 2, t(1.0) + 2, 2, 2, 0x3f6fe0);
+    front.rect(t(13.0), t(1.0) + 2, 2, 2, 0xf0c040);
+    let mut side = Canvas::for_face(19.0, 4.0, body);
+    side.vents_v(t(3.0), t(1.0), t(2.0), 10, 2, dark);
+    let mut side2 = Canvas::for_face(19.0, 4.0, body);
+    side2.vents_v(t(19.0 - 3.0 - 10.0), t(1.0), t(2.0), 10, 2, dark);
+    b.block_skins(body, base, vec![(TOP, top), (FRONT, front), (LEFT, side), (RIGHT, side2)]);
+    // Hump with the cartridge slot, tapering towards the top.
+    let hump = block(0.0, 4.0, -1.0, 14.5, 15.5, 11.0, 12.5, 3.3);
+    let mut htop = Canvas::for_face(11.0, 12.5, body);
+    htop.slot(t(1.6), t(3.6), t(7.8), t(1.6), light, HOLE); // cartridge slot
+    htop.vents_h(t(1.5), t(7.0), t(8.0), 5, 2, dark);
+    let mut hfront = Canvas::for_face(14.5, 3.3, body);
+    hfront.rect(t(5.0), t(1.0), t(4.5), 2, light); // logo plate
+    b.block_skins(body, hump, vec![(TOP, htop), (FRONT, hfront)]);
+    // Cartridge peeking out of the slot.
+    let cart = block(0.0, 7.3, -1.0, 7.4, 1.5, 7.0, 1.3, 2.4);
+    let mut cfront = Canvas::for_face(7.4, 2.4, 0x8d8d93);
+    cfront.rect(1, 1, t(7.4) - 2, t(2.4) - 2, 0xc9392f); // label
+    cfront.rect(2, 2, t(7.4) - 4, 1, 0xf0e6c0);
+    b.block_skins(0x8d8d93, cart, vec![(FRONT, cfront)]);
+}
+
+fn psx(b: &mut Builder) {
+    let body = 0xd4d1c8;
+    let shade = 0xb9b6ad;
+    let dark = 0x6f6d66;
+    let base = block(0.0, 0.0, 0.0, 27.0, 19.0, 26.4, 18.4, 6.0);
+    let mut top = Canvas::for_face(26.4, 18.4, body);
+    // Disc lid: big circle offset to the right, with a seam.
+    top.disc(t(16.0), t(8.6), t(7.4), 0xdedbd2);
+    top.ring(t(16.0), t(8.6), t(7.4), shade);
+    top.disc(t(16.0), t(8.6), t(1.2), shade);
+    // PlayStation logo colours (tiny) on the lid.
+    top.rect(t(16.0) - 3, t(13.5), 2, 2, 0xd94040);
+    top.rect(t(16.0) - 1, t(13.5), 2, 2, 0xe0b030);
+    top.rect(t(16.0) + 1, t(13.5), 2, 2, 0x40a060);
+    top.rect(t(16.0) + 3, t(13.5), 2, 2, 0x4060d0);
+    // Buttons on the left: power, reset, open.
+    top.slot(t(1.6), t(10.5), t(3.4), t(1.4), shade, dark);
+    top.slot(t(1.6), t(13.0), t(3.4), t(1.4), shade, dark);
+    top.slot(t(1.6), t(15.5), t(3.4), t(1.4), shade, dark);
+    top.px(t(5.6), t(11.0), LED_GREEN);
+    top.vents_h(t(1.5), t(1.5), t(6.0), 6, 2, shade);
+    let mut front = Canvas::for_face(27.0, 6.0, body);
+    for x in [3.0f32, 8.5] {
+        front.slot(t(x), t(3.6), t(4.4), t(1.8), dark, HOLE); // controller ports
+        front.slot(t(x), t(1.4), t(4.4), t(1.0), dark, HOLE); // memory cards
+    }
+    front.vents_v(t(18.0), t(1.5), t(3.0), 10, 2, shade);
+    let mut back = Canvas::for_face(27.0, 6.0, body);
+    back.vents_v(t(2.0), t(1.2), t(3.6), 18, 2, shade);
+    b.block_skins(body, base, vec![(TOP, top), (FRONT, front), (BACK, back)]);
+}
+
+fn ps2(b: &mut Builder) {
+    let body = 0x17171d;
+    let groove = 0x26262e;
+    let base = block(0.0, 0.0, 0.0, 30.0, 18.0, 30.0, 18.0, 7.8);
+    let mut front = Canvas::for_face(30.0, 7.8, body);
+    front.rect(0, 0, t(1.6), t(7.8), 0x2244cc); // blue edge
+    front.vents_h(t(1.6), t(1.0), t(28.4), 4, 4, groove);
+    front.slot(t(4.0), t(5.4), t(3.6), t(1.6), 0x3a3a44, HOLE);
+    front.slot(t(8.5), t(5.4), t(3.6), t(1.6), 0x3a3a44, HOLE);
+    front.slot(t(4.0), t(3.6), t(3.6), t(0.9), 0x3a3a44, HOLE);
+    front.slot(t(8.5), t(3.6), t(3.6), t(0.9), 0x3a3a44, HOLE);
+    front.slot(t(13.5), t(1.2), t(14.0), t(1.6), 0x3a3a44, 0x1e1e26); // tray
+    front.disc(t(26.0), t(4.6), 2, 0x3a3a44); // reset
+    front.disc(t(28.0), t(4.6), 2, 0x3a3a44); // eject
+    front.px(t(26.0), t(6.4), LED_GREEN);
+    let mut top = Canvas::for_face(30.0, 18.0, body);
+    top.vents_h(0, t(2.0), t(30.0), 4, 8, groove);
+    top.rect(t(22.0), t(10.0), t(5.0), 2, 0x5c5c66); // logo bar
+    b.block_skins(body, base, vec![(FRONT, front), (TOP, top)]);
+}
+
+fn gc(b: &mut Builder) {
+    let body = 0x5048a0;
+    let shade = 0x3e3880;
+    let light = 0x6a62b8;
+    let base = block(0.0, 0.0, 0.0, 15.0, 16.0, 15.0, 16.0, 11.0);
+    let mut front = Canvas::for_face(15.0, 11.0, body);
+    for x in [3.0f32, 6.0, 9.0, 12.0] {
+        front.port(t(x), t(5.2), t(1.2), 0x8a84c4, HOLE);
+    }
+    front.slot(t(2.0), t(8.6), t(4.6), t(1.4), shade, HOLE);
+    front.slot(t(8.4), t(8.6), t(4.6), t(1.4), shade, HOLE);
+    front.rect(t(1.0), t(1.6), t(13.0), 1, shade);
+    let mut top = Canvas::for_face(15.0, 16.0, body);
+    top.disc(t(7.5), t(7.5), t(5.8), light);
+    top.ring(t(7.5), t(7.5), t(5.8), shade);
+    top.ring(t(7.5), t(7.5), t(2.2), shade); // logo ring
+    top.rect(t(7.5) - 1, t(7.5) - 1, 3, 3, shade);
+    top.disc(t(13.3), t(13.5), 2, 0x9a94d0); // power
+    top.disc(t(13.3), t(11.0), 1, 0x9a94d0); // reset
+    top.vents_h(t(1.0), t(13.0), t(4.0), 4, 2, shade);
+    let mut right = Canvas::for_face(16.0, 11.0, body);
+    right.dots(t(1.5), t(2.0), 12, 10, 2, shade); // vent grid
+    let mut left = Canvas::for_face(16.0, 11.0, body);
+    left.dots(t(16.0 - 1.5 - 11.0), t(2.0), 12, 10, 2, shade);
+    b.block_skins(body, base, vec![(FRONT, front), (TOP, top), (RIGHT, right), (LEFT, left)]);
+    // Handle at the back.
+    b.block(shade, &block(-4.5, 2.0, -8.9, 1.6, 1.6, 1.6, 1.6, 6.0));
+    b.block(shade, &block(4.5, 2.0, -8.9, 1.6, 1.6, 1.6, 1.6, 6.0));
+    b.block(shade, &block(0.0, 8.0, -8.9, 10.6, 1.6, 10.6, 1.6, 1.6));
+}
+
+fn wii(b: &mut Builder) {
+    let body = 0xeef0f3;
+    let shade = 0xcfd3d8;
+    let base = block(0.0, 0.0, 0.0, 4.4, 15.7, 4.4, 15.7, 21.5);
+    let mut front = Canvas::for_face(4.4, 21.5, body);
+    front.rect(t(2.0), t(2.0), 1, t(12.0), 0x7fb8ff); // disc slot light
+    front.rect(t(2.0) + 1, t(2.0), 1, t(12.0), HOLE);
+    front.slot(t(0.8), t(15.5), t(2.8), t(2.6), shade, 0xe2e5ea); // SD door
+    front.disc(t(2.2), t(19.4), 1, 0x9aa0a8); // power
+    front.px(t(1.0), t(19.4), 0x7fb8ff);
+    let mut left = Canvas::for_face(15.7, 21.5, body);
+    left.vents_h(t(10.0), t(16.0), t(4.0), 8, 2, shade);
+    left.rect(t(1.0), t(1.0), t(13.7), 1, shade);
+    b.block_skins(body, base, vec![(FRONT, front), (LEFT, left)]);
+    // Stand.
+    b.block(shade, &block(0.0, -1.3, 0.0, 10.0, 12.0, 8.0, 11.0, 1.3));
+}
+
+fn xbox(b: &mut Builder) {
+    let body = 0x121214;
+    let edge = 0x26262a;
+    let base = block(0.0, 0.0, 0.0, 32.0, 26.0, 30.6, 24.8, 10.0);
+    let mut top = Canvas::for_face(30.6, 24.8, body);
+    // Big X grooves and the green jewel.
+    for i in 0..t(24.8) {
+        let x0 = (i as f32 / t(24.8) as f32 * t(30.6) as f32) as i32;
+        top.px(x0, i, edge);
+        top.px(x0 + 1, i, edge);
+        top.px(t(30.6) - 1 - x0, i, edge);
+        top.px(t(30.6) - 2 - x0, i, edge);
+    }
+    top.disc(t(15.3), t(11.5), t(5.0), 0x1c1c20);
+    top.disc(t(15.3), t(11.5), t(4.2), 0x5cc230);
+    top.disc(t(15.3), t(11.5), t(1.6), 0x3f8e22);
+    let mut front = Canvas::for_face(32.0, 10.0, body);
+    for x in [5.0f32, 11.0, 21.0, 27.0] {
+        front.port(t(x), t(6.6), t(1.6), 0x3a3a40, HOLE);
+    }
+    front.slot(t(6.0), t(1.6), t(20.0), t(2.0), 0x2a2a30, 0x1a1a1e); // tray
+    front.disc(t(29.0), t(2.6), 2, 0x5cc230); // power
+    front.disc(t(3.0), t(2.6), 2, 0x3a3a40); // eject
+    b.block_skins(body, base, vec![(TOP, top), (FRONT, front)]);
+}
+
+fn x360(b: &mut Builder) {
+    let body = 0xe9e9ec;
+    let shade = 0xc9cbd0;
+    let base = block(0.0, 0.0, 0.0, 31.0, 26.0, 30.0, 25.0, 8.3);
+    let mut front = Canvas::for_face(31.0, 8.3, shade);
+    front.rect(0, 0, t(31.0), 1, body);
+    front.slot(t(2.0), t(5.4), t(17.0), t(1.6), 0x3a3a40, 0x1a1a1e); // tray
+    front.disc(t(25.5), t(4.1), t(2.3), body);
+    front.disc(t(25.5), t(4.1), t(1.5), 0x58c843); // ring of light
+    front.disc(t(25.5), t(4.1), 1, body);
+    front.slot(t(2.0), t(1.4), t(2.6), t(1.6), 0x9fa2a8, HOLE); // memory units
+    front.slot(t(5.4), t(1.4), t(2.6), t(1.6), 0x9fa2a8, HOLE);
+    let mut top = Canvas::for_face(30.0, 25.0, body);
+    top.dots(t(2.0), t(2.0), 30, 6, 2, shade);
+    top.dots(t(2.0), t(19.0), 30, 6, 2, shade);
+    top.rect(t(26.0), t(11.0), t(2.0), t(2.0), shade); // sticker
+    let mut back = Canvas::for_face(31.0, 8.3, body);
+    back.dots(t(3.0), t(1.5), 48, 6, 2, shade);
+    b.block_skins(body, base, vec![(FRONT, front), (TOP, top), (BACK, back)]);
+}
+
+fn dc(b: &mut Builder) {
+    let body = 0xeeeeee;
+    let shade = 0xd0d0d0;
+    let base = block(0.0, 0.0, 0.0, 19.0, 19.5, 18.4, 18.9, 7.6);
+    let mut top = Canvas::for_face(18.4, 18.9, body);
+    top.disc(t(9.2), t(8.6), t(7.4), 0xf6f6f6);
+    top.ring(t(9.2), t(8.6), t(7.4), shade);
+    top.disc(t(9.2), t(8.6), t(1.2), 0xf27a1a); // swirl
+    top.px(t(9.2) + 2, t(8.6) - 2, body);
+    top.slot(t(1.2), t(15.6), t(3.0), t(1.4), shade, 0xbdbdbd); // power
+    top.slot(t(14.2), t(15.6), t(3.0), t(1.4), shade, 0xbdbdbd); // open
+    top.px(t(5.0), t(16.3), 0xf27a1a);
+    top.vents_h(t(1.0), t(1.0), t(5.0), 5, 2, shade);
+    let mut front = Canvas::for_face(19.0, 7.6, body);
+    for x in [3.5f32, 7.5, 11.5, 15.5] {
+        front.port(t(x), t(4.4), t(1.2), 0xa8a8a8, HOLE);
+    }
+    b.block_skins(body, base, vec![(TOP, top), (FRONT, front)]);
+}
+
+fn gb(b: &mut Builder) {
+    let body = 0xc7c6c0;
+    let base = block(0.0, 0.0, 0.0, 9.0, 3.2, 9.0, 3.2, 14.8);
+    let mut front = Canvas::for_face(9.0, 14.8, body);
+    front.rect(t(0.7), t(1.0), t(7.6), t(5.8), 0x3c3c48); // bezel
+    front.rect(t(0.7), t(1.3), t(7.6), 1, 0x6e1f3f); // purple line
+    front.rect(t(0.7), t(1.6), t(7.6), 1, 0x2f3bb3); // blue line
+    front.rect(t(1.6), t(2.0), t(4.6), t(4.1), 0x8fa44a); // screen
+    front.px(t(1.0), t(4.0), LED_RED);
+    front.rect(t(1.0), t(7.6), t(4.0), 1, 0x4a4a52); // "Nintendo GAME BOY"
+    front.rect(t(1.3), t(9.3), t(2.6), t(0.9), 0x2a2a30); // d-pad
+    front.rect(t(2.15), t(8.45), t(0.9), t(2.6), 0x2a2a30);
+    front.disc(t(6.0), t(10.6), t(0.6), 0xa8356b); // B
+    front.disc(t(7.6), t(9.8), t(0.6), 0xa8356b); // A
+    front.rect(t(2.5), t(12.6), t(1.4), 1, 0x7a7a80); // select
+    front.rect(t(4.4), t(12.6), t(1.4), 1, 0x7a7a80); // start
+    for i in 0..6 {
+        front.rect(t(6.0) + i * 2, t(12.0) + i, 1, t(1.6), 0x9a9a94); // speaker
+    }
+    let mut back = Canvas::for_face(9.0, 14.8, body);
+    back.rect(t(1.5), t(2.0), t(6.0), t(4.0), 0xb3b2ac); // battery cover
+    b.block_skins(body, base, vec![(FRONT, front), (BACK, back)]);
+}
+
+fn gba(b: &mut Builder) {
+    let body = 0x5a4fa8;
+    let base = block(0.0, 0.0, 0.0, 14.5, 2.5, 14.5, 2.5, 8.2);
+    let mut front = Canvas::for_face(14.5, 8.2, body);
+    front.rect(t(3.6), t(1.2), t(7.3), t(5.5), 0x2a2a35); // bezel
+    front.rect(t(4.3), t(1.9), t(5.9), t(4.0), 0x9aa3b8); // screen
+    front.rect(t(0.9), t(3.5), t(2.4), t(0.8), 0x2a2a30); // d-pad
+    front.rect(t(1.7), t(2.7), t(0.8), t(2.4), 0x2a2a30);
+    front.disc(t(12.0), t(4.0), t(0.5), 0xc7c3e3); // B
+    front.disc(t(13.3), t(3.0), t(0.5), 0xc7c3e3); // A
+    front.rect(t(1.2), t(6.6), t(1.3), 1, 0xc7c3e3); // select
+    front.rect(t(1.2), t(7.3), t(1.3), 1, 0xc7c3e3); // start
+    front.px(t(3.8), t(1.6), LED_GREEN);
+    for i in 0..5 {
+        front.rect(t(12.0) + i, t(6.4) + i, t(0.6), 1, 0x8a82c8); // speaker
+    }
+    b.block_skins(body, base, vec![(FRONT, front)]);
+    b.block(0x3f3870, &block(-5.4, 8.2, -0.3, 4.0, 1.6, 4.0, 1.6, 0.5)); // L
+    b.block(0x3f3870, &block(5.4, 8.2, -0.3, 4.0, 1.6, 4.0, 1.6, 0.5)); // R
+}
+
+fn ds(b: &mut Builder, is3: bool) {
+    let shell = if is3 { 0xb7202e } else { 0xf2f2f4 };
+    let inner = if is3 { 0x202024 } else { 0xf7f7f9 };
+    let detail = if is3 { 0x3a3a40 } else { 0xb9bfc8 };
+    let (w, d, lid_h) = (13.4f32, 7.4f32, 7.4f32);
+    // Bottom half: painted top face (screen, d-pad, buttons).
+    let bottom = block(0.0, 0.0, 0.0, w, d, w, d, 1.1);
+    let mut top = Canvas::for_face(w, d, inner);
+    top.rect(t(3.9), t(1.3), t(5.6), t(4.2), SCREEN); // touch screen
+    top.rect(t(0.8), t(3.0), t(2.2), t(0.7), detail); // d-pad
+    top.rect(t(1.55), t(2.25), t(0.7), t(2.2), detail);
+    for (x, y) in [(10.8f32, 3.3f32), (11.8, 2.3), (11.8, 4.3), (12.8, 3.3)] {
+        top.disc(t(x), t(y), 1, detail);
+    }
+    if is3 {
+        top.disc(t(1.9), t(1.4), t(0.8), 0x5a5a62); // circle pad
+    }
+    top.rect(t(10.0), t(6.0), t(1.0), 1, detail); // start
+    top.rect(t(11.5), t(6.0), t(1.0), 1, detail); // select
+    let mut front = Canvas::for_face(w, 1.1, shell);
+    front.rect(t(4.0), 1, t(5.0), 1, detail); // cartridge slot
+    b.block_skins(shell, bottom, vec![(TOP, top), (FRONT, front)]);
+    // Lid, hinged at the back, leaning back ~25°.
+    let hinge = [0.0, 0.55, -d / 2.0];
+    let tilt = -0.42f32;
+    let lid = block(0.0, 0.55, -d / 2.0 + 0.55, w, 1.1, w, 1.1, lid_h);
+    let mut face = Canvas::for_face(w, lid_h, inner); // inner side (faces the player)
+    face.rect(t(if is3 { 2.9 } else { 3.9 }), t(1.3), t(if is3 { 7.7 } else { 5.6 }), t(4.3), SCREEN);
+    for i in 0..4 {
+        face.px(t(1.2) + i * 2, t(3.5), detail); // speaker dots
+        face.px(t(w - 1.2) - i * 2, t(3.5), detail);
+    }
+    let mut outer = Canvas::for_face(w, lid_h, shell);
+    outer.disc(t(w / 2.0), t(lid_h / 2.0), 2, if is3 { 0x8a1822 } else { 0xd8d8dc }); // logo
+    outer.px(t(w - 1.0), t(1.0), LED_GREEN);
+    let mut parts = Builder::new();
+    parts.block_skins(shell, lid, vec![(FRONT, face), (BACK, outer)]);
+    for mut p in parts.parts {
+        p.verts = rotate_x_about(p.verts, tilt, hinge);
+        b.parts.push(p);
+    }
+    b.cyl(shell, hinge, 0.6, w - 1.0, Axis::X);
+}
+
+fn psp(b: &mut Builder) {
+    let body = 0x15151a;
+    let base = block(0.0, 0.0, 0.0, 17.0, 2.3, 17.0, 2.3, 7.4);
+    let mut front = Canvas::for_face(17.0, 7.4, body);
+    front.rect(t(3.7), t(1.0), t(9.6), t(5.4), 0x2a3350); // screen
+    front.rect(t(3.9), t(1.2), t(9.2), 1, 0x3a4668); // glare line
+    front.rect(t(0.8), t(2.9), t(2.2), t(0.7), 0x2e2e36); // d-pad
+    front.rect(t(1.55), t(2.15), t(0.7), t(2.2), 0x2e2e36);
+    front.disc(t(1.9), t(6.0), t(0.7), 0x55555c); // analog nub
+    for (x, y) in [(14.4f32, 2.2f32), (13.3, 3.3), (15.5, 3.3), (14.4, 4.4)] {
+        front.disc(t(x), t(y), 1, 0xb9b9c0);
+    }
+    front.rect(t(13.6), t(6.3), t(1.2), 1, 0x8a8a92); // select
+    front.rect(t(15.2), t(6.3), t(1.2), 1, 0x8a8a92); // start
+    front.rect(t(7.0), t(6.6), t(3.0), 1, 0x8a8a92); // "PSP" bar
+    front.px(t(15.8), t(0.6), LED_GREEN);
+    b.block_skins(body, base, vec![(FRONT, front)]);
+    b.block(0x2a2a30, &block(-6.5, 7.4, 0.2, 3.5, 1.4, 3.5, 1.4, 0.3)); // L
+    b.block(0x2a2a30, &block(6.5, 7.4, 0.2, 3.5, 1.4, 3.5, 1.4, 0.3)); // R
+}
+
+fn ps5(b: &mut Builder) {
+    let plate = 0xf4f4f6;
+    let core = block(0.0, 0.0, 0.0, 8.0, 24.0, 8.0, 24.0, 38.0);
+    let mut front = Canvas::for_face(8.0, 38.0, 0x111115);
+    front.rect(t(3.6), t(6.0), 2, t(14.0), 0x2a2a30); // disc slot
+    front.disc(t(4.0), t(26.0), 1, 0x8a8a92); // power
+    front.disc(t(4.0), t(28.5), 1, 0x8a8a92); // eject
+    front.rect(t(2.6), t(31.0), t(2.8), 1, 0x2a2a30); // USB
+    b.block_skins(0x111115, core, vec![(FRONT, front)]);
+    // White plates flaring out towards the top.
+    b.block(plate, &block(-4.8, -1.0, 0.0, 1.6, 26.0, 2.6, 26.0, 40.0));
+    b.block(plate, &block(4.8, -1.0, 0.0, 1.6, 26.0, 2.6, 26.0, 40.0));
+    let strip = block(0.0, 38.0, 0.0, 7.6, 22.0, 7.6, 22.0, 0.5);
+    let mut v = Vec::new();
+    for f in &strip.faces {
+        v.extend_from_slice(f);
+    }
+    b.add(rgb(0x4f8cff), 1.0, v); // light strip
+    b.cyl(0x1a1a1f, [0.0, -1.6, 0.0], 7.0, 1.0, Axis::Y); // stand
+}
+
+fn pc(b: &mut Builder) {
+    let body = 0x1c1d22;
+    let base = block(0.0, 0.0, 0.0, 21.0, 45.0, 21.0, 45.0, 45.0);
+    let mut front = Canvas::for_face(21.0, 45.0, 0x26272d);
+    front.dots(t(2.0), t(2.0), 17, 41, 2, 0x15161a); // mesh
+    for y in [9.0f32, 22.5, 36.0] {
+        front.disc(t(10.5), t(y), t(5.6), 0x1c1d22);
+        front.ring(t(10.5), t(y), t(5.6), 0x3ad6c8);
+        front.ring(t(10.5), t(y), t(5.6) - 1, 0x3ad6c8);
+        front.disc(t(10.5), t(y), t(1.8), 0x2a2b31);
+    }
+    front.px(t(18.5), t(1.5), 0x3ad6c8); // power led
+    let mut right = Canvas::for_face(45.0, 45.0, body);
+    right.rect(t(2.0), t(2.0), t(41.0), t(41.0), 0x2a3a5a); // tempered glass
+    right.rect(t(4.0), t(4.0), t(14.0), t(10.0), 0x24344f); // motherboard shadow
+    right.rect(t(20.0), t(28.0), t(18.0), t(6.0), 0x3a2a5a); // GPU glow
+    right.rect(t(20.0), t(27.0), t(18.0), 1, 0x9a5cff);
+    let mut top = Canvas::for_face(21.0, 45.0, body);
+    top.dots(t(3.0), t(3.0), 15, 39, 2, 0x15161a);
+    b.block_skins(body, base, vec![(FRONT, front), (RIGHT, right), (TOP, top)]);
+    for (x, z) in [(-8.0f32, -18.0f32), (8.0, -18.0), (-8.0, 18.0), (8.0, 18.0)] {
+        b.block(0x111114, &block(x, -1.2, z, 3.0, 4.0, 3.0, 4.0, 1.2)); // feet
+    }
 }
 
 /// Axis-aligned bounds of a set of parts (for normalisation).

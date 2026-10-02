@@ -134,7 +134,8 @@ jugar/instalar; Esc vuelve; Tab filtra Todos / Disponibles / Instalados. Funcion
 con teclado, ratón (clic y rueda) y mando.
 
 Las 15 consolas están modeladas en low-poly dentro de la app
-(`app/src/consoles.rs`: cajas y cilindros a proporciones reales, paleta común),
+(`app/src/consoles.rs`: bloques de aristas duras a proporciones reales con
+texturas pixel art pintadas por código: rejillas, puertos, botones, logos),
 así que no hace falta ningún asset externo. Si prefieres un modelo propio, deja
 un glTF en `<datos>/models/` (`~/.local/share/decompdeck/models/` en Linux):
 `n64.glb`, `psx.glb`, … (también `<sistema>.gltf` o la carpeta

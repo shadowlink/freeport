@@ -537,6 +537,20 @@ fn image_rgba(img: &gltf::image::Data) -> Option<(u32, u32, Vec<u8>)> {
     Some((w, h, px))
 }
 
+/// Texture upload without filtering or mipmaps (pixel art).
+fn upload_nearest(gl: &glow::Context, w: u32, h: u32, rgba: &[u8]) -> Result<Tex, String> {
+    unsafe {
+        let t = gl.create_texture()?;
+        gl.bind_texture(glow::TEXTURE_2D, Some(t));
+        gl.tex_image_2d(glow::TEXTURE_2D, 0, glow::RGBA as i32, w as i32, h as i32, 0, glow::RGBA, glow::UNSIGNED_BYTE, glow::PixelUnpackData::Slice(Some(rgba)));
+        gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MIN_FILTER, glow::NEAREST as i32);
+        gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_MAG_FILTER, glow::NEAREST as i32);
+        gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_S, glow::CLAMP_TO_EDGE as i32);
+        gl.tex_parameter_i32(glow::TEXTURE_2D, glow::TEXTURE_WRAP_T, glow::CLAMP_TO_EDGE as i32);
+        Ok(Tex(t))
+    }
+}
+
 // ───────────────────────── logo plaques ─────────────────────────
 
 /// Dark rounded plate with the system's white logo centred: the fallback
@@ -686,7 +700,9 @@ impl SceneRenderer {
                         let Ok(vbo) = gl.create_buffer() else { continue };
                         gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
                         gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, bytemuck_cast(&p.verts), glow::STATIC_DRAW);
-                        out.push(Prim { vbo, count: (p.verts.len() / 8) as i32, tex: None, base: p.color, gloss: p.gloss });
+                        // Pixel-art skins: nearest filtering so the texels stay crisp.
+                        let tex = p.tex.as_ref().and_then(|c| upload_nearest(gl, c.w, c.h, &c.px).ok());
+                        out.push(Prim { vbo, count: (p.verts.len() / 8) as i32, tex, base: p.color, gloss: p.gloss });
                     }
                 }
                 self.models.insert(sys.to_string(), Model { prims: out, fix });

@@ -109,47 +109,177 @@ pub struct Part {
     pub tex: Option<Canvas>,
 }
 
-/// Six faces of a tapered block (bottom rectangle `bw × bd` at `y0`, top
-/// rectangle `tw × td` at `y0 + h`, centred on `cx, cz`), each as its own
-/// quad with a flat normal and uv 0..1 (u left→right, v top→bottom as seen
-/// from outside; the top face is seen from above with the front at the bottom).
+/// Six groups of faces of a solid: front, back, left, right, top, bottom —
+/// each with uv 0..1 (u left→right, v top→bottom as seen from outside; the
+/// top is seen from above with the front at the bottom).
 pub struct Block {
-    pub faces: [Vec<f32>; 6], // front, back, left, right, top, bottom
+    pub faces: [Vec<f32>; 6],
+    /// Highest point (walls map v = 1 - y / hmax).
+    pub hmax: f32,
 }
 
-fn quad(p: [[f32; 3]; 4]) -> Vec<f32> {
-    // p: BL, BR, TR, TL (CCW from outside), uv BL(0,1) BR(1,1) TR(1,0) TL(0,0).
+fn tri(p: [[f32; 3]; 3], uv: [[f32; 2]; 3], out: &mut Vec<f32>) {
     let u = [p[1][0] - p[0][0], p[1][1] - p[0][1], p[1][2] - p[0][2]];
-    let v = [p[3][0] - p[0][0], p[3][1] - p[0][1], p[3][2] - p[0][2]];
+    let v = [p[2][0] - p[0][0], p[2][1] - p[0][1], p[2][2] - p[0][2]];
     let n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
     let l = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt().max(1e-6);
     let n = [n[0] / l, n[1] / l, n[2] / l];
-    let uv = [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]];
-    let mut out = Vec::with_capacity(48);
-    for i in [0, 1, 2, 0, 2, 3] {
+    for i in 0..3 {
         out.extend_from_slice(&p[i]);
         out.extend_from_slice(&n);
         out.extend_from_slice(&uv[i]);
     }
+}
+
+/// Quad BL, BR, TR, TL (CCW from outside) with explicit uvs.
+fn quad_uv(p: [[f32; 3]; 4], uv: [[f32; 2]; 4]) -> Vec<f32> {
+    let mut out = Vec::with_capacity(48);
+    tri([p[0], p[1], p[2]], [uv[0], uv[1], uv[2]], &mut out);
+    tri([p[0], p[2], p[3]], [uv[0], uv[2], uv[3]], &mut out);
     out
 }
 
+fn quad(p: [[f32; 3]; 4]) -> Vec<f32> {
+    quad_uv(p, [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]])
+}
+
+/// Tapered block: bottom rectangle `bw × bd` at `y0`, top `tw × td` at `y0 + h`.
 #[allow(clippy::too_many_arguments)]
 pub fn block(cx: f32, y0: f32, cz: f32, bw: f32, bd: f32, tw: f32, td: f32, h: f32) -> Block {
     let (bx, bz, tx, tz) = (bw / 2.0, bd / 2.0, tw / 2.0, td / 2.0);
     let y1 = y0 + h;
-    // Corners: [-x,-z], [+x,-z], [+x,+z], [-x,+z] at the bottom (b) and top (t).
     let b = [[cx - bx, y0, cz - bz], [cx + bx, y0, cz - bz], [cx + bx, y0, cz + bz], [cx - bx, y0, cz + bz]];
     let t = [[cx - tx, y1, cz - tz], [cx + tx, y1, cz - tz], [cx + tx, y1, cz + tz], [cx - tx, y1, cz + tz]];
     Block {
         faces: [
-            quad([b[3], b[2], t[2], t[3]]), // front (+z)
-            quad([b[1], b[0], t[0], t[1]]), // back (-z)
-            quad([b[0], b[3], t[3], t[0]]), // left (-x), u towards +z
-            quad([b[2], b[1], t[1], t[2]]), // right (+x), u towards -z
-            quad([t[3], t[2], t[1], t[0]]), // top: BL = front-left, TL = back-left
-            quad([b[0], b[1], b[2], b[3]]), // bottom
+            quad([b[3], b[2], t[2], t[3]]),
+            quad([b[1], b[0], t[0], t[1]]),
+            quad([b[0], b[3], t[3], t[0]]),
+            quad([b[2], b[1], t[1], t[2]]),
+            quad([t[3], t[2], t[1], t[0]]),
+            quad([b[0], b[1], b[2], b[3]]),
         ],
+        hmax: y1,
+    }
+}
+
+/// Relief shell: a footprint `w × d` (centred at the origin, `inside` says
+/// which cells exist) with a height function sampled on a `cell`-sized grid.
+/// Faceted (one flat normal per triangle) so the low-poly facets show. Walls
+/// are emitted wherever a cell borders the outside and sorted into the four
+/// side groups by their direction; the top gets uv over the whole footprint.
+pub fn shell(w: f32, d: f32, cell: f32, inside: &dyn Fn(f32, f32) -> bool, height: &dyn Fn(f32, f32) -> f32) -> Block {
+    let nx = (w / cell).ceil() as i32;
+    let nz = (d / cell).ceil() as i32;
+    let x_at = |i: i32| -w / 2.0 + i as f32 * cell;
+    let z_at = |k: i32| -d / 2.0 + k as f32 * cell;
+    let present = |i: i32, k: i32| -> bool {
+        i >= 0 && k >= 0 && i < nx && k < nz && inside(x_at(i) + cell / 2.0, z_at(k) + cell / 2.0)
+    };
+    // Corner heights: sample the height function clamped into the footprint.
+    let hc = |i: i32, k: i32| -> f32 {
+        let x = x_at(i).clamp(-w / 2.0 + 0.01, w / 2.0 - 0.01);
+        let z = z_at(k).clamp(-d / 2.0 + 0.01, d / 2.0 - 0.01);
+        height(x, z).max(0.05)
+    };
+    let mut hmax = 0.0f32;
+    for k in 0..=nz {
+        for i in 0..=nx {
+            hmax = hmax.max(hc(i, k));
+        }
+    }
+    let mut faces: [Vec<f32>; 6] = Default::default();
+    let uv_top = |i: i32, k: i32| [(x_at(i) + w / 2.0) / w, (z_at(k) + d / 2.0) / d];
+    for k in 0..nz {
+        for i in 0..nx {
+            if !present(i, k) {
+                continue;
+            }
+            let (x0, x1, z0, z1) = (x_at(i), x_at(i + 1), z_at(k), z_at(k + 1));
+            let a = [x0, hc(i, k), z0]; // back-left
+            let bb = [x1, hc(i + 1, k), z0]; // back-right
+            let c = [x1, hc(i + 1, k + 1), z1]; // front-right
+            let dd = [x0, hc(i, k + 1), z1]; // front-left
+            let (ua, ub, uc, ud) = (uv_top(i, k), uv_top(i + 1, k), uv_top(i + 1, k + 1), uv_top(i, k + 1));
+            tri([dd, c, bb], [ud, uc, ub], &mut faces[TOP]);
+            tri([dd, bb, a], [ud, ub, ua], &mut faces[TOP]);
+            // Bottom (flat).
+            let f = |p: [f32; 3]| [p[0], 0.0, p[2]];
+            faces[BOTTOM].extend(quad_uv([f(a), f(bb), f(c), f(dd)], [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]));
+            // Walls towards missing neighbours.
+            let vmap = |h: f32| 1.0 - h / hmax;
+            if !present(i, k + 1) {
+                let (u0, u1) = ((x0 + w / 2.0) / w, (x1 + w / 2.0) / w);
+                faces[FRONT].extend(quad_uv(
+                    [f(dd), f(c), c, dd],
+                    [[u0, 1.0], [u1, 1.0], [u1, vmap(c[1])], [u0, vmap(dd[1])]],
+                ));
+            }
+            if !present(i, k - 1) {
+                let (u0, u1) = ((w / 2.0 - x1) / w, (w / 2.0 - x0) / w);
+                faces[BACK].extend(quad_uv(
+                    [f(bb), f(a), a, bb],
+                    [[u0, 1.0], [u1, 1.0], [u1, vmap(a[1])], [u0, vmap(bb[1])]],
+                ));
+            }
+            if !present(i - 1, k) {
+                let (u0, u1) = ((z0 + d / 2.0) / d, (z1 + d / 2.0) / d);
+                faces[LEFT].extend(quad_uv(
+                    [f(a), f(dd), dd, a],
+                    [[u0, 1.0], [u1, 1.0], [u1, vmap(dd[1])], [u0, vmap(a[1])]],
+                ));
+            }
+            if !present(i + 1, k) {
+                let (u0, u1) = ((d / 2.0 - z1) / d, (d / 2.0 - z0) / d);
+                faces[RIGHT].extend(quad_uv(
+                    [f(c), f(bb), bb, c],
+                    [[u0, 1.0], [u1, 1.0], [u1, vmap(bb[1])], [u0, vmap(c[1])]],
+                ));
+            }
+        }
+    }
+    Block { faces, hmax }
+}
+
+/// Inside a rectangle `w × d` centred at the origin with corner radius `r`.
+pub fn rounded_rect(x: f32, z: f32, w: f32, d: f32, r: f32) -> bool {
+    rounded_rect4(x, z, w, d, [r, r, r, r])
+}
+
+/// Same with one radius per corner: back-left, back-right, front-right, front-left.
+pub fn rounded_rect4(x: f32, z: f32, w: f32, d: f32, r: [f32; 4]) -> bool {
+    let (hx, hz) = (w / 2.0, d / 2.0);
+    if x.abs() > hx || z.abs() > hz {
+        return false;
+    }
+    let ri = match (x < 0.0, z < 0.0) {
+        (true, true) => r[0],
+        (false, true) => r[1],
+        (false, false) => r[2],
+        (true, false) => r[3],
+    };
+    let dx = (x.abs() - (hx - ri)).max(0.0);
+    let dz = (z.abs() - (hz - ri)).max(0.0);
+    dx * dx + dz * dz <= ri * ri
+}
+
+pub fn smoothstep(e0: f32, e1: f32, x: f32) -> f32 {
+    let t = ((x - e0) / (e1 - e0)).clamp(0.0, 1.0);
+    t * t * (3.0 - 2.0 * t)
+}
+
+/// Soft disc bump of height `h` and radius `r` centred at (cx, cz).
+pub fn dome(x: f32, z: f32, cx: f32, cz: f32, r: f32, h: f32) -> f32 {
+    let dist = ((x - cx).powi(2) + (z - cz).powi(2)).sqrt();
+    h * (1.0 - smoothstep(r - 0.8, r + 0.2, dist))
+}
+
+/// Raised rectangle (buttons, bezels): `h` inside `x0..x1 × z0..z1`.
+pub fn plate(x: f32, z: f32, x0: f32, z0: f32, x1: f32, z1: f32, h: f32) -> f32 {
+    if x >= x0 && x <= x1 && z >= z0 && z <= z1 {
+        h
+    } else {
+        0.0
     }
 }
 
@@ -158,6 +288,7 @@ pub const BACK: usize = 1;
 pub const LEFT: usize = 2;
 pub const RIGHT: usize = 3;
 pub const TOP: usize = 4;
+pub const BOTTOM: usize = 5;
 
 #[derive(Clone, Copy)]
 pub enum Axis {
@@ -325,86 +456,127 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
     Some(b.parts)
 }
 
-fn n64(b: &mut Builder) {
-    let body = 0x3d3d45;
-    let dark = 0x2c2c33;
-    let light = 0x55555e;
-    // Base: wide tapered block (26 × 19 cm footprint, 4 cm tall).
-    let base = block(0.0, 0.0, 0.0, 26.0, 19.0, 23.6, 17.2, 4.0);
-    // Top of the base: vents on both wings, power switch + reset at the front-left.
-    let mut top = Canvas::for_face(23.6, 17.2, body);
-    top.vents_h(t(1.2), t(2.0), t(5.5), 9, 2, dark);
-    top.vents_h(t(23.6 - 6.7), t(2.0), t(5.5), 9, 2, dark);
-    top.slot(t(1.6), t(11.5), t(3.2), t(1.4), light, dark); // power switch
-    top.slot(t(1.6), t(14.0), t(2.4), t(1.2), light, dark); // reset
-    top.px(t(5.6), t(12.0), LED_RED);
-    // Front of the base: four controller ports + the four-colour logo.
-    let mut front = Canvas::for_face(26.0, 4.0, body);
-    for x in [-8.0f32, -3.0, 3.0, 8.0] {
-        front.port(t(13.0 + x), t(2.1), t(1.3), RIM, HOLE);
+/// Lays a handheld built flat (face up, front = bottom edge) upright facing
+/// the camera: top → +z, front → -y.
+fn stand_up(v: Vec<f32>) -> Vec<f32> {
+    rotate_x_about(v, std::f32::consts::FRAC_PI_2, [0.0; 3])
+}
+
+fn translate(mut v: Vec<f32>, dx: f32, dy: f32, dz: f32) -> Vec<f32> {
+    for i in (0..v.len()).step_by(8) {
+        v[i] += dx;
+        v[i + 1] += dy;
+        v[i + 2] += dz;
     }
-    front.rect(t(13.0) - 2, t(1.0), 2, 2, 0xe04040);
-    front.rect(t(13.0), t(1.0), 2, 2, 0x4fa64f);
-    front.rect(t(13.0) - 2, t(1.0) + 2, 2, 2, 0x3f6fe0);
-    front.rect(t(13.0), t(1.0) + 2, 2, 2, 0xf0c040);
-    let mut side = Canvas::for_face(19.0, 4.0, body);
-    side.vents_v(t(3.0), t(1.0), t(2.0), 10, 2, dark);
-    let mut side2 = Canvas::for_face(19.0, 4.0, body);
-    side2.vents_v(t(19.0 - 3.0 - 10.0), t(1.0), t(2.0), 10, 2, dark);
-    b.block_skins(body, base, vec![(TOP, top), (FRONT, front), (LEFT, side), (RIGHT, side2)]);
-    // Hump with the cartridge slot, tapering towards the top.
-    let hump = block(0.0, 4.0, -1.0, 14.5, 15.5, 11.0, 12.5, 3.3);
-    let mut htop = Canvas::for_face(11.0, 12.5, body);
-    htop.slot(t(1.6), t(3.6), t(7.8), t(1.6), light, HOLE); // cartridge slot
-    htop.vents_h(t(1.5), t(7.0), t(8.0), 5, 2, dark);
-    let mut hfront = Canvas::for_face(14.5, 3.3, body);
-    hfront.rect(t(5.0), t(1.0), t(4.5), 2, light); // logo plate
-    b.block_skins(body, hump, vec![(TOP, htop), (FRONT, hfront)]);
-    // Cartridge peeking out of the slot.
-    let cart = block(0.0, 7.3, -1.0, 7.4, 1.5, 7.0, 1.3, 2.4);
-    let mut cfront = Canvas::for_face(7.4, 2.4, 0x8d8d93);
-    cfront.rect(1, 1, t(7.4) - 2, t(2.4) - 2, 0xc9392f); // label
+    v
+}
+
+/// Centre-relative cm from canvas-style (top-left origin) cm on a `w × d` top.
+fn cx(w: f32, x_from_left: f32) -> f32 {
+    x_from_left - w / 2.0
+}
+fn cz(d: f32, y_from_top: f32) -> f32 {
+    y_from_top - d / 2.0
+}
+
+fn n64(b: &mut Builder) {
+    let (w, d) = (26.0f32, 19.0f32);
+    let body = 0x3f3f48;
+    let dark = 0x2b2b32;
+    let light = 0x5a5a64;
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 3.5);
+    let height = |x: f32, z: f32| {
+        let zn = (z + d / 2.0) / d; // 0 back → 1 front
+        let base = 4.4 - 1.0 * zn; // body slopes down towards the front
+        let lip = 1.0 - 0.55 * smoothstep(0.76, 1.0, zn); // rounded front edge
+        let hx = 1.0 - smoothstep(5.0, 8.8, x.abs()); // wide central hump
+        let hump = 3.2 * hx * (1.0 - 0.45 * zn);
+        let ear = 0.7 * smoothstep(8.5, 12.0, x.abs()) * (1.0 - zn); // raised outer wings at the back
+        let mut h = (base + hump + ear) * lip;
+        if x.abs() < 3.9 && z > -3.8 && z < -2.0 {
+            h -= 1.4; // cartridge slot
+        }
+        h
+    };
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let hmax = sh.hmax;
+    let mut top = Canvas::for_face(w, d, body);
+    top.vents_h(t(1.5), t(3.0), t(5.0), 10, 2, dark); // wing vents
+    top.vents_h(t(w - 6.5), t(3.0), t(5.0), 10, 2, dark);
+    top.slot(t(1.8), t(12.6), t(3.2), t(1.4), light, dark); // power switch
+    top.slot(t(1.8), t(15.0), t(2.4), t(1.2), light, dark); // reset
+    top.px(t(5.6), t(13.2), LED_RED);
+    top.slot(t(8.8), t(5.0), t(8.4), t(2.2), light, HOLE); // cartridge slot frame
+    top.vents_h(t(9.4), t(9.0), t(2.0), 6, 2, dark); // hump side slits
+    top.vents_h(t(w - 11.4), t(9.0), t(2.0), 6, 2, dark);
+    top.rect(t(11.2), t(16.2), t(3.6), 2, light); // logo plate
+    let mut front = Canvas::for_face(w, hmax, body);
+    for x in [5.5f32, 9.5, 16.5, 20.5] {
+        front.port(t(x), t(hmax - 1.5), t(1.25), RIM, HOLE);
+    }
+    let (lx, ly) = (t(13.0) - 2, t(hmax - 3.2));
+    front.rect(lx, ly, 2, 2, 0xe04040);
+    front.rect(lx + 2, ly, 2, 2, 0x4fa64f);
+    front.rect(lx, ly + 2, 2, 2, 0x3f6fe0);
+    front.rect(lx + 2, ly + 2, 2, 2, 0xf0c040);
+    let mut left = Canvas::for_face(d, hmax, body);
+    left.vents_v(t(2.0), t(hmax - 3.4), t(2.0), 10, 2, dark);
+    let mut right = Canvas::for_face(d, hmax, body);
+    right.vents_v(t(d - 2.0 - 9.0), t(hmax - 3.4), t(2.0), 10, 2, dark);
+    b.block_skins(body, sh, vec![(TOP, top), (FRONT, front), (LEFT, left), (RIGHT, right)]);
+    // Cartridge sitting in the slot.
+    let cart = block(0.0, 5.3, -2.9, 7.4, 1.5, 7.0, 1.3, 2.8);
+    let mut cfront = Canvas::for_face(7.4, 2.8, 0x8d8d93);
+    cfront.rect(1, 1, t(7.4) - 2, t(2.8) - 2, 0xc9392f);
     cfront.rect(2, 2, t(7.4) - 4, 1, 0xf0e6c0);
     b.block_skins(0x8d8d93, cart, vec![(FRONT, cfront)]);
 }
 
 fn psx(b: &mut Builder) {
+    let (w, d) = (27.0f32, 19.0f32);
     let body = 0xd4d1c8;
     let shade = 0xb9b6ad;
     let dark = 0x6f6d66;
-    let base = block(0.0, 0.0, 0.0, 27.0, 19.0, 26.4, 18.4, 6.0);
-    let mut top = Canvas::for_face(26.4, 18.4, body);
-    // Disc lid: big circle offset to the right, with a seam.
-    top.disc(t(16.0), t(8.6), t(7.4), 0xdedbd2);
-    top.ring(t(16.0), t(8.6), t(7.4), shade);
-    top.disc(t(16.0), t(8.6), t(1.2), shade);
-    // PlayStation logo colours (tiny) on the lid.
-    top.rect(t(16.0) - 3, t(13.5), 2, 2, 0xd94040);
-    top.rect(t(16.0) - 1, t(13.5), 2, 2, 0xe0b030);
-    top.rect(t(16.0) + 1, t(13.5), 2, 2, 0x40a060);
-    top.rect(t(16.0) + 3, t(13.5), 2, 2, 0x4060d0);
-    // Buttons on the left: power, reset, open.
-    top.slot(t(1.6), t(10.5), t(3.4), t(1.4), shade, dark);
-    top.slot(t(1.6), t(13.0), t(3.4), t(1.4), shade, dark);
-    top.slot(t(1.6), t(15.5), t(3.4), t(1.4), shade, dark);
-    top.px(t(5.6), t(11.0), LED_GREEN);
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 2.2);
+    let height = |x: f32, z: f32| {
+        let zn = (z + d / 2.0) / d;
+        6.0 - 0.5 * smoothstep(0.85, 1.0, zn) + dome(x, z, 3.0, -1.0, 7.5, 0.55)
+    };
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let hmax = sh.hmax;
+    let mut top = Canvas::for_face(w, d, body);
+    let (lcx, lcz) = (t(w / 2.0 + 3.0), t(d / 2.0 - 1.0));
+    top.disc(lcx, lcz, t(7.5), 0xdedbd2);
+    top.ring(lcx, lcz, t(7.5), shade);
+    top.disc(lcx, lcz, t(1.2), shade);
+    top.rect(lcx - 4, lcz + t(4.6), 2, 2, 0xd94040); // PlayStation colours
+    top.rect(lcx - 2, lcz + t(4.6), 2, 2, 0xe0b030);
+    top.rect(lcx, lcz + t(4.6), 2, 2, 0x40a060);
+    top.rect(lcx + 2, lcz + t(4.6), 2, 2, 0x4060d0);
+    top.slot(t(1.8), t(10.5), t(3.4), t(1.4), shade, dark); // power
+    top.slot(t(1.8), t(13.0), t(3.4), t(1.4), shade, dark); // reset
+    top.slot(t(1.8), t(15.5), t(3.4), t(1.4), shade, dark); // open
+    top.px(t(5.8), t(11.1), LED_GREEN);
     top.vents_h(t(1.5), t(1.5), t(6.0), 6, 2, shade);
-    let mut front = Canvas::for_face(27.0, 6.0, body);
+    let mut front = Canvas::for_face(w, hmax, body);
     for x in [3.0f32, 8.5] {
-        front.slot(t(x), t(3.6), t(4.4), t(1.8), dark, HOLE); // controller ports
-        front.slot(t(x), t(1.4), t(4.4), t(1.0), dark, HOLE); // memory cards
+        front.slot(t(x), t(hmax - 2.6), t(4.4), t(1.8), dark, HOLE); // controller ports
+        front.slot(t(x), t(hmax - 4.6), t(4.4), t(1.0), dark, HOLE); // memory cards
     }
-    front.vents_v(t(18.0), t(1.5), t(3.0), 10, 2, shade);
-    let mut back = Canvas::for_face(27.0, 6.0, body);
-    back.vents_v(t(2.0), t(1.2), t(3.6), 18, 2, shade);
-    b.block_skins(body, base, vec![(TOP, top), (FRONT, front), (BACK, back)]);
+    front.vents_v(t(18.0), t(hmax - 4.0), t(3.0), 10, 2, shade);
+    let mut back = Canvas::for_face(w, hmax, body);
+    back.vents_v(t(2.0), t(hmax - 4.5), t(3.6), 18, 2, shade);
+    b.block_skins(body, sh, vec![(TOP, top), (FRONT, front), (BACK, back)]);
 }
 
 fn ps2(b: &mut Builder) {
+    let (w, d) = (30.0f32, 18.0f32);
     let body = 0x17171d;
     let groove = 0x26262e;
-    let base = block(0.0, 0.0, 0.0, 30.0, 18.0, 30.0, 18.0, 7.8);
-    let mut front = Canvas::for_face(30.0, 7.8, body);
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 0.7);
+    let height = |_x: f32, _z: f32| 7.8;
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let mut front = Canvas::for_face(w, 7.8, body);
     front.rect(0, 0, t(1.6), t(7.8), 0x2244cc); // blue edge
     front.vents_h(t(1.6), t(1.0), t(28.4), 4, 4, groove);
     front.slot(t(4.0), t(5.4), t(3.6), t(1.6), 0x3a3a44, HOLE);
@@ -415,39 +587,45 @@ fn ps2(b: &mut Builder) {
     front.disc(t(26.0), t(4.6), 2, 0x3a3a44); // reset
     front.disc(t(28.0), t(4.6), 2, 0x3a3a44); // eject
     front.px(t(26.0), t(6.4), LED_GREEN);
-    let mut top = Canvas::for_face(30.0, 18.0, body);
-    top.vents_h(0, t(2.0), t(30.0), 4, 8, groove);
-    top.rect(t(22.0), t(10.0), t(5.0), 2, 0x5c5c66); // logo bar
-    b.block_skins(body, base, vec![(FRONT, front), (TOP, top)]);
+    let mut top = Canvas::for_face(w, d, body);
+    top.vents_h(0, t(2.0), t(w), 4, 8, groove);
+    top.disc(t(24.0), t(10.0), t(1.6), 0x2e2e38); // logo disc
+    b.block_skins(body, sh, vec![(FRONT, front), (TOP, top)]);
 }
 
 fn gc(b: &mut Builder) {
+    let (w, d) = (15.0f32, 16.0f32);
     let body = 0x5048a0;
     let shade = 0x3e3880;
     let light = 0x6a62b8;
-    let base = block(0.0, 0.0, 0.0, 15.0, 16.0, 15.0, 16.0, 11.0);
-    let mut front = Canvas::for_face(15.0, 11.0, body);
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 1.8);
+    let height = |x: f32, z: f32| {
+        let edge = (x.abs() / (w / 2.0)).max(z.abs() / (d / 2.0));
+        11.0 - 0.35 * smoothstep(0.86, 1.0, edge) + dome(x, z, 0.0, 0.5, 5.6, 0.45)
+    };
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let hmax = sh.hmax;
+    let mut front = Canvas::for_face(w, hmax, body);
     for x in [3.0f32, 6.0, 9.0, 12.0] {
-        front.port(t(x), t(5.2), t(1.2), 0x8a84c4, HOLE);
+        front.port(t(x), t(hmax - 5.6), t(1.2), 0x8a84c4, HOLE);
     }
-    front.slot(t(2.0), t(8.6), t(4.6), t(1.4), shade, HOLE);
-    front.slot(t(8.4), t(8.6), t(4.6), t(1.4), shade, HOLE);
-    front.rect(t(1.0), t(1.6), t(13.0), 1, shade);
-    let mut top = Canvas::for_face(15.0, 16.0, body);
-    top.disc(t(7.5), t(7.5), t(5.8), light);
-    top.ring(t(7.5), t(7.5), t(5.8), shade);
-    top.ring(t(7.5), t(7.5), t(2.2), shade); // logo ring
-    top.rect(t(7.5) - 1, t(7.5) - 1, 3, 3, shade);
-    top.disc(t(13.3), t(13.5), 2, 0x9a94d0); // power
-    top.disc(t(13.3), t(11.0), 1, 0x9a94d0); // reset
-    top.vents_h(t(1.0), t(13.0), t(4.0), 4, 2, shade);
-    let mut right = Canvas::for_face(16.0, 11.0, body);
+    front.slot(t(2.0), t(hmax - 2.6), t(4.6), t(1.4), shade, HOLE);
+    front.slot(t(8.4), t(hmax - 2.6), t(4.6), t(1.4), shade, HOLE);
+    front.rect(t(1.0), t(hmax - 9.4), t(13.0), 1, shade);
+    let mut top = Canvas::for_face(w, d, body);
+    top.disc(t(7.5), t(8.5), t(5.6), light);
+    top.ring(t(7.5), t(8.5), t(5.6), shade);
+    top.ring(t(7.5), t(8.5), t(2.2), shade); // logo ring
+    top.rect(t(7.5) - 1, t(8.5) - 1, 3, 3, shade);
+    top.disc(t(13.3), t(14.0), 2, 0x9a94d0); // power
+    top.disc(t(13.3), t(11.5), 1, 0x9a94d0); // reset
+    top.vents_h(t(1.0), t(13.5), t(4.0), 4, 2, shade);
+    let mut right = Canvas::for_face(d, hmax, body);
     right.dots(t(1.5), t(2.0), 12, 10, 2, shade); // vent grid
-    let mut left = Canvas::for_face(16.0, 11.0, body);
-    left.dots(t(16.0 - 1.5 - 11.0), t(2.0), 12, 10, 2, shade);
-    b.block_skins(body, base, vec![(FRONT, front), (TOP, top), (RIGHT, right), (LEFT, left)]);
-    // Handle at the back.
-    b.block(shade, &block(-4.5, 2.0, -8.9, 1.6, 1.6, 1.6, 1.6, 6.0));
+    let mut left = Canvas::for_face(d, hmax, body);
+    left.dots(t(d - 1.5 - 11.0), t(2.0), 12, 10, 2, shade);
+    b.block_skins(body, sh, vec![(FRONT, front), (TOP, top), (RIGHT, right), (LEFT, left)]);
+    b.block(shade, &block(-4.5, 2.0, -8.9, 1.6, 1.6, 1.6, 1.6, 6.0)); // handle
     b.block(shade, &block(4.5, 2.0, -8.9, 1.6, 1.6, 1.6, 1.6, 6.0));
     b.block(shade, &block(0.0, 8.0, -8.9, 10.6, 1.6, 10.6, 1.6, 1.6));
 }
@@ -466,129 +644,205 @@ fn wii(b: &mut Builder) {
     left.vents_h(t(10.0), t(16.0), t(4.0), 8, 2, shade);
     left.rect(t(1.0), t(1.0), t(13.7), 1, shade);
     b.block_skins(body, base, vec![(FRONT, front), (LEFT, left)]);
-    // Stand.
-    b.block(shade, &block(0.0, -1.3, 0.0, 10.0, 12.0, 8.0, 11.0, 1.3));
+    b.block(shade, &block(0.0, -1.3, 0.0, 10.0, 12.0, 8.0, 11.0, 1.3)); // stand
 }
 
 fn xbox(b: &mut Builder) {
+    let (w, d) = (32.0f32, 26.0f32);
     let body = 0x121214;
     let edge = 0x26262a;
-    let base = block(0.0, 0.0, 0.0, 32.0, 26.0, 30.6, 24.8, 10.0);
-    let mut top = Canvas::for_face(30.6, 24.8, body);
-    // Big X grooves and the green jewel.
-    for i in 0..t(24.8) {
-        let x0 = (i as f32 / t(24.8) as f32 * t(30.6) as f32) as i32;
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 3.0);
+    let height = |x: f32, z: f32| {
+        let e = (x.abs() / (w / 2.0)).max(z.abs() / (d / 2.0));
+        let mut h = 10.0 - 0.7 * smoothstep(0.8, 1.0, e) + dome(x, z, 0.0, -2.0, 5.2, 0.6);
+        // The two diagonal grooves of the X.
+        let k = (d / 2.0) / (w / 2.0);
+        let d1 = (z + 2.0 - x * k).abs() / (1.0 + k * k).sqrt();
+        let d2 = (z + 2.0 + x * k).abs() / (1.0 + k * k).sqrt();
+        let jewel = ((x * x) + (z + 2.0) * (z + 2.0)).sqrt() < 5.4;
+        if d1.min(d2) < 0.9 && !jewel {
+            h -= 0.4;
+        }
+        h
+    };
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let hmax = sh.hmax;
+    let mut top = Canvas::for_face(w, d, body);
+    for i in 0..t(d) {
+        let x0 = (i as f32 / t(d) as f32 * t(w) as f32) as i32;
         top.px(x0, i, edge);
         top.px(x0 + 1, i, edge);
-        top.px(t(30.6) - 1 - x0, i, edge);
-        top.px(t(30.6) - 2 - x0, i, edge);
+        top.px(t(w) - 1 - x0, i, edge);
+        top.px(t(w) - 2 - x0, i, edge);
     }
-    top.disc(t(15.3), t(11.5), t(5.0), 0x1c1c20);
-    top.disc(t(15.3), t(11.5), t(4.2), 0x5cc230);
-    top.disc(t(15.3), t(11.5), t(1.6), 0x3f8e22);
-    let mut front = Canvas::for_face(32.0, 10.0, body);
+    top.disc(t(w / 2.0), t(d / 2.0 - 2.0), t(5.0), 0x1c1c20);
+    top.disc(t(w / 2.0), t(d / 2.0 - 2.0), t(4.2), 0x5cc230);
+    top.disc(t(w / 2.0), t(d / 2.0 - 2.0), t(1.6), 0x3f8e22);
+    let mut front = Canvas::for_face(w, hmax, body);
     for x in [5.0f32, 11.0, 21.0, 27.0] {
-        front.port(t(x), t(6.6), t(1.6), 0x3a3a40, HOLE);
+        front.port(t(x), t(hmax - 3.4), t(1.6), 0x3a3a40, HOLE);
     }
-    front.slot(t(6.0), t(1.6), t(20.0), t(2.0), 0x2a2a30, 0x1a1a1e); // tray
-    front.disc(t(29.0), t(2.6), 2, 0x5cc230); // power
-    front.disc(t(3.0), t(2.6), 2, 0x3a3a40); // eject
-    b.block_skins(body, base, vec![(TOP, top), (FRONT, front)]);
+    front.slot(t(6.0), t(hmax - 8.0), t(20.0), t(2.0), 0x2a2a30, 0x1a1a1e); // tray
+    front.disc(t(29.0), t(hmax - 7.0), 2, 0x5cc230); // power
+    front.disc(t(3.0), t(hmax - 7.0), 2, 0x3a3a40); // eject
+    b.block_skins(body, sh, vec![(TOP, top), (FRONT, front)]);
 }
 
 fn x360(b: &mut Builder) {
+    let (w, d) = (31.0f32, 26.0f32);
     let body = 0xe9e9ec;
     let shade = 0xc9cbd0;
-    let base = block(0.0, 0.0, 0.0, 31.0, 26.0, 30.0, 25.0, 8.3);
-    let mut front = Canvas::for_face(31.0, 8.3, shade);
-    front.rect(0, 0, t(31.0), 1, body);
-    front.slot(t(2.0), t(5.4), t(17.0), t(1.6), 0x3a3a40, 0x1a1a1e); // tray
-    front.disc(t(25.5), t(4.1), t(2.3), body);
-    front.disc(t(25.5), t(4.1), t(1.5), 0x58c843); // ring of light
-    front.disc(t(25.5), t(4.1), 1, body);
-    front.slot(t(2.0), t(1.4), t(2.6), t(1.6), 0x9fa2a8, HOLE); // memory units
-    front.slot(t(5.4), t(1.4), t(2.6), t(1.6), 0x9fa2a8, HOLE);
-    let mut top = Canvas::for_face(30.0, 25.0, body);
-    top.dots(t(2.0), t(2.0), 30, 6, 2, shade);
-    top.dots(t(2.0), t(19.0), 30, 6, 2, shade);
+    // Concave sides: the waist of the 360.
+    let inside = |x: f32, z: f32| {
+        let waist = 1.7 * (1.0 - (z / (d / 2.0)).powi(2));
+        x.abs() <= w / 2.0 - waist && rounded_rect(x, z, w, d, 2.0)
+    };
+    let height = |x: f32, _z: f32| 8.3 - 0.7 * (1.0 - (x / (w / 2.0)).powi(2));
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let hmax = sh.hmax;
+    let mut front = Canvas::for_face(w, hmax, shade);
+    front.rect(0, 0, t(w), 1, body);
+    front.slot(t(2.0), t(hmax - 2.9), t(17.0), t(1.6), 0x3a3a40, 0x1a1a1e); // tray
+    front.disc(t(25.5), t(hmax - 4.2), t(2.3), body);
+    front.disc(t(25.5), t(hmax - 4.2), t(1.5), 0x58c843); // ring of light
+    front.disc(t(25.5), t(hmax - 4.2), 1, body);
+    front.slot(t(2.0), t(hmax - 6.9), t(2.6), t(1.6), 0x9fa2a8, HOLE); // memory units
+    front.slot(t(5.4), t(hmax - 6.9), t(2.6), t(1.6), 0x9fa2a8, HOLE);
+    let mut top = Canvas::for_face(w, d, body);
+    top.dots(t(2.5), t(2.0), 30, 6, 2, shade);
+    top.dots(t(2.5), t(19.0), 30, 6, 2, shade);
     top.rect(t(26.0), t(11.0), t(2.0), t(2.0), shade); // sticker
-    let mut back = Canvas::for_face(31.0, 8.3, body);
+    let mut back = Canvas::for_face(w, hmax, body);
     back.dots(t(3.0), t(1.5), 48, 6, 2, shade);
-    b.block_skins(body, base, vec![(FRONT, front), (TOP, top), (BACK, back)]);
+    b.block_skins(body, sh, vec![(FRONT, front), (TOP, top), (BACK, back)]);
 }
 
 fn dc(b: &mut Builder) {
+    let (w, d) = (19.0f32, 19.5f32);
     let body = 0xeeeeee;
     let shade = 0xd0d0d0;
-    let base = block(0.0, 0.0, 0.0, 19.0, 19.5, 18.4, 18.9, 7.6);
-    let mut top = Canvas::for_face(18.4, 18.9, body);
-    top.disc(t(9.2), t(8.6), t(7.4), 0xf6f6f6);
-    top.ring(t(9.2), t(8.6), t(7.4), shade);
-    top.disc(t(9.2), t(8.6), t(1.2), 0xf27a1a); // swirl
-    top.px(t(9.2) + 2, t(8.6) - 2, body);
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 4.5);
+    let height = |x: f32, z: f32| {
+        let zn = (z + d / 2.0) / d;
+        7.6 - 0.6 * smoothstep(0.82, 1.0, zn) + dome(x, z, 0.0, -0.5, 7.6, 0.5) + dome(x, z, 0.0, -0.5, 1.6, 0.3)
+    };
+    let sh = shell(w, d, 0.5, &inside, &height);
+    let hmax = sh.hmax;
+    let mut top = Canvas::for_face(w, d, body);
+    let (lcx, lcz) = (t(w / 2.0), t(d / 2.0 - 0.5));
+    top.disc(lcx, lcz, t(7.6), 0xf6f6f6);
+    top.ring(lcx, lcz, t(7.6), shade);
+    top.disc(lcx, lcz, t(1.2), 0xf27a1a); // swirl
+    top.px(lcx + 2, lcz - 2, body);
     top.slot(t(1.2), t(15.6), t(3.0), t(1.4), shade, 0xbdbdbd); // power
-    top.slot(t(14.2), t(15.6), t(3.0), t(1.4), shade, 0xbdbdbd); // open
+    top.slot(t(14.8), t(15.6), t(3.0), t(1.4), shade, 0xbdbdbd); // open
     top.px(t(5.0), t(16.3), 0xf27a1a);
     top.vents_h(t(1.0), t(1.0), t(5.0), 5, 2, shade);
-    let mut front = Canvas::for_face(19.0, 7.6, body);
+    let mut front = Canvas::for_face(w, hmax, body);
     for x in [3.5f32, 7.5, 11.5, 15.5] {
-        front.port(t(x), t(4.4), t(1.2), 0xa8a8a8, HOLE);
+        front.port(t(x), t(hmax - 3.2), t(1.2), 0xa8a8a8, HOLE);
     }
-    b.block_skins(body, base, vec![(TOP, top), (FRONT, front)]);
+    b.block_skins(body, sh, vec![(TOP, top), (FRONT, front)]);
 }
 
 fn gb(b: &mut Builder) {
+    let (w, d) = (9.0f32, 14.8f32); // face up: d runs top (back) → bottom (front)
     let body = 0xc7c6c0;
-    let base = block(0.0, 0.0, 0.0, 9.0, 3.2, 9.0, 3.2, 14.8);
-    let mut front = Canvas::for_face(9.0, 14.8, body);
-    front.rect(t(0.7), t(1.0), t(7.6), t(5.8), 0x3c3c48); // bezel
-    front.rect(t(0.7), t(1.3), t(7.6), 1, 0x6e1f3f); // purple line
-    front.rect(t(0.7), t(1.6), t(7.6), 1, 0x2f3bb3); // blue line
-    front.rect(t(1.6), t(2.0), t(4.6), t(4.1), 0x8fa44a); // screen
-    front.px(t(1.0), t(4.0), LED_RED);
-    front.rect(t(1.0), t(7.6), t(4.0), 1, 0x4a4a52); // "Nintendo GAME BOY"
-    front.rect(t(1.3), t(9.3), t(2.6), t(0.9), 0x2a2a30); // d-pad
-    front.rect(t(2.15), t(8.45), t(0.9), t(2.6), 0x2a2a30);
-    front.disc(t(6.0), t(10.6), t(0.6), 0xa8356b); // B
-    front.disc(t(7.6), t(9.8), t(0.6), 0xa8356b); // A
-    front.rect(t(2.5), t(12.6), t(1.4), 1, 0x7a7a80); // select
-    front.rect(t(4.4), t(12.6), t(1.4), 1, 0x7a7a80); // start
+    let inside = |x: f32, z: f32| rounded_rect4(x, z, w, d, [0.8, 0.8, 2.8, 0.8]); // big bottom-right corner
+    let height = |x: f32, z: f32| {
+        let mut h = 3.2;
+        h += plate(x, z, cx(w, 0.7), cz(d, 1.0), cx(w, 8.3), cz(d, 6.8), -0.2); // screen bezel inset
+        h += plate(x, z, cx(w, 1.3), cz(d, 8.85), cx(w, 3.9), cz(d, 9.75), 0.35); // d-pad
+        h += plate(x, z, cx(w, 2.15), cz(d, 8.0), cx(w, 3.05), cz(d, 10.6), 0.35);
+        h += dome(x, z, cx(w, 6.0), cz(d, 10.6), 0.9, 0.4); // B
+        h += dome(x, z, cx(w, 7.6), cz(d, 9.8), 0.9, 0.4); // A
+        h
+    };
+    let sh = shell(w, d, 0.25, &inside, &height);
+    let mut face = Canvas::for_face(w, d, body);
+    face.rect(t(0.7), t(1.0), t(7.6), t(5.8), 0x3c3c48); // bezel
+    face.rect(t(0.7), t(1.3), t(7.6), 1, 0x6e1f3f); // purple line
+    face.rect(t(0.7), t(1.6), t(7.6), 1, 0x2f3bb3); // blue line
+    face.rect(t(1.6), t(2.0), t(4.6), t(4.1), 0x8fa44a); // screen
+    face.px(t(1.0), t(4.0), LED_RED);
+    face.rect(t(1.0), t(7.6), t(4.0), 1, 0x4a4a52); // "Nintendo GAME BOY"
+    face.rect(t(1.3), t(8.85), t(2.6), t(0.9), 0x2a2a30); // d-pad
+    face.rect(t(2.15), t(8.0), t(0.9), t(2.6), 0x2a2a30);
+    face.disc(t(6.0), t(10.6), t(0.6), 0xa8356b); // B
+    face.disc(t(7.6), t(9.8), t(0.6), 0xa8356b); // A
+    face.rect(t(2.5), t(12.6), t(1.4), 1, 0x7a7a80); // select
+    face.rect(t(4.4), t(12.6), t(1.4), 1, 0x7a7a80); // start
     for i in 0..6 {
-        front.rect(t(6.0) + i * 2, t(12.0) + i, 1, t(1.6), 0x9a9a94); // speaker
+        face.rect(t(6.0) + i * 2, t(12.0) + i, 1, t(1.6), 0x9a9a94); // speaker
     }
-    let mut back = Canvas::for_face(9.0, 14.8, body);
+    let mut back = Canvas::for_face(w, d, body);
     back.rect(t(1.5), t(2.0), t(6.0), t(4.0), 0xb3b2ac); // battery cover
-    b.block_skins(body, base, vec![(FRONT, front), (BACK, back)]);
+    let mut hb = Builder::new();
+    hb.block_skins(body, sh, vec![(TOP, face), (BOTTOM, back)]);
+    for mut p in hb.parts {
+        p.verts = stand_up(p.verts);
+        b.parts.push(p);
+    }
 }
 
 fn gba(b: &mut Builder) {
+    let (w, d) = (14.5f32, 8.2f32);
     let body = 0x5a4fa8;
-    let base = block(0.0, 0.0, 0.0, 14.5, 2.5, 14.5, 2.5, 8.2);
-    let mut front = Canvas::for_face(14.5, 8.2, body);
-    front.rect(t(3.6), t(1.2), t(7.3), t(5.5), 0x2a2a35); // bezel
-    front.rect(t(4.3), t(1.9), t(5.9), t(4.0), 0x9aa3b8); // screen
-    front.rect(t(0.9), t(3.5), t(2.4), t(0.8), 0x2a2a30); // d-pad
-    front.rect(t(1.7), t(2.7), t(0.8), t(2.4), 0x2a2a30);
-    front.disc(t(12.0), t(4.0), t(0.5), 0xc7c3e3); // B
-    front.disc(t(13.3), t(3.0), t(0.5), 0xc7c3e3); // A
-    front.rect(t(1.2), t(6.6), t(1.3), 1, 0xc7c3e3); // select
-    front.rect(t(1.2), t(7.3), t(1.3), 1, 0xc7c3e3); // start
-    front.px(t(3.8), t(1.6), LED_GREEN);
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 3.4);
+    let height = |x: f32, z: f32| {
+        let mut h = 2.5;
+        h += plate(x, z, cx(w, 3.6), cz(d, 1.2), cx(w, 10.9), cz(d, 6.7), -0.15); // bezel inset
+        h += plate(x, z, cx(w, 0.9), cz(d, 3.5), cx(w, 3.3), cz(d, 4.3), 0.3); // d-pad
+        h += plate(x, z, cx(w, 1.7), cz(d, 2.7), cx(w, 2.5), cz(d, 5.1), 0.3);
+        h += dome(x, z, cx(w, 12.0), cz(d, 4.0), 0.8, 0.3); // B
+        h += dome(x, z, cx(w, 13.3), cz(d, 3.0), 0.8, 0.3); // A
+        h
+    };
+    let sh = shell(w, d, 0.25, &inside, &height);
+    let mut face = Canvas::for_face(w, d, body);
+    face.rect(t(3.6), t(1.2), t(7.3), t(5.5), 0x2a2a35); // bezel
+    face.rect(t(4.3), t(1.9), t(5.9), t(4.0), 0x9aa3b8); // screen
+    face.rect(t(0.9), t(3.5), t(2.4), t(0.8), 0x2a2a30); // d-pad
+    face.rect(t(1.7), t(2.7), t(0.8), t(2.4), 0x2a2a30);
+    face.disc(t(12.0), t(4.0), t(0.5), 0xc7c3e3); // B
+    face.disc(t(13.3), t(3.0), t(0.5), 0xc7c3e3); // A
+    face.rect(t(1.2), t(6.6), t(1.3), 1, 0xc7c3e3); // select
+    face.rect(t(1.2), t(7.3), t(1.3), 1, 0xc7c3e3); // start
+    face.px(t(3.8), t(1.6), LED_GREEN);
     for i in 0..5 {
-        front.rect(t(12.0) + i, t(6.4) + i, t(0.6), 1, 0x8a82c8); // speaker
+        face.rect(t(12.0) + i, t(6.4) + i, t(0.6), 1, 0x8a82c8); // speaker
     }
-    b.block_skins(body, base, vec![(FRONT, front)]);
-    b.block(0x3f3870, &block(-5.4, 8.2, -0.3, 4.0, 1.6, 4.0, 1.6, 0.5)); // L
-    b.block(0x3f3870, &block(5.4, 8.2, -0.3, 4.0, 1.6, 4.0, 1.6, 0.5)); // R
+    let mut hb = Builder::new();
+    hb.block_skins(body, sh, vec![(TOP, face)]);
+    hb.block(0x3f3870, &block(-5.4, 0.4, -4.4, 4.0, 1.4, 4.0, 1.2, 1.7)); // L (at the back = top once upright)
+    hb.block(0x3f3870, &block(5.4, 0.4, -4.4, 4.0, 1.4, 4.0, 1.2, 1.7)); // R
+    for mut p in hb.parts {
+        p.verts = stand_up(p.verts);
+        b.parts.push(p);
+    }
 }
 
 fn ds(b: &mut Builder, is3: bool) {
-    let shell = if is3 { 0xb7202e } else { 0xf2f2f4 };
+    let shell_c = if is3 { 0xb7202e } else { 0xf2f2f4 };
     let inner = if is3 { 0x202024 } else { 0xf7f7f9 };
     let detail = if is3 { 0x3a3a40 } else { 0xb9bfc8 };
-    let (w, d, lid_h) = (13.4f32, 7.4f32, 7.4f32);
-    // Bottom half: painted top face (screen, d-pad, buttons).
-    let bottom = block(0.0, 0.0, 0.0, w, d, w, d, 1.1);
+    let (w, d) = (13.4f32, 7.4f32);
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 0.9);
+    // Bottom half: screen inset, raised d-pad and buttons.
+    let height = |x: f32, z: f32| {
+        let mut h = 1.1;
+        h += plate(x, z, cx(w, 3.9), cz(d, 1.3), cx(w, 9.5), cz(d, 5.5), -0.1);
+        h += plate(x, z, cx(w, 0.8), cz(d, 3.0), cx(w, 3.0), cz(d, 3.7), 0.2);
+        h += plate(x, z, cx(w, 1.55), cz(d, 2.25), cx(w, 2.25), cz(d, 4.45), 0.2);
+        for (bx, bz) in [(10.8f32, 3.3f32), (11.8, 2.3), (11.8, 4.3), (12.8, 3.3)] {
+            h += dome(x, z, cx(w, bx), cz(d, bz), 0.6, 0.2);
+        }
+        if is3 {
+            h += dome(x, z, cx(w, 1.9), cz(d, 1.4), 1.0, 0.25);
+        }
+        h
+    };
+    let sh = shell(w, d, 0.25, &inside, &height);
     let mut top = Canvas::for_face(w, d, inner);
     top.rect(t(3.9), t(1.3), t(5.6), t(4.2), SCREEN); // touch screen
     top.rect(t(0.8), t(3.0), t(2.2), t(0.7), detail); // d-pad
@@ -601,54 +855,78 @@ fn ds(b: &mut Builder, is3: bool) {
     }
     top.rect(t(10.0), t(6.0), t(1.0), 1, detail); // start
     top.rect(t(11.5), t(6.0), t(1.0), 1, detail); // select
-    let mut front = Canvas::for_face(w, 1.1, shell);
+    let mut front = Canvas::for_face(w, 1.1, shell_c);
     front.rect(t(4.0), 1, t(5.0), 1, detail); // cartridge slot
-    b.block_skins(shell, bottom, vec![(TOP, top), (FRONT, front)]);
-    // Lid, hinged at the back, leaning back ~25°.
-    let hinge = [0.0, 0.55, -d / 2.0];
-    let tilt = -0.42f32;
-    let lid = block(0.0, 0.55, -d / 2.0 + 0.55, w, 1.1, w, 1.1, lid_h);
-    let mut face = Canvas::for_face(w, lid_h, inner); // inner side (faces the player)
+    let mut sides = Canvas::for_face(d, 1.1, shell_c);
+    sides.rect(t(1.0), 1, t(2.0), 1, detail); // volume slider
+    b.block_skins(shell_c, sh, vec![(TOP, top), (FRONT, front), (LEFT, sides)]);
+    // Lid: built flat (inner face up), stood up, moved onto the hinge and tilted back.
+    let lid_h = |x: f32, z: f32| {
+        1.1 + plate(x, z, cx(w, if is3 { 2.9 } else { 3.9 }), cz(d, 1.3), cx(w, if is3 { 10.6 } else { 9.5 }), cz(d, 5.6), -0.1)
+    };
+    let lid = shell(w, d, 0.25, &inside, &lid_h);
+    let mut face = Canvas::for_face(w, d, inner);
     face.rect(t(if is3 { 2.9 } else { 3.9 }), t(1.3), t(if is3 { 7.7 } else { 5.6 }), t(4.3), SCREEN);
     for i in 0..4 {
         face.px(t(1.2) + i * 2, t(3.5), detail); // speaker dots
         face.px(t(w - 1.2) - i * 2, t(3.5), detail);
     }
-    let mut outer = Canvas::for_face(w, lid_h, shell);
-    outer.disc(t(w / 2.0), t(lid_h / 2.0), 2, if is3 { 0x8a1822 } else { 0xd8d8dc }); // logo
+    let mut outer = Canvas::for_face(w, d, shell_c);
+    outer.disc(t(w / 2.0), t(d / 2.0), 2, if is3 { 0x8a1822 } else { 0xd8d8dc }); // logo
     outer.px(t(w - 1.0), t(1.0), LED_GREEN);
-    let mut parts = Builder::new();
-    parts.block_skins(shell, lid, vec![(FRONT, face), (BACK, outer)]);
-    for mut p in parts.parts {
-        p.verts = rotate_x_about(p.verts, tilt, hinge);
+    let hinge = [0.0, 0.55, -d / 2.0];
+    let mut lb = Builder::new();
+    lb.block_skins(shell_c, lid, vec![(TOP, face), (BOTTOM, outer)]);
+    for mut p in lb.parts {
+        let v = stand_up(p.verts);
+        let v = translate(v, 0.0, d / 2.0 + 0.55, -d / 2.0 - 0.55);
+        p.verts = rotate_x_about(v, -0.42, hinge);
         b.parts.push(p);
     }
-    b.cyl(shell, hinge, 0.6, w - 1.0, Axis::X);
+    b.cyl(shell_c, hinge, 0.6, w - 1.0, Axis::X);
 }
 
 fn psp(b: &mut Builder) {
+    let (w, d) = (17.0f32, 7.4f32);
     let body = 0x15151a;
-    let base = block(0.0, 0.0, 0.0, 17.0, 2.3, 17.0, 2.3, 7.4);
-    let mut front = Canvas::for_face(17.0, 7.4, body);
-    front.rect(t(3.7), t(1.0), t(9.6), t(5.4), 0x2a3350); // screen
-    front.rect(t(3.9), t(1.2), t(9.2), 1, 0x3a4668); // glare line
-    front.rect(t(0.8), t(2.9), t(2.2), t(0.7), 0x2e2e36); // d-pad
-    front.rect(t(1.55), t(2.15), t(0.7), t(2.2), 0x2e2e36);
-    front.disc(t(1.9), t(6.0), t(0.7), 0x55555c); // analog nub
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 3.6);
+    let height = |x: f32, z: f32| {
+        let mut h = 2.3;
+        h += plate(x, z, cx(w, 3.7), cz(d, 1.0), cx(w, 13.3), cz(d, 6.4), -0.15); // screen
+        h += plate(x, z, cx(w, 0.8), cz(d, 2.9), cx(w, 3.0), cz(d, 3.6), 0.25); // d-pad
+        h += plate(x, z, cx(w, 1.55), cz(d, 2.15), cx(w, 2.25), cz(d, 4.35), 0.25);
+        h += dome(x, z, cx(w, 1.9), cz(d, 6.0), 0.8, 0.35); // analog nub
+        for (bx, bz) in [(14.4f32, 2.2f32), (13.3, 3.3), (15.5, 3.3), (14.4, 4.4)] {
+            h += dome(x, z, cx(w, bx), cz(d, bz), 0.6, 0.25);
+        }
+        h
+    };
+    let sh = shell(w, d, 0.25, &inside, &height);
+    let mut face = Canvas::for_face(w, d, body);
+    face.rect(t(3.7), t(1.0), t(9.6), t(5.4), 0x2a3350); // screen
+    face.rect(t(3.9), t(1.2), t(9.2), 1, 0x3a4668); // glare line
+    face.rect(t(0.8), t(2.9), t(2.2), t(0.7), 0x2e2e36); // d-pad
+    face.rect(t(1.55), t(2.15), t(0.7), t(2.2), 0x2e2e36);
+    face.disc(t(1.9), t(6.0), t(0.7), 0x55555c); // analog nub
     for (x, y) in [(14.4f32, 2.2f32), (13.3, 3.3), (15.5, 3.3), (14.4, 4.4)] {
-        front.disc(t(x), t(y), 1, 0xb9b9c0);
+        face.disc(t(x), t(y), 1, 0xb9b9c0);
     }
-    front.rect(t(13.6), t(6.3), t(1.2), 1, 0x8a8a92); // select
-    front.rect(t(15.2), t(6.3), t(1.2), 1, 0x8a8a92); // start
-    front.rect(t(7.0), t(6.6), t(3.0), 1, 0x8a8a92); // "PSP" bar
-    front.px(t(15.8), t(0.6), LED_GREEN);
-    b.block_skins(body, base, vec![(FRONT, front)]);
-    b.block(0x2a2a30, &block(-6.5, 7.4, 0.2, 3.5, 1.4, 3.5, 1.4, 0.3)); // L
-    b.block(0x2a2a30, &block(6.5, 7.4, 0.2, 3.5, 1.4, 3.5, 1.4, 0.3)); // R
+    face.rect(t(13.6), t(6.3), t(1.2), 1, 0x8a8a92); // select
+    face.rect(t(15.2), t(6.3), t(1.2), 1, 0x8a8a92); // start
+    face.rect(t(7.0), t(6.6), t(3.0), 1, 0x8a8a92); // "PSP" bar
+    face.px(t(15.8), t(0.6), LED_GREEN);
+    let mut hb = Builder::new();
+    hb.block_skins(body, sh, vec![(TOP, face)]);
+    hb.block(0x2a2a30, &block(-6.5, 0.2, -3.85, 3.5, 1.0, 3.5, 0.9, 1.6)); // L
+    hb.block(0x2a2a30, &block(6.5, 0.2, -3.85, 3.5, 1.0, 3.5, 0.9, 1.6)); // R
+    for mut p in hb.parts {
+        p.verts = stand_up(p.verts);
+        b.parts.push(p);
+    }
 }
 
 fn ps5(b: &mut Builder) {
-    let plate = 0xf4f4f6;
+    let plate_c = 0xf4f4f6;
     let core = block(0.0, 0.0, 0.0, 8.0, 24.0, 8.0, 24.0, 38.0);
     let mut front = Canvas::for_face(8.0, 38.0, 0x111115);
     front.rect(t(3.6), t(6.0), 2, t(14.0), 0x2a2a30); // disc slot
@@ -656,9 +934,8 @@ fn ps5(b: &mut Builder) {
     front.disc(t(4.0), t(28.5), 1, 0x8a8a92); // eject
     front.rect(t(2.6), t(31.0), t(2.8), 1, 0x2a2a30); // USB
     b.block_skins(0x111115, core, vec![(FRONT, front)]);
-    // White plates flaring out towards the top.
-    b.block(plate, &block(-4.8, -1.0, 0.0, 1.6, 26.0, 2.6, 26.0, 40.0));
-    b.block(plate, &block(4.8, -1.0, 0.0, 1.6, 26.0, 2.6, 26.0, 40.0));
+    b.block(plate_c, &block(-4.8, -1.0, 0.0, 1.6, 26.0, 2.6, 26.0, 40.0)); // plates, flared
+    b.block(plate_c, &block(4.8, -1.0, 0.0, 1.6, 26.0, 2.6, 26.0, 40.0));
     let strip = block(0.0, 38.0, 0.0, 7.6, 22.0, 7.6, 22.0, 0.5);
     let mut v = Vec::new();
     for f in &strip.faces {
@@ -672,7 +949,7 @@ fn pc(b: &mut Builder) {
     let body = 0x1c1d22;
     let base = block(0.0, 0.0, 0.0, 21.0, 45.0, 21.0, 45.0, 45.0);
     let mut front = Canvas::for_face(21.0, 45.0, 0x26272d);
-    front.dots(t(2.0), t(2.0), 17, 41, 2, 0x15161a); // mesh
+    front.dots(t(2.0), t(2.0), 26, 62, 2, 0x15161a); // mesh
     for y in [9.0f32, 22.5, 36.0] {
         front.disc(t(10.5), t(y), t(5.6), 0x1c1d22);
         front.ring(t(10.5), t(y), t(5.6), 0x3ad6c8);
@@ -686,7 +963,7 @@ fn pc(b: &mut Builder) {
     right.rect(t(20.0), t(28.0), t(18.0), t(6.0), 0x3a2a5a); // GPU glow
     right.rect(t(20.0), t(27.0), t(18.0), 1, 0x9a5cff);
     let mut top = Canvas::for_face(21.0, 45.0, body);
-    top.dots(t(3.0), t(3.0), 15, 39, 2, 0x15161a);
+    top.dots(t(3.0), t(3.0), 22, 58, 2, 0x15161a);
     b.block_skins(body, base, vec![(FRONT, front), (RIGHT, right), (TOP, top)]);
     for (x, z) in [(-8.0f32, -18.0f32), (8.0, -18.0), (-8.0, 18.0), (8.0, 18.0)] {
         b.block(0x111114, &block(x, -1.2, z, 3.0, 4.0, 3.0, 4.0, 1.2)); // feet

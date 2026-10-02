@@ -1823,7 +1823,7 @@ dependencies = [
 
 [[package]]
 name = "freeport"
-version = "0.2.57"
+version = "0.2.58"
 dependencies = [
  "freeport-core",
  "glow",

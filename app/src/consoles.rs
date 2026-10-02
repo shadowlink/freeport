@@ -1,7 +1,7 @@
 //! Procedural low-poly consoles for the immersive carousel: every system is
 //! built from a handful of cuboids and cylinders at (roughly) real-world
 //! proportions, in a flat, toy-like style that stays coherent across the
-//! whole set. No external assets needed; a glTF in the models dir still wins.
+//! whole set, with rounded edges and smooth shading (no paper-box look). No external assets needed; a glTF in the models dir still wins.
 //!
 //! Coordinates: centimetres, y up, +z towards the viewer (the "front" of the
 //! console). `scene` normalises the result like any other model.
@@ -27,6 +27,68 @@ fn cuboid(c: [f32; 3], s: [f32; 3]) -> Vec<f32> {
         v[i] = v[i] * s[0] + c[0];
         v[i + 1] = v[i + 1] * s[1] + c[1];
         v[i + 2] = v[i + 2] * s[2] + c[2];
+    }
+    v
+}
+
+/// Cuboid with rounded edges and corners (radius `r`), smooth-shaded: every
+/// face is a grid whose points are projected onto the rounded-box surface.
+fn rounded_box(c: [f32; 3], s: [f32; 3], r: f32, n: usize) -> Vec<f32> {
+    let h = [s[0] / 2.0, s[1] / 2.0, s[2] / 2.0];
+    let r = r.min(h[0]).min(h[1]).min(h[2]).max(0.0);
+    let inner = [h[0] - r, h[1] - r, h[2] - r];
+    // Point on the unit-cube surface → (position, normal) on the rounded box.
+    let surf = |u: [f32; 3]| -> ([f32; 3], [f32; 3]) {
+        let q = [u[0] * h[0], u[1] * h[1], u[2] * h[2]];
+        let k = [
+            q[0].clamp(-inner[0], inner[0]),
+            q[1].clamp(-inner[1], inner[1]),
+            q[2].clamp(-inner[2], inner[2]),
+        ];
+        let d = [q[0] - k[0], q[1] - k[1], q[2] - k[2]];
+        let l = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt();
+        if l < 1e-6 {
+            return ([k[0] + c[0], k[1] + c[1], k[2] + c[2]], [0.0, 1.0, 0.0]);
+        }
+        let nrm = [d[0] / l, d[1] / l, d[2] / l];
+        ([k[0] + nrm[0] * r + c[0], k[1] + nrm[1] * r + c[1], k[2] + nrm[2] * r + c[2]], nrm)
+    };
+    // Each face: axis, sign, and the two tangent axes (ordered for CCW winding).
+    let faces: [(usize, f32, usize, usize); 6] = [
+        (2, 1.0, 0, 1),  // +z front
+        (2, -1.0, 1, 0), // -z back
+        (0, 1.0, 1, 2),  // +x
+        (0, -1.0, 2, 1), // -x
+        (1, 1.0, 2, 0),  // +y top
+        (1, -1.0, 0, 2), // -y bottom
+    ];
+    let mut v = Vec::with_capacity(6 * n * n * 6 * 8);
+    let mut push = |u: [f32; 3]| {
+        let (p, nrm) = surf(u);
+        v.extend_from_slice(&p);
+        v.extend_from_slice(&nrm);
+        v.extend_from_slice(&[0.0, 0.0]);
+    };
+    for (ax, sign, ta, tb) in faces {
+        for i in 0..n {
+            for j in 0..n {
+                let (a0, a1) = (i as f32 / n as f32 * 2.0 - 1.0, (i + 1) as f32 / n as f32 * 2.0 - 1.0);
+                let (b0, b1) = (j as f32 / n as f32 * 2.0 - 1.0, (j + 1) as f32 / n as f32 * 2.0 - 1.0);
+                let mk = |a: f32, b: f32| {
+                    let mut u = [0.0; 3];
+                    u[ax] = sign;
+                    u[ta] = a;
+                    u[tb] = b;
+                    u
+                };
+                push(mk(a0, b0));
+                push(mk(a1, b0));
+                push(mk(a1, b1));
+                push(mk(a0, b0));
+                push(mk(a1, b1));
+                push(mk(a0, b1));
+            }
+        }
     }
     v
 }
@@ -57,16 +119,16 @@ fn cylinder(c: [f32; 3], r: f32, h: f32, axis: Axis, seg: usize) -> Vec<f32> {
         let p01 = [r * c1, y0, -r * s1];
         let p10 = [r * c0, y1, -r * s0];
         let p11 = [r * c1, y1, -r * s1];
-        // Flat side normal (low-poly facets).
-        let am = (a0 + a1) / 2.0;
-        let n = [am.cos(), 0.0, -am.sin()];
+        // Smooth side normals.
+        let n0 = [c0, 0.0, -s0];
+        let n1 = [c1, 0.0, -s1];
         // Side quad (CCW seen from outside).
-        push(p00, n);
-        push(p01, n);
-        push(p11, n);
-        push(p00, n);
-        push(p11, n);
-        push(p10, n);
+        push(p00, n0);
+        push(p01, n1);
+        push(p11, n1);
+        push(p00, n0);
+        push(p11, n1);
+        push(p10, n0);
         // Top cap (normal +y) and bottom cap (normal -y).
         push([0.0, y1, 0.0], [0.0, 1.0, 0.0]);
         push(p10, [0.0, 1.0, 0.0]);
@@ -135,6 +197,10 @@ fn rotate_z_about(mut verts: Vec<f32>, a: f32, pivot: [f32; 3]) -> Vec<f32> {
     verts
 }
 
+fn auto_radius(s: [f32; 3]) -> f32 {
+    (s[0].min(s[1]).min(s[2]) * 0.34).min(0.9)
+}
+
 struct Builder {
     parts: Vec<Part>,
 }
@@ -147,14 +213,20 @@ impl Builder {
         self.parts.push(Part { color, gloss, verts });
         self
     }
+    /// Rounded box with an automatic edge radius (a third of the thinnest side,
+    /// capped), the default look of every part.
     fn boxp(&mut self, color: [f32; 3], c: [f32; 3], s: [f32; 3]) -> &mut Self {
-        self.add(color, 0.0, cuboid(c, s))
+        self.add(color, 0.0, rounded_box(c, s, auto_radius(s), 6))
     }
     fn boxg(&mut self, color: [f32; 3], c: [f32; 3], s: [f32; 3]) -> &mut Self {
-        self.add(color, 1.0, cuboid(c, s))
+        self.add(color, 1.0, rounded_box(c, s, auto_radius(s), 6))
+    }
+    /// Rounded box with an explicit radius (bodies with softer edges).
+    fn boxr(&mut self, color: [f32; 3], c: [f32; 3], s: [f32; 3], r: f32) -> &mut Self {
+        self.add(color, 0.0, rounded_box(c, s, r, 8))
     }
     fn cyl(&mut self, color: [f32; 3], c: [f32; 3], r: f32, h: f32, axis: Axis) -> &mut Self {
-        self.add(color, 0.0, cylinder(c, r, h, axis, 20))
+        self.add(color, 0.0, cylinder(c, r, h, axis, 36))
     }
 }
 
@@ -168,10 +240,10 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
     match system {
         "n64" => {
             let body = rgb(0x4a4a53);
-            b.boxp(body, [0.0, 0.0, 0.0], [26.0, 5.5, 19.0]);
+            b.boxr(body, [0.0, 0.0, 0.0], [26.0, 5.5, 19.0], 1.4);
             // Shoulders either side of the cartridge bay.
-            b.boxp(body, [-8.5, 3.6, -2.0], [8.5, 2.6, 13.0]);
-            b.boxp(body, [8.5, 3.6, -2.0], [8.5, 2.6, 13.0]);
+            b.boxr(body, [-8.5, 3.6, -2.0], [8.5, 2.6, 13.0], 1.2);
+            b.boxr(body, [8.5, 3.6, -2.0], [8.5, 2.6, 13.0], 1.2);
             b.boxp(rgb(0x33333a), [0.0, 3.4, -2.0], [8.5, 2.2, 13.0]); // bay
             b.boxp(rgb(0x8d8d93), [0.0, 6.4, -2.0], [7.4, 3.2, 2.0]); // cartridge
             b.boxp(rgb(0xd33a3a), [0.0, 6.4, -0.9], [5.0, 2.0, 0.3]); // label
@@ -185,7 +257,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
         }
         "psx" => {
             let body = rgb(0xcfccc3);
-            b.boxp(body, [0.0, 0.0, 0.0], [27.0, 6.0, 19.0]);
+            b.boxr(body, [0.0, 0.0, 0.0], [27.0, 6.0, 19.0], 1.6);
             b.cyl(rgb(0xd8d5cc), [3.0, 3.3, -1.0], 7.6, 0.6, Axis::Y); // lid
             b.boxp(rgb(0x8e8c85), [-9.5, 3.2, 5.5], [3.2, 0.4, 2.0]); // power
             b.boxp(rgb(0x8e8c85), [-9.5, 3.2, 2.0], [3.2, 0.4, 2.0]); // reset
@@ -197,7 +269,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
         }
         "ps2" => {
             let body = rgb(0x17171d);
-            b.boxp(body, [0.0, 0.0, 0.0], [30.0, 7.8, 18.0]);
+            b.boxr(body, [0.0, 0.0, 0.0], [30.0, 7.8, 18.0], 0.8);
             b.boxp(rgb(0x2244cc), [-13.4, 0.0, 9.1], [1.6, 7.8, 0.4]); // blue edge
             b.boxp(rgb(0x2a2a33), [4.0, 2.4, 9.1], [17.0, 1.4, 0.4]); // tray
             for x in [-7.0, -2.5] {
@@ -212,7 +284,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
         }
         "gc" => {
             let body = rgb(0x4a3e93);
-            b.boxp(body, [0.0, 0.0, 0.0], [15.0, 11.0, 16.0]);
+            b.boxr(body, [0.0, 0.0, 0.0], [15.0, 11.0, 16.0], 1.6);
             b.boxp(rgb(0x5d50ad), [0.0, 5.7, 0.5], [12.5, 0.4, 12.5]); // lid
             b.cyl(rgb(0x3e3480), [0.0, 6.05, 0.5], 4.6, 0.3, Axis::Y); // disc dome
             // Handle at the back.
@@ -227,14 +299,14 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             b.cyl(rgb(0x8e8ab8), [6.0, 5.8, 6.0], 0.7, 0.3, Axis::Y); // power
         }
         "wii" => {
-            b.boxp(rgb(0xeef0f3), [0.0, 0.0, 0.0], [4.4, 21.5, 15.7]);
+            b.boxr(rgb(0xeef0f3), [0.0, 0.0, 0.0], [4.4, 21.5, 15.7], 0.8);
             b.boxp(rgb(0x7fb8ff), [0.0, 5.0, 7.95], [0.4, 12.0, 0.3]); // disc slot glow
             b.boxp(rgb(0xd8dbe0), [0.0, -5.0, 7.95], [3.6, 2.4, 0.2]); // sd door
             b.cyl(rgb(0xc9cdd3), [0.0, -8.5, 7.95], 0.5, 0.2, Axis::Z); // power
             b.boxp(rgb(0xcfd3d8), [0.0, -11.3, 0.0], [10.0, 1.2, 12.0]); // stand
         }
         "xbox" => {
-            b.boxp(rgb(0x121214), [0.0, 0.0, 0.0], [32.0, 10.0, 26.0]);
+            b.boxr(rgb(0x121214), [0.0, 0.0, 0.0], [32.0, 10.0, 26.0], 2.0);
             b.cyl(rgb(0x1a1a1e), [0.0, 5.1, -2.0], 7.0, 0.4, Axis::Y); // raised ring
             b.cyl(rgb(0x5cc230), [0.0, 5.3, -2.0], 4.6, 0.4, Axis::Y); // jewel
             for x in [-11.0, -5.0, 5.0, 11.0] {
@@ -245,9 +317,9 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             b.cyl(rgb(0x3a3a40), [-13.0, 2.6, 13.2], 1.0, 0.4, Axis::Z); // eject
         }
         "x360" => {
-            b.boxp(rgb(0xe9e9ec), [0.0, 0.0, 0.0], [31.0, 8.3, 26.0]);
-            b.boxp(rgb(0xc9cbd0), [0.0, 0.0, 13.2], [31.0, 8.3, 0.5]); // faceplate
-            b.boxp(rgb(0x9fa2a8), [0.0, 0.0, -13.1], [31.0, 8.3, 0.3]); // back vents
+            b.boxr(rgb(0xe9e9ec), [0.0, 0.0, 0.0], [31.0, 8.3, 26.0], 1.8);
+            b.boxr(rgb(0xc9cbd0), [0.0, 0.0, 12.9], [29.4, 7.4, 1.2], 1.0); // faceplate
+            b.boxr(rgb(0x9fa2a8), [0.0, 0.0, -12.9], [28.0, 6.5, 0.6], 0.3); // back vents
             b.boxp(rgb(0x3a3a40), [-4.0, 1.8, 13.5], [17.0, 1.6, 0.2]); // tray
             b.cyl(rgb(0xdfe1e6), [9.5, 0.0, 13.6], 2.3, 0.3, Axis::Z); // ring
             b.cyl(rgb(0x58c843), [9.5, 0.0, 13.8], 1.4, 0.2, Axis::Z); // power led
@@ -256,7 +328,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             }
         }
         "dc" => {
-            b.boxp(rgb(0xeeeeee), [0.0, 0.0, 0.0], [19.0, 7.6, 19.5]);
+            b.boxr(rgb(0xeeeeee), [0.0, 0.0, 0.0], [19.0, 7.6, 19.5], 2.2);
             b.cyl(rgb(0xf4f4f4), [0.0, 4.1, -1.0], 7.6, 0.6, Axis::Y); // lid
             b.cyl(rgb(0xf27a1a), [0.0, 4.55, -1.0], 1.7, 0.3, Axis::Y); // swirl
             for x in [-6.0, -2.0, 2.0, 6.0] {
@@ -267,7 +339,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             b.cyl(rgb(0xf27a1a), [-7.5, 4.3, 3.0], 0.4, 0.3, Axis::Y); // led
         }
         "gb" => {
-            b.boxp(rgb(0xc7c6c0), [0.0, 0.0, 0.0], [9.0, 14.8, 3.2]);
+            b.boxr(rgb(0xc7c6c0), [0.0, 0.0, 0.0], [9.0, 14.8, 3.2], 1.0);
             b.boxp(rgb(0x3c3c48), [0.0, 3.4, 1.7], [7.6, 5.8, 0.3]); // bezel
             b.boxg(rgb(0x8fa44a), [-0.4, 3.4, 1.9], [4.6, 4.1, 0.2]); // screen
             b.boxp(rgb(0x6e1f3f), [0.0, 6.0, 1.9], [7.6, 0.25, 0.15]); // purple stripe
@@ -279,7 +351,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             b.boxp(rgb(0x7a7a80), [0.9, -5.3, 1.7], [1.4, 0.45, 0.3]); // start
         }
         "gba" => {
-            b.boxp(rgb(0x5a4fa8), [0.0, 0.0, 0.0], [14.5, 8.2, 2.5]);
+            b.boxr(rgb(0x5a4fa8), [0.0, 0.0, 0.0], [14.5, 8.2, 2.5], 1.1);
             b.boxp(rgb(0x2a2a35), [0.0, 0.5, 1.3], [7.2, 5.4, 0.3]); // bezel
             b.boxg(rgb(0x9aa3b8), [0.0, 0.5, 1.5], [6.0, 4.0, 0.2]); // screen
             b.boxp(rgb(PORT), [-5.6, 0.4, 1.4], [2.4, 0.8, 0.4]); // d-pad
@@ -296,7 +368,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             let shell = if is3 { rgb(0xb7202e) } else { rgb(0xf2f2f4) };
             let inner = if is3 { rgb(0x202024) } else { rgb(0xf7f7f9) };
             let (w, d, lid_h) = if is3 { (13.4, 7.4, 7.4) } else { (13.3, 7.4, 7.4) };
-            b.boxp(shell, [0.0, 0.0, 0.0], [w, 1.1, d]); // bottom half
+            b.boxr(shell, [0.0, 0.0, 0.0], [w, 1.1, d], 0.5); // bottom half
             b.boxp(inner, [0.0, 0.58, 0.0], [w - 0.8, 0.1, d - 0.8]); // inner face
             b.boxg(rgb(SCREEN), [0.0, 0.66, 0.2], [if is3 { 5.6 } else { 5.6 }, 0.1, 4.2]); // bottom screen
             b.boxp(rgb(PORT), [-4.6, 0.7, 0.4], [2.2, 0.15, 0.7]); // d-pad
@@ -310,7 +382,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             // Lid, hinged at the back and tilted ~110°.
             let hinge = [0.0, 0.55, -d / 2.0];
             let tilt = -0.42f32; // leaning back ~25° from upright
-            let lid = cuboid([0.0, 0.55 + lid_h / 2.0, -d / 2.0 + 0.55], [w, lid_h, 1.1]);
+            let lid = rounded_box([0.0, 0.55 + lid_h / 2.0, -d / 2.0 + 0.55], [w, lid_h, 1.1], 0.5, 8);
             b.add(shell, 0.0, rotate_x_about(lid, tilt, hinge));
             let face = cuboid([0.0, 0.55 + lid_h / 2.0, -d / 2.0 + 1.11], [w - 0.8, lid_h - 0.8, 0.05]);
             b.add(inner, 0.0, rotate_x_about(face, tilt, hinge));
@@ -320,7 +392,7 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             b.cyl(shell, hinge, 0.6, w - 1.0, Axis::X);
         }
         "psp" => {
-            b.boxp(rgb(0x15151a), [0.0, 0.0, 0.0], [17.0, 7.4, 2.3]);
+            b.boxr(rgb(0x15151a), [0.0, 0.0, 0.0], [17.0, 7.4, 2.3], 1.1);
             b.boxg(rgb(0x2a3350), [0.0, 0.35, 1.2], [9.6, 5.4, 0.2]); // screen
             b.boxp(rgb(PORT), [-6.6, 0.8, 1.25], [2.2, 0.7, 0.3]); // d-pad
             b.boxp(rgb(PORT), [-6.6, 0.8, 1.25], [0.7, 2.2, 0.3]);
@@ -334,18 +406,18 @@ pub fn build(system: &str) -> Option<Vec<Part>> {
             b.boxp(rgb(0xb9b9c0), [2.8, -2.8, 1.2], [1.2, 0.3, 0.2]); // select
         }
         "ps5" => {
-            b.boxp(rgb(0x111115), [0.0, 0.0, 0.0], [8.0, 38.0, 24.0]); // core
+            b.boxr(rgb(0x111115), [0.0, 0.0, 0.0], [8.0, 38.0, 24.0], 2.5); // core
             // White side plates, flared outwards at the top.
-            let l = cuboid([-4.7, 0.0, 0.0], [1.6, 40.0, 26.0]);
+            let l = rounded_box([-4.7, 0.0, 0.0], [1.6, 40.0, 26.0], 0.8, 8);
             b.add(rgb(0xf4f4f6), 0.0, rotate_z_about(l, 0.035, [-4.0, -19.0, 0.0]));
-            let r = cuboid([4.7, 0.0, 0.0], [1.6, 40.0, 26.0]);
+            let r = rounded_box([4.7, 0.0, 0.0], [1.6, 40.0, 26.0], 0.8, 8);
             b.add(rgb(0xf4f4f6), 0.0, rotate_z_about(r, -0.035, [4.0, -19.0, 0.0]));
             b.boxg(rgb(0x4f8cff), [0.0, 19.3, 0.0], [7.4, 0.5, 22.0]); // light strip
             b.cyl(rgb(0x1a1a1f), [0.0, -19.6, 0.0], 7.0, 0.9, Axis::Y); // stand
             b.boxp(rgb(0x2a2a30), [0.0, 8.0, 12.05], [1.2, 14.0, 0.3]); // disc slot
         }
         "pc" => {
-            b.boxp(rgb(0x1c1d22), [0.0, 0.0, 0.0], [21.0, 45.0, 45.0]);
+            b.boxr(rgb(0x1c1d22), [0.0, 0.0, 0.0], [21.0, 45.0, 45.0], 1.2);
             b.boxg(rgb(0x2a3a5a), [10.6, 1.0, 0.0], [0.3, 40.0, 41.0]); // glass side
             b.boxp(rgb(0x26272d), [0.0, 0.0, 22.6], [19.5, 43.0, 0.3]); // front mesh
             for y in [-13.0, 0.0, 13.0] {

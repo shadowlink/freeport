@@ -341,9 +341,9 @@ impl App {
             && p.asset_rules.contains_key("windows-x86_64")
             && supports(p, "windows-x86_64");
         let inst = installed.get(&p.id);
-        // Experimental ports stay hidden unless the user opts in — installed ones
-        // always show (you can't lose sight of something on your disk).
-        if p.is_experimental() && inst.is_none() && !self.experimental_allowed(&p.system) {
+        // Experimental ports stay hidden unless the user opts in for their
+        // system — installed ones too (off means off; the switch brings them back).
+        if p.is_experimental() && !self.experimental_allowed(&p.system) {
             return (false, false);
         }
         (native || win_ok || inst.is_some(), !native && (win_ok || inst.map(|e| e.windows).unwrap_or(false)))
@@ -397,22 +397,25 @@ fn rebuild(app: &App, win: &MainWindow) {
     let mut sys_rows: Vec<SysRow> = Vec::new();
     let mut settings_rows: Vec<SysRow> = Vec::new();
     for s in &catalog.systems {
-        // Experimental ports of this system that the switch would actually bring
-        // on screen: not installed, switch off, and not just another version of a
-        // game that already has a visible (stable or installed) card. In the
-        // library nothing is ever hidden (installed games always show).
-        let exp_hidden = if library || app.experimental_allowed(&s.id) {
+        // Experimental games of this system that the switch would actually bring
+        // on screen: switch off, (library: installed only), and not just another
+        // version of a game that already has a visible stable card.
+        let exp_hidden = if app.experimental_allowed(&s.id) {
             0
         } else {
             let visible_keys: HashSet<&str> = catalog
                 .projects
                 .iter()
-                .filter(|p| p.system == s.id && (!p.is_experimental() || installed.contains_key(&p.id)))
-                .filter(|p| app.visibility(p, &installed, show_windows).0)
+                .filter(|p| p.system == s.id && !p.is_experimental() && app.visibility(p, &installed, show_windows).0)
+                .filter(|p| !library || installed.contains_key(&p.id))
                 .map(|p| p.game_key())
                 .collect();
             let mut keys: HashSet<&str> = HashSet::new();
-            for p in catalog.projects.iter().filter(|p| p.system == s.id && p.is_experimental() && !installed.contains_key(&p.id)) {
+            for p in catalog
+                .projects
+                .iter()
+                .filter(|p| p.system == s.id && p.is_experimental() && (!library || installed.contains_key(&p.id)))
+            {
                 if !visible_keys.contains(p.game_key()) {
                     keys.insert(p.game_key());
                 }
@@ -434,8 +437,7 @@ fn rebuild(app: &App, win: &MainWindow) {
             });
         }
         if active == s.id {
-            // Library: the toggle has no effect there, so don't show it.
-            win.set_active_exp_on(!library && app.experimental_allowed(&s.id));
+            win.set_active_exp_on(app.experimental_allowed(&s.id));
             win.set_active_exp_hidden(exp_hidden as i32);
         }
         let mut keys: HashSet<&str> = HashSet::new();

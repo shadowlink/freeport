@@ -133,14 +133,16 @@ Enter sobre una caja la trae al frente (el visor 3D) con el botón grande de
 jugar/instalar; Esc vuelve; Tab filtra Todos / Disponibles / Instalados. Funciona
 con teclado, ratón (clic y rueda) y mando.
 
-Las consolas se representan con modelos glTF si existen en
-`<datos>/models/` (`~/.local/share/decompdeck/models/` en Linux): `n64.glb`,
-`psx.glb`, … (también `<sistema>.gltf` o la carpeta `<sistema>/scene.gltf` tal
-cual la descarga Sketchfab). El modelo se centra y escala solo; un `<sistema>.json`
-opcional ajusta `yaw`, `pitch`, `roll` (grados) y `scale`. Sin modelo se muestra
-una placa oscura con el logo del sistema. `tools/fetch_models.py` descarga un
-conjunto de modelos CC-BY de Sketchfab (requiere un token de API de Sketchfab) y
-deja la atribución en `models/CREDITS.txt`.
+Las 15 consolas están modeladas en low-poly dentro de la app
+(`app/src/consoles.rs`: cajas y cilindros a proporciones reales, paleta común),
+así que no hace falta ningún asset externo. Si prefieres un modelo propio, deja
+un glTF en `<datos>/models/` (`~/.local/share/decompdeck/models/` en Linux):
+`n64.glb`, `psx.glb`, … (también `<sistema>.gltf` o la carpeta
+`<sistema>/scene.gltf` tal cual la descarga Sketchfab) y sustituye al integrado.
+El modelo se centra y escala solo; un `<sistema>.json` opcional ajusta `yaw`,
+`pitch`, `roll` (grados) y `scale`. `tools/fetch_models.py` descarga un conjunto
+de modelos CC-BY de Sketchfab (requiere un token de API de Sketchfab) y deja la
+atribución en `models/CREDITS.txt`.
 
 ## Tests
 

@@ -70,10 +70,13 @@ void main() {
   vec3 l = normalize(vec3(-0.45, 0.75, 0.9));
   vec3 v = normalize(vec3(0.0, 0.0, 3.2) - v_pos);
   float diff = max(dot(n, l), 0.0);
+  // Soft fill from the opposite side + faint rim so dark plastics read in 3D.
+  float fill = max(dot(n, normalize(vec3(0.7, -0.2, -0.6))), 0.0) * 0.22;
+  float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0) * 0.12;
   vec3 h = normalize(l + v);
   float spec = pow(max(dot(n, h), 0.0), mix(24.0, 90.0, u_gloss)) * mix(0.15, 0.55, u_gloss);
   vec4 c = texture2D(u_tex, v_uv) * vec4(u_tint, 1.0);
-  vec3 col = c.rgb * (0.42 + 0.68 * diff) * u_dim + vec3(spec);
+  vec3 col = c.rgb * (0.40 + 0.70 * diff + fill) * u_dim + vec3(spec + rim) * u_dim;
   gl_FragColor = vec4(col, 1.0);
 }"#;
 

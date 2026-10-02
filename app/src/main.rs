@@ -4,6 +4,7 @@
 slint::include_modules!();
 
 mod box3d;
+mod consoles;
 mod scene;
 #[cfg(windows)]
 mod win_titlebar;
@@ -726,11 +727,12 @@ fn immersive_systems(app: &App) -> Vec<scene::SysEntry> {
     let show_windows = store::load_config(&app.paths).map(|c| c.show_windows).unwrap_or(false);
     let catalog = app.catalog.borrow();
     let mut out = Vec::new();
+    let debug_all = std::env::var_os("FREEPORT_DEBUG_IMMERSIVE_ALL").is_some(); // dev aid: every system
     for s in &catalog.systems {
         let keys: HashSet<&str> = catalog
             .projects
             .iter()
-            .filter(|p| p.system == s.id && app.visibility(p, &installed, show_windows).0)
+            .filter(|p| p.system == s.id && (debug_all || app.visibility(p, &installed, show_windows).0))
             .map(|p| p.game_key())
             .collect();
         if keys.is_empty() {
@@ -810,7 +812,7 @@ fn immersive_models_info(app: &App) -> String {
         })
         .count();
     format!(
-        "Modelos 3D de consolas: {have} de {total} sistemas en {} (archivos <sistema>.glb; sin modelo se muestra una placa con el logo).",
+        "Las consolas se dibujan en low-poly dentro de la app. Modelos glTF propios: {have} de {total} sistemas en {} (archivos <sistema>.glb, sustituyen al modelo integrado).",
         dir.display()
     )
 }
@@ -3128,13 +3130,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         if cfg.immersive || dbg.is_some() {
             open_immersive(&app, &win); // start in the 3D interface (or dev aid)
         }
-        // dev aid: FREEPORT_DEBUG_IMMERSIVE=<system id> lands straight on its shelf.
+        // dev aid: FREEPORT_DEBUG_IMMERSIVE=<system id> lands straight on its
+        // shelf; "@<system id>" only focuses it on the carousel.
         if let Some(sys) = dbg.filter(|v| v.len() > 1) {
+            let (focus_only, sys) = match sys.strip_prefix('@') {
+                Some(rest) => (true, rest.to_string()),
+                None => (false, sys),
+            };
             let idx = app.scene.borrow().systems.iter().position(|s| s.id == sys);
             if let Some(i) = idx {
                 app.scene.borrow_mut().focus_system(i);
                 app.scene.borrow_mut().sys_pos = i as f32;
-                immersive_input(&app, &win, "a");
+                if !focus_only {
+                    immersive_input(&app, &win, "a");
+                }
             }
         }
     }

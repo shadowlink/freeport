@@ -107,7 +107,10 @@ impl SceneState {
     /// (callers keep redrawing anyway; this is informational).
     pub fn tick(&mut self, dt: f32) -> bool {
         self.t += dt;
-        self.spin += dt * 0.45;
+        match std::env::var("FREEPORT_DEBUG_SPIN").ok().and_then(|v| v.parse::<f32>().ok()) {
+            Some(fixed) => self.spin = fixed, // dev aid: freeze the console angle
+            None => self.spin += dt * 0.45,
+        }
         let st = self.sys_target as f32;
         let bt = self.box_target as f32;
         let before = (self.sys_pos, self.box_pos, self.phase);
@@ -265,7 +268,7 @@ fn layout_systems(st: &SceneState) -> Vec<Placed> {
         let fly_x = mix * d.signum() * 3.0 * ad;
         let model = mul(
             mul(translate(x + fly_x, bob + 0.05, fly_z), scale_m(scale * (1.0 + 0.3 * mix))),
-            rot_x(0.16),
+            rot_x(0.42),
         );
         out.push(Placed { index: i, model, dim: (1.0 - 0.5 * ad) * (1.0 - mix), alpha: 1.0 - mix, yaw, focus: 1.0 - ad });
     }
@@ -394,6 +397,7 @@ struct Prim {
     count: i32,
     tex: Option<Tex>,
     base: [f32; 3],
+    gloss: f32,
 }
 
 struct Model {
@@ -668,7 +672,27 @@ impl SceneRenderer {
             st.models_dir.join(sys).join("scene.gltf"), // Sketchfab zip layout
             st.models_dir.join(sys).join("scene.glb"),
         ];
-        let Some(path) = candidates.iter().find(|p| p.exists()) else { return };
+        let Some(path) = candidates.iter().find(|p| p.exists()) else {
+            // No file: the built-in low-poly console.
+            if let Some(parts) = crate::consoles::build(sys) {
+                let (lo, hi) = crate::consoles::bounds(&parts);
+                let center = [(lo[0] + hi[0]) / 2.0, (lo[1] + hi[1]) / 2.0, (lo[2] + hi[2]) / 2.0];
+                let extent = (hi[0] - lo[0]).max(hi[1] - lo[1]).max(hi[2] - lo[2]).max(1e-4);
+                let fix = mul(scale_m(2.1 / extent), translate(-center[0], -center[1], -center[2]));
+                let gl = &self.gl;
+                let mut out = Vec::new();
+                unsafe {
+                    for p in parts {
+                        let Ok(vbo) = gl.create_buffer() else { continue };
+                        gl.bind_buffer(glow::ARRAY_BUFFER, Some(vbo));
+                        gl.buffer_data_u8_slice(glow::ARRAY_BUFFER, bytemuck_cast(&p.verts), glow::STATIC_DRAW);
+                        out.push(Prim { vbo, count: (p.verts.len() / 8) as i32, tex: None, base: p.color, gloss: p.gloss });
+                    }
+                }
+                self.models.insert(sys.to_string(), Model { prims: out, fix });
+            }
+            return;
+        };
         let started = std::time::Instant::now();
         match load_gltf(path) {
             Ok((prims, images, center, extent)) => {
@@ -698,7 +722,7 @@ impl SceneRenderer {
                             tex_cache.insert(i, t.0);
                             Some(t)
                         });
-                        out.push(Prim { vbo, count: (p.verts.len() / 8) as i32, tex, base: p.base });
+                        out.push(Prim { vbo, count: (p.verts.len() / 8) as i32, tex, base: p.base, gloss: 0.35 });
                     }
                 }
                 eprintln!(
@@ -849,8 +873,8 @@ impl SceneRenderer {
                 if let Some(m) = self.models.get(&sys.id) {
                     // Real model: slow full turn while in focus.
                     let model = mul(mul(p.model, rot_y(p.yaw + p.focus * st.spin)), m.fix);
-                    self.set_mats(&pv, &model, 0.35);
                     for prim in &m.prims {
+                        self.set_mats(&pv, &model, prim.gloss);
                         gl.bind_buffer(glow::ARRAY_BUFFER, Some(prim.vbo));
                         self.attribs(true);
                         gl.bind_texture(glow::TEXTURE_2D, Some(prim.tex.as_ref().map(|t| t.0).unwrap_or(self.white.0)));

@@ -4,6 +4,7 @@
 slint::include_modules!();
 
 mod box3d;
+mod scene;
 #[cfg(windows)]
 mod win_titlebar;
 
@@ -177,6 +178,11 @@ struct App {
     /// Experimental 3D box viewer state (shared with the GL rendering notifier).
     viewer3d: box3d::Shared,
     viewer3d_timer: RefCell<Option<slint::Timer>>,
+    /// Immersive 3D mode state (shared with the GL rendering notifier) and its
+    /// renderer handle (to drop cover textures when the shelf changes).
+    scene: scene::Shared,
+    scene_timer: RefCell<Option<slint::Timer>>,
+    scene_gl: Rc<RefCell<Option<scene::SceneRenderer>>>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
     /// Catalog ids → first-seen epoch (drives NUEVO badge + newcomers strip).
@@ -706,6 +712,313 @@ fn rebuild(app: &App, win: &MainWindow) {
     win.set_updates_pending(pending as i32);
     win.set_recent(ModelRc::new(VecModel::from(recent)));
     win.set_newcomers(ModelRc::new(VecModel::from(newcomers)));
+    if app.scene.borrow().visible {
+        immersive_refresh_systems(app, win);
+    }
+}
+
+// ───────────────────────── Immersive 3D mode ─────────────────────────
+
+/// Systems with at least one game visible under the current rules (same
+/// filters as the catalog sidebar), with their accent colour.
+fn immersive_systems(app: &App) -> Vec<scene::SysEntry> {
+    let installed = store::load_installed(&app.paths).unwrap_or_default();
+    let show_windows = store::load_config(&app.paths).map(|c| c.show_windows).unwrap_or(false);
+    let catalog = app.catalog.borrow();
+    let mut out = Vec::new();
+    for s in &catalog.systems {
+        let keys: HashSet<&str> = catalog
+            .projects
+            .iter()
+            .filter(|p| p.system == s.id && app.visibility(p, &installed, show_windows).0)
+            .map(|p| p.game_key())
+            .collect();
+        if keys.is_empty() {
+            continue;
+        }
+        out.push(scene::SysEntry {
+            id: s.id.clone(),
+            name: s.name.clone(),
+            accent: color_rgb(parse_color(&s.color)),
+            count: keys.len(),
+        });
+    }
+    out
+}
+
+/// One box per game of `system` (versions folded), favourites first then A–Z.
+/// `filter`: 0 all, 1 not installed, 2 installed.
+fn immersive_boxes(app: &App, system: &str, filter: i32) -> Vec<scene::BoxEntry> {
+    let installed = store::load_installed(&app.paths).unwrap_or_default();
+    let cfg = store::load_config(&app.paths).unwrap_or_default();
+    let favs: HashSet<&str> = cfg.favorites.iter().map(|s| s.as_str()).collect();
+    let catalog = app.catalog.borrow();
+    let accent = catalog
+        .systems
+        .iter()
+        .find(|s| s.id == system)
+        .map(|s| color_rgb(parse_color(&s.color)))
+        .unwrap_or([1.0, 0.7, 0.24]);
+    let groups = freeport_core::groups::group_visible(&catalog.projects, &app.triple, |p| {
+        p.system == system && app.visibility(p, &installed, cfg.show_windows).0
+    });
+    let mut rows: Vec<(bool, String, scene::BoxEntry)> = Vec::new();
+    for g in &groups {
+        let any_installed = g.members.iter().any(|m| installed.contains_key(&m.id));
+        if (filter == 1 && any_installed) || (filter == 2 && !any_installed) {
+            continue;
+        }
+        let p: &Project = g
+            .members
+            .iter()
+            .copied()
+            .find(|m| installed.contains_key(&m.id))
+            .unwrap_or_else(|| g.primary());
+        let title = g.title().to_string();
+        let fav = g.members.iter().any(|m| favs.contains(m.id.as_str()));
+        rows.push((
+            fav,
+            title.to_lowercase(),
+            scene::BoxEntry {
+                id: p.id.clone(),
+                title,
+                aspect: box_aspect(system),
+                depth: box_depth(system),
+                glossy: box_glossy(system),
+                accent,
+                installed: any_installed,
+                cover_path: p.box_art.as_ref().or(p.cover_url.as_ref()).map(|u| thumbs::path_for(&app.paths, u)),
+            },
+        ));
+    }
+    rows.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
+    rows.into_iter().map(|(_, _, b)| b).collect()
+}
+
+fn immersive_models_info(app: &App) -> String {
+    let dir = app.paths.data_dir.join("models");
+    let catalog = app.catalog.borrow();
+    let total = catalog.systems.len();
+    let have = catalog
+        .systems
+        .iter()
+        .filter(|s| {
+            dir.join(format!("{}.glb", s.id)).exists()
+                || dir.join(format!("{}.gltf", s.id)).exists()
+                || dir.join(&s.id).join("scene.gltf").exists()
+                || dir.join(&s.id).join("scene.glb").exists()
+        })
+        .count();
+    format!(
+        "Modelos 3D de consolas: {have} de {total} sistemas en {} (archivos <sistema>.glb; sin modelo se muestra una placa con el logo).",
+        dir.display()
+    )
+}
+
+/// Rebuilds the system list keeping the focus on the same system.
+fn immersive_refresh_systems(app: &App, win: &MainWindow) {
+    let systems = immersive_systems(app);
+    let mut sc = app.scene.borrow_mut();
+    let current = sc.current_system().map(|s| s.id.clone());
+    sc.systems = systems;
+    if let Some(id) = current {
+        if let Some(i) = sc.systems.iter().position(|s| &s.id == &id) {
+            sc.sys_target = i;
+            sc.sys_pos = sc.sys_pos.min(sc.systems.len().saturating_sub(1) as f32);
+        }
+    }
+    sc.hud_dirty = true;
+    drop(sc);
+    immersive_hud(app, win);
+}
+
+/// Fills the shelf for the focused system with the active filter.
+fn immersive_fill_shelf(app: &App, win: &MainWindow) {
+    let filter = win.get_imm_filter();
+    let sys = app.scene.borrow().current_system().map(|s| s.id.clone());
+    let Some(sys) = sys else { return };
+    let boxes = immersive_boxes(app, &sys, filter);
+    if let Some(r) = app.scene_gl.borrow_mut().as_mut() {
+        r.drop_covers();
+    }
+    let mut sc = app.scene.borrow_mut();
+    sc.boxes = boxes;
+    sc.box_target = 0;
+    sc.box_pos = 0.0;
+    sc.hud_dirty = true;
+    drop(sc);
+    immersive_hud(app, win);
+}
+
+/// Refreshes the bottom strip (title / subtitle / hint) from the scene focus.
+fn immersive_hud(app: &App, win: &MainWindow) {
+    let mut sc = app.scene.borrow_mut();
+    sc.hud_dirty = false;
+    let shelf = sc.in_shelf();
+    win.set_imm_shelf(shelf);
+    if shelf {
+        let filter = win.get_imm_filter();
+        let total = sc.boxes.len();
+        match sc.current_box() {
+            Some(b) => {
+                win.set_imm_title(b.title.clone().into());
+                let state = if b.installed { "Instalado" } else { "Disponible" };
+                win.set_imm_subtitle(
+                    format!("{state} · {} de {total}{}", sc.box_target + 1, match filter {
+                        1 => " disponibles",
+                        2 => " instalados",
+                        _ => "",
+                    })
+                    .into(),
+                );
+                win.set_imm_hint(
+                    format!("Enter: ver la caja y {} · ← → cambiar de juego · Esc: volver a las consolas · Tab: filtro", if b.installed { "jugar" } else { "instalar" }).into(),
+                );
+            }
+            None => {
+                let sys = sc.current_system().map(|s| s.name.clone()).unwrap_or_default();
+                win.set_imm_title(sys.into());
+                win.set_imm_subtitle(
+                    match filter {
+                        1 => "No queda nada por instalar aquí",
+                        2 => "Aún no tienes nada instalado de este sistema",
+                        _ => "Sin juegos",
+                    }
+                    .into(),
+                );
+                win.set_imm_hint("Tab: cambiar el filtro · Esc: volver a las consolas".into());
+            }
+        }
+    } else {
+        match sc.current_system() {
+            Some(s) => {
+                win.set_imm_title(s.name.clone().into());
+                win.set_imm_subtitle(format!("{} {}", s.count, if s.count == 1 { "juego" } else { "juegos" }).into());
+                win.set_imm_hint("← → cambiar de sistema · Enter: entrar · Esc: interfaz clásica".into());
+            }
+            None => {
+                win.set_imm_title("Freeport".into());
+                win.set_imm_subtitle("Sin sistemas que mostrar".into());
+                win.set_imm_hint("Esc: interfaz clásica".into());
+            }
+        }
+    }
+}
+
+fn open_immersive(app: &Rc<App>, win: &MainWindow) {
+    let models_dir = app.paths.data_dir.join("models");
+    let _ = std::fs::create_dir_all(&models_dir);
+    {
+        let mut sc = app.scene.borrow_mut();
+        sc.models_dir = models_dir;
+        sc.assets_gen += 1; // pick up models dropped in since last time
+        sc.phase = scene::Phase::Carousel;
+        sc.boxes.clear();
+        sc.visible = true;
+        sc.t = 0.0;
+    }
+    immersive_refresh_systems(app, win);
+    win.set_imm_filter(0);
+    win.set_immersive_visible(true);
+    win.window().request_redraw();
+    // 60 fps animation while the mode is open.
+    let weak = win.as_weak();
+    let app2 = app.clone();
+    let timer = slint::Timer::default();
+    timer.start(slint::TimerMode::Repeated, std::time::Duration::from_millis(16), move || {
+        let Some(w) = weak.upgrade() else { return };
+        let dirty = {
+            let mut sc = app2.scene.borrow_mut();
+            if !sc.visible {
+                return;
+            }
+            sc.tick(0.016);
+            sc.hud_dirty
+        };
+        if dirty {
+            immersive_hud(&app2, &w);
+        }
+        w.window().request_redraw();
+    });
+    *app.scene_timer.borrow_mut() = Some(timer);
+}
+
+fn close_immersive(app: &App, win: &MainWindow) {
+    app.scene.borrow_mut().visible = false;
+    *app.scene_timer.borrow_mut() = None;
+    if let Some(r) = app.scene_gl.borrow_mut().as_mut() {
+        r.drop_covers();
+    }
+    win.set_immersive_visible(false);
+}
+
+/// Keyboard / gamepad in the immersive mode. Buttons use the TV-mode names
+/// ("left", "a", "b", "y", …).
+fn immersive_input(app: &Rc<App>, win: &MainWindow, key: &str) {
+    if win.get_viewer3d_visible() {
+        // The box viewer is modal: B / Esc close it, A plays/installs.
+        match key {
+            "b" | "back" => win.invoke_close_viewer3d(),
+            "a" | "start" => {
+                let id = win.get_viewer3d_id();
+                if win.get_viewer3d_installed() {
+                    win.invoke_play(id);
+                } else {
+                    win.invoke_install(id);
+                }
+                win.invoke_close_viewer3d();
+            }
+            _ => {}
+        }
+        return;
+    }
+    let shelf = app.scene.borrow().in_shelf();
+    if shelf {
+        match key {
+            "left" => app.scene.borrow_mut().move_box(-1),
+            "right" => app.scene.borrow_mut().move_box(1),
+            "up" | "lb" => app.scene.borrow_mut().move_box(-5),
+            "down" | "rb" => app.scene.borrow_mut().move_box(5),
+            "home" => app.scene.borrow_mut().focus_box(0),
+            "end" => {
+                let n = app.scene.borrow().boxes.len();
+                app.scene.borrow_mut().focus_box(n.saturating_sub(1));
+            }
+            "a" | "start" => {
+                let id = app.scene.borrow().current_box().map(|b| b.id.clone());
+                if let Some(id) = id {
+                    win.invoke_open_viewer3d(id.into());
+                }
+            }
+            "b" | "back" => {
+                app.scene.borrow_mut().leave_shelf();
+                immersive_hud(app, win);
+            }
+            "y" | "x" => {
+                let f = (win.get_imm_filter() + 1) % 3;
+                win.set_imm_filter(f);
+                immersive_fill_shelf(app, win);
+            }
+            _ => {}
+        }
+    } else {
+        match key {
+            "left" => app.scene.borrow_mut().move_system(-1),
+            "right" => app.scene.borrow_mut().move_system(1),
+            "home" => app.scene.borrow_mut().focus_system(0),
+            "end" => {
+                let n = app.scene.borrow().systems.len();
+                app.scene.borrow_mut().focus_system(n.saturating_sub(1));
+            }
+            "a" | "start" => {
+                immersive_fill_shelf(app, win);
+                app.scene.borrow_mut().enter_shelf();
+                immersive_hud(app, win);
+            }
+            "b" | "back" => close_immersive(app, win),
+            _ => {}
+        }
+    }
 }
 
 impl App {
@@ -1447,6 +1760,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         chooser_mode: RefCell::new(String::new()),
         viewer3d: Default::default(),
         viewer3d_timer: RefCell::new(None),
+        scene: Default::default(),
+        scene_timer: RefCell::new(None),
+        scene_gl: Rc::new(RefCell::new(None)),
         install_error: RefCell::new(HashSet::new()),
         seen: RefCell::new(std::collections::HashMap::new()),
         ra_cache: RefCell::new(std::collections::HashMap::new()),
@@ -1467,6 +1783,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(w) = weak.upgrade() {
                         if w.get_tv_visible() {
                             tv_input(app, &w, &b);
+                        } else if w.get_immersive_visible() && !w.get_viewer3d_visible() {
+                            immersive_input(app, &w, &b);
                         }
                     }
                 }
@@ -2527,25 +2845,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ── Experimental 3D box viewer: GL overlay via the rendering notifier ──
     {
         let renderer: Rc<RefCell<Option<box3d::BoxRenderer>>> = Rc::new(RefCell::new(None));
+        let scene_gl = app.scene_gl.clone();
         let viewer = app.viewer3d.clone();
+        let scene_st = app.scene.clone();
         let weak = win.as_weak();
         let r = win.window().set_rendering_notifier(move |state, api| match state {
             slint::RenderingState::RenderingSetup => {
                 if let slint::GraphicsAPI::NativeOpenGL { get_proc_address } = api {
-                    match box3d::BoxRenderer::new(get_proc_address) {
+                    let gl = Rc::new(unsafe { glow::Context::from_loader_function_cstr(|s| get_proc_address(s)) });
+                    match box3d::BoxRenderer::new(gl.clone()) {
                         Ok(b) => *renderer.borrow_mut() = Some(b),
                         Err(e) => eprintln!("[freeport] 3D: {e}"),
+                    }
+                    match scene::SceneRenderer::new(gl, LOGOS) {
+                        Ok(r) => *scene_gl.borrow_mut() = Some(r),
+                        Err(e) => eprintln!("[freeport] 3D (escena): {e}"),
                     }
                 }
             }
             slint::RenderingState::AfterRendering => {
-                let mut st = viewer.borrow_mut();
-                if !st.visible {
-                    return;
-                }
                 let Some(w) = weak.upgrade() else { return };
                 let scale = w.window().scale_factor();
                 let size = w.window().size();
+                let mut st = viewer.borrow_mut();
+                // Immersive scene first (the box viewer may open on top of it).
+                {
+                    let mut sc = scene_st.borrow_mut();
+                    if sc.visible && !st.visible {
+                        sc.region = (
+                            w.get_imm_x() * scale,
+                            w.get_imm_y() * scale,
+                            w.get_imm_w() * scale,
+                            w.get_imm_h() * scale,
+                        );
+                        if let Some(r) = scene_gl.borrow_mut().as_mut() {
+                            r.render(&mut sc, size.width as f32, size.height as f32);
+                        }
+                    }
+                }
+                if !st.visible {
+                    return;
+                }
                 st.region = (
                     w.get_v3_x() * scale,
                     w.get_v3_y() * scale,
@@ -2558,6 +2898,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             slint::RenderingState::RenderingTeardown => {
                 *renderer.borrow_mut() = None;
+                *scene_gl.borrow_mut() = None;
             }
             _ => {}
         });
@@ -2683,6 +3024,119 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     if let Some(id) = std::env::var("FREEPORT_DEBUG_3D").ok().filter(|s| !s.is_empty()) {
         win.invoke_open_viewer3d(id.into()); // dev aid: open the 3D viewer for a game
+    }
+
+    // ── Immersive 3D mode (opt-in) ──────────────────────────────────────
+    win.on_open_immersive({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            if let Some(w) = weak.upgrade() {
+                open_immersive(&app, &w);
+            }
+        }
+    });
+    win.on_close_immersive({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            if let Some(w) = weak.upgrade() {
+                close_immersive(&app, &w);
+            }
+        }
+    });
+    win.on_immersive_input({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |k| {
+            if let Some(w) = weak.upgrade() {
+                immersive_input(&app, &w, k.as_str());
+            }
+        }
+    });
+    win.on_immersive_click({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |x, y| {
+            let Some(w) = weak.upgrade() else { return };
+            let scale = w.window().scale_factor();
+            let px = (w.get_imm_x() + x) * scale;
+            let py = (w.get_imm_y() + y) * scale;
+            let hit = scene::pick(&app.scene.borrow(), px, py);
+            match hit {
+                scene::Pick::System(i) => {
+                    let focused = app.scene.borrow().sys_target == i;
+                    if focused {
+                        immersive_input(&app, &w, "a");
+                    } else {
+                        app.scene.borrow_mut().focus_system(i);
+                    }
+                }
+                scene::Pick::Box(j) => {
+                    let focused = app.scene.borrow().box_target == j;
+                    if focused {
+                        immersive_input(&app, &w, "a");
+                    } else {
+                        app.scene.borrow_mut().focus_box(j);
+                    }
+                }
+                scene::Pick::None => {}
+            }
+        }
+    });
+    win.on_immersive_scroll({
+        let app = app.clone();
+        move |delta| {
+            let step = if delta > 0.0 { -1 } else if delta < 0.0 { 1 } else { 0 };
+            let mut sc = app.scene.borrow_mut();
+            if sc.in_shelf() {
+                sc.move_box(step);
+            } else {
+                sc.move_system(step);
+            }
+        }
+    });
+    win.on_immersive_filter({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |f| {
+            if let Some(w) = weak.upgrade() {
+                w.set_imm_filter(f);
+                immersive_fill_shelf(&app, &w);
+            }
+        }
+    });
+    win.on_toggle_immersive({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |v| {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.immersive = v;
+                let _ = store::save_config(&app.paths, &c);
+            }
+            if let Some(w) = weak.upgrade() {
+                w.set_immersive_enabled(v);
+                w.set_imm_models_info(immersive_models_info(&app).into());
+            }
+        }
+    });
+    {
+        let cfg = store::load_config(&app.paths).unwrap_or_default();
+        win.set_immersive_enabled(cfg.immersive);
+        win.set_imm_models_info(immersive_models_info(&app).into());
+        let dbg = std::env::var("FREEPORT_DEBUG_IMMERSIVE").ok();
+        if cfg.immersive || dbg.is_some() {
+            open_immersive(&app, &win); // start in the 3D interface (or dev aid)
+        }
+        // dev aid: FREEPORT_DEBUG_IMMERSIVE=<system id> lands straight on its shelf.
+        if let Some(sys) = dbg.filter(|v| v.len() > 1) {
+            let idx = app.scene.borrow().systems.iter().position(|s| s.id == sys);
+            if let Some(i) = idx {
+                app.scene.borrow_mut().focus_system(i);
+                app.scene.borrow_mut().sys_pos = i as f32;
+                immersive_input(&app, &win, "a");
+            }
+        }
     }
 
     if let Some(sz) = std::env::var("FREEPORT_DEBUG_SIZE").ok() {

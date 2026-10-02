@@ -101,6 +101,24 @@ component Cover inherits Rectangle {
 }
 
 // Header sort selector chip.
+component ImmChip inherits Rectangle {
+    in property <string> label;
+    in property <int> idx;
+    in property <int> active;
+    callback pick(int);
+    height: 26px;
+    border-radius: 13px;
+    background: root.active == root.idx ? #ffb23e : #1c1f28;
+    border-width: 1px; border-color: root.active == root.idx ? #ffb23e : #2b2f3a;
+    animate background { duration: 120ms; easing: ease-out; }
+    HorizontalLayout {
+        padding-left: 12px; padding-right: 12px;
+        Text { text: root.label; color: root.active == root.idx ? #0b0c10 : #ffffffaa;
+               font-size: 12px; font-weight: 700; vertical-alignment: center; }
+    }
+    TouchArea { mouse-cursor: pointer; clicked => { root.pick(root.idx); } }
+}
+
 component SortChip inherits Rectangle {
     in property <string> label;
     in property <string> mode;
@@ -415,6 +433,27 @@ export component MainWindow inherits Window {
     callback close-viewer3d();
     callback viewer3d-drag(length, length);
     callback viewer3d-release();
+    // Immersive 3D mode (opt-in): console carousel + cover-flow shelves,
+    // painted by OpenGL inside `imm-area`; Slint draws the HUD strips.
+    in-out property <bool> immersive-enabled;
+    in-out property <bool> immersive-visible;
+    in property <string> imm-title;
+    in property <string> imm-subtitle;
+    in property <string> imm-hint;
+    in property <bool> imm-shelf;
+    in-out property <int> imm-filter;        // 0 todos, 1 disponibles, 2 instalados
+    in property <string> imm-models-info;
+    out property <length> imm-x: imm-area.absolute-position.x;
+    out property <length> imm-y: imm-area.absolute-position.y;
+    out property <length> imm-w: imm-area.width;
+    out property <length> imm-h: imm-area.height;
+    callback open-immersive();
+    callback close-immersive();
+    callback immersive-input(string);
+    callback immersive-click(length, length);
+    callback immersive-scroll(float);
+    callback immersive-filter(int);
+    callback toggle-immersive(bool);
     in-out property <string> rail-tip;        // window-level tooltip for the icon rail
     in-out property <length> rail-tip-y;
     in-out property <string> current-runner-label;
@@ -537,6 +576,9 @@ export component MainWindow inherits Window {
                           clicked => { root.settings-visible = false; root.library-tab = true; root.active-system = ""; root.refresh(); }
                           hover(h) => { root.rail-tip = h ? "Mi biblioteca" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
                 Rectangle { vertical-stretch: 1; }
+                if root.immersive-enabled: RailBtn { icon: @image-url("../assets/icons/cube.svg"); active: false;
+                          clicked => { root.open-immersive(); }
+                          hover(h) => { root.rail-tip = h ? "Modo 3D" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
                 RailBtn { icon: @image-url("../assets/icons/tv.svg"); active: false;
                           clicked => { root.open-tv(); }
                           hover(h) => { root.rail-tip = h ? "Modo TV" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
@@ -740,6 +782,17 @@ export component MainWindow inherits Window {
                     spacing: 10px;
                     CheckBox { checked <=> root.crt-visible; toggled => { root.toggle-crt(root.crt-visible); } }
                     Text { text: "Efecto CRT (scanlines retro)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                }
+                VerticalLayout {
+                    spacing: 4px;
+                    HorizontalLayout {
+                        spacing: 10px;
+                        CheckBox { checked <=> root.immersive-enabled; toggled => { root.toggle-immersive(root.immersive-enabled); } }
+                        Text { text: "Interfaz 3D inmersiva (experimental)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
+                    }
+                    Text { text: "Carrusel de consolas y estanterías de cajas en 3D. Se abre desde el icono ⬡ del lateral y al arrancar. ← → cambian de sistema o de juego, Enter entra, Esc vuelve, Tab filtra.";
+                           color: #ffffff77; font-size: 11px; wrap: word-wrap; }
+                    if root.immersive-enabled: Text { text: root.imm-models-info; color: #ffffff77; font-size: 11px; wrap: word-wrap; }
                 }
                 HorizontalLayout {
                     spacing: 8px;
@@ -1410,6 +1463,77 @@ export component MainWindow inherits Window {
         }
     }
 
+    // ── Immersive 3D mode (opt-in) ───────────────────────
+    Rectangle {
+        visible: root.immersive-visible;
+        width: 100%; height: 100%;
+        background: #0e1016;
+        VerticalLayout {
+            // Top strip: brand, filters, exit. Colour matches the GL gradient top.
+            Rectangle {
+                height: 56px;
+                background: #0e1016;
+                HorizontalLayout {
+                    padding-left: 20px; padding-right: 16px; spacing: 10px;
+                    Image { source: @image-url("../assets/logo.svg"); width: 24px; height: 24px; y: 16px; }
+                    Text { text: "Freeport"; color: white; font-size: 15px; font-weight: 900; vertical-alignment: center; }
+                    Text { text: "Modo 3D"; color: #ffffff55; font-size: 12px; vertical-alignment: center; }
+                    Rectangle { horizontal-stretch: 1; }
+                    if root.imm-shelf: HorizontalLayout {
+                        spacing: 6px; padding-top: 15px; padding-bottom: 15px;
+                        ImmChip { label: "Todos"; idx: 0; active: root.imm-filter; pick(i) => { root.immersive-filter(i); } }
+                        ImmChip { label: "Disponibles"; idx: 1; active: root.imm-filter; pick(i) => { root.immersive-filter(i); } }
+                        ImmChip { label: "Instalados"; idx: 2; active: root.imm-filter; pick(i) => { root.immersive-filter(i); } }
+                    }
+                    Rectangle { width: 8px; }
+                    VerticalLayout { alignment: center;
+                        Btn { label: "Interfaz clásica"; bg: #1c1f28; fg: white; clicked => { root.close-immersive(); } } }
+                }
+            }
+            imm-area := Rectangle {
+                vertical-stretch: 1;
+                TouchArea {
+                    clicked => { root.immersive-click(self.mouse-x, self.mouse-y); }
+                    scroll-event(e) => { root.immersive-scroll((e.delta-y + e.delta-x) / 1px); return EventResult.accept; }
+                }
+            }
+            // Bottom strip: what is in focus. Colour matches the GL gradient bottom.
+            Rectangle {
+                height: 108px;
+                background: #07080c;
+                VerticalLayout {
+                    alignment: center; spacing: 5px;
+                    padding-left: 24px; padding-right: 24px;
+                    Rectangle { min-width: 0; height: 32px;
+                        Text { text: root.imm-title; color: white; font-size: 26px; font-weight: 900; horizontal-alignment: center;
+                               vertical-alignment: center; width: 100%; height: 100%; overflow: elide; } }
+                    Rectangle { min-width: 0; height: 18px;
+                        Text { text: root.imm-subtitle; color: #ffffffaa; font-size: 13px; horizontal-alignment: center;
+                               vertical-alignment: center; width: 100%; height: 100%; overflow: elide; } }
+                    Rectangle { min-width: 0; height: 16px;
+                        Text { text: root.imm-hint; color: #ffffff55; font-size: 11px; horizontal-alignment: center;
+                               vertical-alignment: center; width: 100%; height: 100%; overflow: elide; } }
+                }
+            }
+        }
+    }
+    // Keyboard for the immersive mode (grabs focus while it is open).
+    if root.immersive-visible: FocusScope {
+        width: 0; height: 0;
+        init => { self.focus(); }
+        key-pressed(e) => {
+            if (e.text == Key.LeftArrow) { root.immersive-input("left"); return EventResult.accept; }
+            if (e.text == Key.RightArrow) { root.immersive-input("right"); return EventResult.accept; }
+            if (e.text == Key.UpArrow) { root.immersive-input("up"); return EventResult.accept; }
+            if (e.text == Key.DownArrow) { root.immersive-input("down"); return EventResult.accept; }
+            if (e.text == Key.Return || e.text == " ") { root.immersive-input("a"); return EventResult.accept; }
+            if (e.text == Key.Escape || e.text == Key.Backspace) { root.immersive-input("b"); return EventResult.accept; }
+            if (e.text == Key.Tab) { root.immersive-input("y"); return EventResult.accept; }
+            if (e.text == Key.Home) { root.immersive-input("home"); return EventResult.accept; }
+            if (e.text == Key.End) { root.immersive-input("end"); return EventResult.accept; }
+            return EventResult.reject;
+        }
+    }
     // ── Settings overlay ─────────────────────────────────
     // ── Icon rail tooltip (window level, above the sidebar) ──
     if root.rail-tip != "": Rectangle {

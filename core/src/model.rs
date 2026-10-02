@@ -279,6 +279,10 @@ pub struct Config {
     /// Retro CRT screen effect (scanlines + vignette).
     #[serde(default)]
     pub crt: bool,
+    /// Opt-in immersive 3D interface (console carousel + 3D shelves). Off by
+    /// default; the classic storefront stays the main UI.
+    #[serde(default)]
+    pub immersive: bool,
     /// RetroAchievements account (managed centrally; handed to the RA mod).
     #[serde(default)]
     pub ra_user: Option<String>,

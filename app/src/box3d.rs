@@ -35,10 +35,10 @@ pub struct ViewerState {
 
 pub type Shared = Rc<RefCell<ViewerState>>;
 
-struct Tex(glow::Texture);
+pub(crate) struct Tex(pub glow::Texture);
 
 pub struct BoxRenderer {
-    gl: glow::Context,
+    gl: Rc<glow::Context>,
     program: glow::Program,
     vbo: glow::Buffer,
     cover: Option<Tex>,
@@ -48,7 +48,7 @@ pub struct BoxRenderer {
     glow_vbo: glow::Buffer,
 }
 
-const VS: &str = r#"
+pub(crate) const VS: &str = r#"
 attribute vec3 a_pos; attribute vec3 a_nrm; attribute vec2 a_uv;
 uniform mat4 u_mvp; uniform mat4 u_model;
 varying vec3 v_nrm; varying vec2 v_uv; varying vec3 v_pos;
@@ -59,7 +59,7 @@ void main() {
   gl_Position = u_mvp * vec4(a_pos, 1.0);
 }"#;
 
-const FS: &str = r#"
+pub(crate) const FS: &str = r#"
 #ifdef GL_ES
 precision mediump float;
 #endif
@@ -92,7 +92,7 @@ void main() {
   gl_FragColor = vec4(u_color * a, a);
 }"#;
 
-fn compile(gl: &glow::Context, vs: &str, fs: &str) -> Result<glow::Program, String> {
+pub(crate) fn compile(gl: &glow::Context, vs: &str, fs: &str) -> Result<glow::Program, String> {
     unsafe {
         let program = gl.create_program()?;
         for (kind, src) in [(glow::VERTEX_SHADER, vs), (glow::FRAGMENT_SHADER, fs)] {
@@ -113,7 +113,7 @@ fn compile(gl: &glow::Context, vs: &str, fs: &str) -> Result<glow::Program, Stri
 }
 
 /// Cube with per-face normals/uvs; width `w`, height 1, depth `d` (centered).
-fn cube(w: f32, d: f32) -> Vec<f32> {
+pub(crate) fn cube(w: f32, d: f32) -> Vec<f32> {
     let (x, y, z) = (w / 2.0, 0.5, d / 2.0);
     // Each face: 2 triangles × (pos3, nrm3, uv2); uv flipped so textures are upright.
     let face = |p: [[f32; 3]; 4], n: [f32; 3]| -> Vec<f32> {
@@ -137,7 +137,7 @@ fn cube(w: f32, d: f32) -> Vec<f32> {
     v
 }
 
-fn upload(gl: &glow::Context, w: u32, h: u32, rgba: &[u8]) -> Result<Tex, String> {
+pub(crate) fn upload(gl: &glow::Context, w: u32, h: u32, rgba: &[u8]) -> Result<Tex, String> {
     unsafe {
         let t = gl.create_texture()?;
         gl.bind_texture(glow::TEXTURE_2D, Some(t));
@@ -167,9 +167,8 @@ fn spine_pixels() -> (u32, u32, Vec<u8>) {
 }
 
 impl BoxRenderer {
-    pub fn new(get_proc_address: &dyn Fn(&std::ffi::CStr) -> *const std::ffi::c_void) -> Result<Self, String> {
+    pub fn new(gl: Rc<glow::Context>) -> Result<Self, String> {
         unsafe {
-            let gl = glow::Context::from_loader_function_cstr(|s| get_proc_address(s));
             let program = compile(&gl, VS, FS)?;
             let glow_prog = compile(&gl, GLOW_VS, GLOW_FS)?;
             let vbo = gl.create_buffer()?;
@@ -288,13 +287,13 @@ impl BoxRenderer {
     }
 }
 
-fn bytemuck_cast(v: &[f32]) -> &[u8] {
+pub(crate) fn bytemuck_cast(v: &[f32]) -> &[u8] {
     unsafe { std::slice::from_raw_parts(v.as_ptr() as *const u8, v.len() * 4) }
 }
 
 // ---- tiny column-major 4x4 helpers ----
-type M4 = [f32; 16];
-fn mul(a: M4, b: M4) -> M4 {
+pub(crate) type M4 = [f32; 16];
+pub(crate) fn mul(a: M4, b: M4) -> M4 {
     let mut r = [0.0; 16];
     for c in 0..4 {
         for rr in 0..4 {
@@ -303,18 +302,18 @@ fn mul(a: M4, b: M4) -> M4 {
     }
     r
 }
-fn translate(x: f32, y: f32, z: f32) -> M4 {
+pub(crate) fn translate(x: f32, y: f32, z: f32) -> M4 {
     [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, x, y, z, 1.0]
 }
-fn rot_y(a: f32) -> M4 {
+pub(crate) fn rot_y(a: f32) -> M4 {
     let (s, c) = a.sin_cos();
     [c, 0.0, -s, 0.0, 0.0, 1.0, 0.0, 0.0, s, 0.0, c, 0.0, 0.0, 0.0, 0.0, 1.0]
 }
-fn rot_x(a: f32) -> M4 {
+pub(crate) fn rot_x(a: f32) -> M4 {
     let (s, c) = a.sin_cos();
     [1.0, 0.0, 0.0, 0.0, 0.0, c, s, 0.0, 0.0, -s, c, 0.0, 0.0, 0.0, 0.0, 1.0]
 }
-fn perspective(fovy: f32, aspect: f32, near: f32, far: f32) -> M4 {
+pub(crate) fn perspective(fovy: f32, aspect: f32, near: f32, far: f32) -> M4 {
     let f = 1.0 / (fovy / 2.0).tan();
     let nf = 1.0 / (near - far);
     [f / aspect, 0.0, 0.0, 0.0, 0.0, f, 0.0, 0.0, 0.0, 0.0, (far + near) * nf, -1.0, 0.0, 0.0, 2.0 * far * near * nf, 0.0]

@@ -397,12 +397,28 @@ fn rebuild(app: &App, win: &MainWindow) {
     let mut sys_rows: Vec<SysRow> = Vec::new();
     let mut settings_rows: Vec<SysRow> = Vec::new();
     for s in &catalog.systems {
-        // Experimental ports of this system not shown right now (not installed, switch off).
-        let exp_hidden = catalog
-            .projects
-            .iter()
-            .filter(|p| p.system == s.id && p.is_experimental() && !installed.contains_key(&p.id) && !app.experimental_allowed(&s.id))
-            .count();
+        // Experimental ports of this system that the switch would actually bring
+        // on screen: not installed, switch off, and not just another version of a
+        // game that already has a visible (stable or installed) card. In the
+        // library nothing is ever hidden (installed games always show).
+        let exp_hidden = if library || app.experimental_allowed(&s.id) {
+            0
+        } else {
+            let visible_keys: HashSet<&str> = catalog
+                .projects
+                .iter()
+                .filter(|p| p.system == s.id && (!p.is_experimental() || installed.contains_key(&p.id)))
+                .filter(|p| app.visibility(p, &installed, show_windows).0)
+                .map(|p| p.game_key())
+                .collect();
+            let mut keys: HashSet<&str> = HashSet::new();
+            for p in catalog.projects.iter().filter(|p| p.system == s.id && p.is_experimental() && !installed.contains_key(&p.id)) {
+                if !visible_keys.contains(p.game_key()) {
+                    keys.insert(p.game_key());
+                }
+            }
+            keys.len()
+        };
         let total_games: HashSet<&str> = catalog.projects.iter().filter(|p| p.system == s.id).map(|p| p.game_key()).collect();
         if !total_games.is_empty() {
             let logo = app.logos.get(&s.id).cloned();
@@ -418,7 +434,8 @@ fn rebuild(app: &App, win: &MainWindow) {
             });
         }
         if active == s.id {
-            win.set_active_exp_on(app.experimental_allowed(&s.id));
+            // Library: the toggle has no effect there, so don't show it.
+            win.set_active_exp_on(!library && app.experimental_allowed(&s.id));
             win.set_active_exp_hidden(exp_hidden as i32);
         }
         let mut keys: HashSet<&str> = HashSet::new();

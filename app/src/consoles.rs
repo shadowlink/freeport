@@ -46,6 +46,12 @@ impl Canvas {
             }
         }
     }
+    pub fn frame(&mut self, x: i32, y: i32, w: i32, h: i32, color: u32) {
+        self.rect(x, y, w, 1, color);
+        self.rect(x, y + h - 1, w, 1, color);
+        self.rect(x, y, 1, h, color);
+        self.rect(x + w - 1, y, 1, h, color);
+    }
     pub fn disc(&mut self, cx: i32, cy: i32, r: i32, color: u32) {
         for yy in -r..=r {
             for xx in -r..=r {
@@ -480,54 +486,68 @@ fn cz(d: f32, y_from_top: f32) -> f32 {
 }
 
 fn n64(b: &mut Builder) {
+    // From the reference photo: a flat lower tray that sticks out at the
+    // front (four grey ports + logo on its face), and a set-back upper shell
+    // with a very broad hump, the cartridge slot at the back, the Expansion
+    // Pak lid at the front centre, power slider left and reset right.
     let (w, d) = (26.0f32, 19.0f32);
-    let body = 0x3f3f48;
-    let dark = 0x2b2b32;
-    let light = 0x5a5a64;
-    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 3.5);
+    let body = 0x3a3a40;
+    let dark = 0x26262b;
+    let light = 0x8e8e94;
+    let inside = |x: f32, z: f32| rounded_rect(x, z, w, d, 2.6);
+    // Upper shell footprint: 1 cm in from the sides/back, 3.5 cm from the front.
+    let shell_in = |x: f32, z: f32| rounded_rect(x, z + 1.25, 24.0, 16.5, 3.0);
+    let core_in = |x: f32, z: f32| rounded_rect(x, z + 1.25, 22.4, 14.9, 2.4);
     let height = |x: f32, z: f32| {
-        let zn = (z + d / 2.0) / d; // 0 back → 1 front
-        let base = 4.4 - 1.0 * zn; // body slopes down towards the front
-        let lip = 1.0 - 0.55 * smoothstep(0.76, 1.0, zn); // rounded front edge
-        let hx = 1.0 - smoothstep(5.0, 8.8, x.abs()); // wide central hump
-        let hump = 3.2 * hx * (1.0 - 0.45 * zn);
-        let ear = 0.7 * smoothstep(8.5, 12.0, x.abs()) * (1.0 - zn); // raised outer wings at the back
-        let mut h = (base + hump + ear) * lip;
-        if x.abs() < 3.9 && z > -3.8 && z < -2.0 {
-            h -= 1.4; // cartridge slot
+        let mut h = 2.6; // tray
+        if shell_in(x, z) {
+            h += if core_in(x, z) { 2.4 } else { 1.6 }; // shell with a chamfered rim
+            let (nx, nz) = (x / 10.5, (z + 2.0) / 8.0); // broad hump, slightly back
+            let r = (nx * nx + nz * nz).sqrt();
+            h += 2.4 * (1.0 - smoothstep(0.5, 1.05, r));
+            h += plate(x, z, -4.0, 1.0, 4.0, 5.5, 0.25); // Expansion Pak lid
+            if x.abs() < 4.3 && z > -5.6 && z < -3.6 {
+                h -= 1.5; // cartridge slot
+            }
+            h += plate(x, z, -10.5, -1.0, -7.5, 1.5, -0.3); // power slider track
+            h += plate(x, z, 7.5, 1.0, 10.0, 3.5, 0.3); // reset button
         }
         h
     };
     let sh = shell(w, d, 0.5, &inside, &height);
     let hmax = sh.hmax;
     let mut top = Canvas::for_face(w, d, body);
-    top.vents_h(t(1.5), t(3.0), t(5.0), 10, 2, dark); // wing vents
-    top.vents_h(t(w - 6.5), t(3.0), t(5.0), 10, 2, dark);
-    top.slot(t(1.8), t(12.6), t(3.2), t(1.4), light, dark); // power switch
-    top.slot(t(1.8), t(15.0), t(2.4), t(1.2), light, dark); // reset
-    top.px(t(5.6), t(13.2), LED_RED);
-    top.slot(t(8.8), t(5.0), t(8.4), t(2.2), light, HOLE); // cartridge slot frame
-    top.vents_h(t(9.4), t(9.0), t(2.0), 6, 2, dark); // hump side slits
-    top.vents_h(t(w - 11.4), t(9.0), t(2.0), 6, 2, dark);
-    top.rect(t(11.2), t(16.2), t(3.6), 2, light); // logo plate
+    top.slot(t(8.4), t(3.9), t(9.2), t(2.0), light, HOLE); // cartridge slot with grey frame
+    top.rect(t(9.0), t(10.5), t(8.0), t(4.5), 0x404046); // Expansion Pak lid
+    top.frame(t(9.0), t(10.5), t(8.0), t(4.5), dark);
+    top.rect(t(10.5), t(12.4), t(5.0), 1, light); // "Nintendo 64" on the lid
+    top.rect(t(2.5), t(8.5), t(3.0), t(2.5), dark); // power track
+    top.rect(t(3.0), t(9.0), t(2.0), t(1.1), light); // slider
+    top.rect(t(20.5), t(10.5), t(2.5), t(2.5), dark); // reset
+    top.frame(t(20.5), t(10.5), t(2.5), t(2.5), 0x55555c);
+    top.px(t(6.2), t(9.0), LED_RED);
     let mut front = Canvas::for_face(w, hmax, body);
-    for x in [5.5f32, 9.5, 16.5, 20.5] {
-        front.port(t(x), t(hmax - 1.5), t(1.25), RIM, HOLE);
+    let py = t(hmax - 1.3);
+    for x in [4.5f32, 8.2, 17.8, 21.5] {
+        front.disc(t(x), py, t(1.1), light);
+        front.disc(t(x), py, t(0.7), 0x6a6a70);
+        front.px(t(x) - 1, py, HOLE);
+        front.px(t(x) + 1, py, HOLE);
+        front.px(t(x), py + 1, HOLE);
     }
-    let (lx, ly) = (t(13.0) - 2, t(hmax - 3.2));
+    front.rect(t(11.0), t(hmax - 2.2), t(4.0), 1, light); // NINTENDO 64
+    let (lx, ly) = (t(13.0) - 2, t(hmax - 1.6));
     front.rect(lx, ly, 2, 2, 0xe04040);
     front.rect(lx + 2, ly, 2, 2, 0x4fa64f);
     front.rect(lx, ly + 2, 2, 2, 0x3f6fe0);
     front.rect(lx + 2, ly + 2, 2, 2, 0xf0c040);
-    let mut left = Canvas::for_face(d, hmax, body);
-    left.vents_v(t(2.0), t(hmax - 3.4), t(2.0), 10, 2, dark);
-    let mut right = Canvas::for_face(d, hmax, body);
-    right.vents_v(t(d - 2.0 - 9.0), t(hmax - 3.4), t(2.0), 10, 2, dark);
-    b.block_skins(body, sh, vec![(TOP, top), (FRONT, front), (LEFT, left), (RIGHT, right)]);
+    let mut back = Canvas::for_face(w, hmax, body);
+    back.vents_v(t(3.0), t(hmax - 2.3), t(1.6), 30, 2, dark);
+    b.block_skins(body, sh, vec![(TOP, top), (FRONT, front), (BACK, back)]);
     // Cartridge sitting in the slot.
-    let cart = block(0.0, 5.3, -2.9, 7.4, 1.5, 7.0, 1.3, 2.8);
-    let mut cfront = Canvas::for_face(7.4, 2.8, 0x8d8d93);
-    cfront.rect(1, 1, t(7.4) - 2, t(2.8) - 2, 0xc9392f);
+    let cart = block(0.0, 6.0, -4.6, 7.4, 1.6, 7.0, 1.4, 2.6);
+    let mut cfront = Canvas::for_face(7.4, 2.6, 0x8d8d93);
+    cfront.rect(1, 1, t(7.4) - 2, t(2.6) - 2, 0xc9392f);
     cfront.rect(2, 2, t(7.4) - 4, 1, 0xf0e6c0);
     b.block_skins(0x8d8d93, cart, vec![(FRONT, cfront)]);
 }

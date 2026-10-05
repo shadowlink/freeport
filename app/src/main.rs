@@ -78,6 +78,7 @@ fn fmt_ago(epoch: i64) -> String {
 const LOGOS: &[(&str, &[u8])] = &[
     ("3ds", include_bytes!("../assets/logos/3ds.svg")),
     ("amiga", include_bytes!("../assets/logos/amiga.svg")),
+    ("arcade", include_bytes!("../assets/logos/arcade.svg")),
     ("dc", include_bytes!("../assets/logos/dc.svg")),
     ("gb", include_bytes!("../assets/logos/gb.svg")),
     ("gba", include_bytes!("../assets/logos/gba.svg")),
@@ -245,7 +246,7 @@ fn box_aspect(system: &str) -> f32 {
         "psx" | "gb" | "gba" | "dc" => 1.0,
         "nds" => 1.11,
         "3ds" => 1.14,
-        "gc" | "wii" | "ps2" | "xbox" => 0.71,
+        "gc" | "wii" | "ps2" | "xbox" | "arcade" => 0.71,
         "psp" => 0.58,
         _ => 0.667,
     }
@@ -3127,7 +3128,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_immersive_enabled(cfg.immersive);
         win.set_imm_models_info(immersive_models_info(&app).into());
         let dbg = std::env::var("FREEPORT_DEBUG_IMMERSIVE").ok();
-        if cfg.immersive || dbg.is_some() {
+        // dev aid: FREEPORT_DEBUG_CLASSIC=1 starts in the classic UI regardless.
+        if (cfg.immersive && std::env::var_os("FREEPORT_DEBUG_CLASSIC").is_none()) || dbg.is_some() {
             open_immersive(&app, &win); // start in the 3D interface (or dev aid)
         }
         // dev aid: FREEPORT_DEBUG_IMMERSIVE=<system id> lands straight on its

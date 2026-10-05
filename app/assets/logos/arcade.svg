@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <g fill="#ffffff">
+    <!-- joystick: ball, shaft, base -->
+    <circle cx="90" cy="48" r="30"/>
+    <rect x="80" y="70" width="20" height="60" rx="6"/>
+    <path d="M30 128h120c14 0 24 10 24 22v10c0 8-6 14-14 14H20c-8 0-14-6-14-14v-10c0-12 10-22 24-22z"/>
+    <!-- two buttons -->
+    <circle cx="206" cy="150" r="16"/>
+    <circle cx="248" cy="138" r="16"/>
+  </g>
+  <text x="630" y="150" font-family="Arial, Helvetica, sans-serif" font-size="112" font-weight="900" fill="#ffffff" text-anchor="end" letter-spacing="6">ARCADE</text>
+</svg>

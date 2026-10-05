@@ -853,7 +853,7 @@ export component MainWindow inherits Window {
                     padding-bottom: 6px;
                     spacing: 10px;
                     Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
-                    Text { text: "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
+                    Text { text: root.header-count == 1 ? "1 juego" : "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
                     Rectangle { horizontal-stretch: 1; }
                     if root.active-system != "" && (root.active-exp-hidden > 0 || root.active-exp-on): Rectangle {
                         height: 28px; width: hx-l.preferred-width; border-radius: 8px;

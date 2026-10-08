@@ -92,6 +92,7 @@ const LOGOS: &[(&str, &[u8])] = &[
     ("psp", include_bytes!("../assets/logos/psp.svg")),
     ("psx", include_bytes!("../assets/logos/psx.svg")),
     ("wii", include_bytes!("../assets/logos/wii.svg")),
+    ("wiiu", include_bytes!("../assets/logos/wiiu.svg")),
     ("x360", include_bytes!("../assets/logos/x360.svg")),
     ("xbox", include_bytes!("../assets/logos/xbox.svg")),
 ];
@@ -247,7 +248,7 @@ fn box_aspect(system: &str) -> f32 {
         "psx" | "gb" | "gba" | "dc" => 1.0,
         "nds" => 1.11,
         "3ds" => 1.14,
-        "gc" | "wii" | "ps2" | "xbox" | "arcade" | "ps4" => 0.71,
+        "gc" | "wii" | "wiiu" | "ps2" | "xbox" | "arcade" | "ps4" => 0.71,
         "psp" => 0.58,
         _ => 0.667,
     }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <g fill="#ffffff">
+    <!-- W -->
+    <path d="M20 40h42l24 86 26-86h32l26 86 24-86h42l-46 130h-38l-24-80-24 80h-38z"/>
+    <!-- i i with dots -->
+    <rect x="262" y="78" width="30" height="92" rx="4"/><circle cx="277" cy="50" r="17"/>
+    <rect x="312" y="78" width="30" height="92" rx="4"/><circle cx="327" cy="50" r="17"/>
+    <!-- U in a rounded square -->
+    <rect x="392" y="30" width="228" height="140" rx="26" fill="none" stroke="#ffffff" stroke-width="14"/>
+    <path d="M438 60h36v62c0 18 12 28 32 28s32-10 32-28V60h36v64c0 36-28 56-68 56s-68-20-68-56z"/>
+  </g>
+</svg>

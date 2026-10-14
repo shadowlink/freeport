@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
+  <g fill="#ffffff">
+    <!-- Switch mark: left Joy-Con (outlined, ring) + right Joy-Con (solid, dot) -->
+    <g transform="translate(24,36) scale(0.8) translate(-28,-20)">
+      <path d="M78 20h40v160H78c-30 0-50-20-50-50V70c0-30 20-50 50-50zm0 18c-19 0-32 13-32 32v60c0 19 13 32 32 32h22V38z"/>
+      <circle cx="80" cy="66" r="13"/>
+      <path d="M132 20h32c30 0 50 20 50 50v60c0 30-20 50-50 50h-32z"/>
+      <circle cx="164" cy="132" r="13" fill="#e60012"/>
+    </g>
+    <!-- S -->
+    <rect x="222" y="45" width="54" height="19"/><rect x="222" y="45" width="19" height="48"/>
+    <rect x="222" y="90" width="54" height="19"/><rect x="257" y="90" width="19" height="65"/>
+    <rect x="222" y="136" width="54" height="19"/>
+    <!-- W -->
+    <path d="M288 45h16l9 70 11-70h14l11 70 9-70h16l-20 110h-18l-12-62-12 62h-18z"/>
+    <!-- I -->
+    <rect x="386" y="45" width="19" height="110"/>
+    <!-- T -->
+    <rect x="420" y="45" width="54" height="19"/><rect x="437" y="45" width="19" height="110"/>
+    <!-- C -->
+    <rect x="490" y="45" width="54" height="19"/><rect x="490" y="45" width="19" height="110"/>
+    <rect x="490" y="136" width="54" height="19"/>
+    <!-- H -->
+    <rect x="560" y="45" width="19" height="110"/><rect x="602" y="45" width="19" height="110"/>
+    <rect x="560" y="90" width="61" height="19"/>
+  </g>
+</svg>

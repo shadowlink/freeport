@@ -123,28 +123,6 @@ Freeport en `~/.config/sunshine/apps.json` (con backup) con el comando
 `<AppImage> --tv`. Reinicia Sunshine y aparecerá en Moonlight; al abrirlo por
 streaming arranca directo en Modo TV y se maneja con el mando del cliente.
 
-## Modo 3D inmersivo (opcional)
-
-Interfaz alternativa "de videojuego", desactivada por defecto: se activa en
-**Configuración → Interfaz 3D inmersiva** y entonces la app arranca en ella (y
-aparece el icono ⬡ en el lateral para entrar). Un carrusel de consolas flotantes
-(← →), Enter abre la estantería del sistema con las cajas en 3D (cover-flow),
-Enter sobre una caja la trae al frente (el visor 3D) con el botón grande de
-jugar/instalar; Esc vuelve; Tab filtra Todos / Disponibles / Instalados. Funciona
-con teclado, ratón (clic y rueda) y mando.
-
-Las 15 consolas están modeladas en low-poly dentro de la app
-(`app/src/consoles.rs`: mallas de relieve a proporciones reales (joroba, alas, tapas, botones) con
-texturas pixel art pintadas por código: rejillas, puertos, botones, logos),
-así que no hace falta ningún asset externo. Si prefieres un modelo propio, deja
-un glTF en `<datos>/models/` (`~/.local/share/decompdeck/models/` en Linux):
-`n64.glb`, `psx.glb`, … (también `<sistema>.gltf` o la carpeta
-`<sistema>/scene.gltf` tal cual la descarga Sketchfab) y sustituye al integrado.
-El modelo se centra y escala solo; un `<sistema>.json` opcional ajusta `yaw`,
-`pitch`, `roll` (grados) y `scale`. `tools/fetch_models.py` descarga un conjunto
-de modelos CC-BY de Sketchfab (requiere un token de API de Sketchfab) y deja la
-atribución en `models/CREDITS.txt`.
-
 ## Tests
 
 ```bash

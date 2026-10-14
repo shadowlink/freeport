@@ -1,6 +1,6 @@
 [package]
 name = "freeport"
-version = "0.2.63"
+version = "0.2.64"
 edition = "2021"
 
 [[bin]]
@@ -17,8 +17,6 @@ slint = { version = "1", features = ["unstable-fontique-010"] }
 i-slint-backend-winit = "=1.17.1"
 freeport-core = { path = "../core" }
 glow = "0.17"
-gltf = { version = "1", default-features = false, features = ["import", "utils", "KHR_materials_unlit"] }
-resvg = "0.47"
 tokio = { version = "1", features = ["rt-multi-thread"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
 rfd = "0.15"

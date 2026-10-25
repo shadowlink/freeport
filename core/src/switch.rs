@@ -239,19 +239,24 @@ fn import_inner(
         c.arg("-x").arg(part).arg(out).arg(nca);
         run(&mut c, "nstool (extracción)").map(|_| ())
     };
-    progress("Extrayendo exefs del juego base");
-    extract(&base.program_nca, base.tik.as_ref(), None, "/0", &exefs)?;
-    progress("Extrayendo romfs del juego base");
-    extract(&base.program_nca, base.tik.as_ref(), None, "/1", &romfs)?;
-
     let mut patches: Vec<&Content> = contents.iter().filter(|c| c.kind == "Patch").collect();
     patches.sort_by_key(|c| c.version);
-    for p in patches {
-        let v = p.version >> 16;
-        progress(&format!("Aplicando actualización v{v} (exefs)"));
-        extract(&p.program_nca, p.tik.as_ref(), Some(&base.program_nca), "/0", &exefs)?;
-        progress(&format!("Aplicando actualización v{v} (romfs)"));
-        extract(&p.program_nca, p.tik.as_ref(), Some(&base.program_nca), "/1", &romfs)?;
+    match patches.last() {
+        // An update NCA read against the base NCA yields the complete, merged
+        // exefs and romfs of that version, so only the newest update is needed.
+        Some(p) => {
+            let v = p.version >> 16;
+            progress(&format!("Extrayendo exefs (actualización v{v})"));
+            extract(&p.program_nca, p.tik.as_ref(), Some(&base.program_nca), "/0", &exefs)?;
+            progress(&format!("Extrayendo romfs (actualización v{v}, puede tardar)"));
+            extract(&p.program_nca, p.tik.as_ref(), Some(&base.program_nca), "/1", &romfs)?;
+        }
+        None => {
+            progress("Extrayendo exefs del juego base");
+            extract(&base.program_nca, base.tik.as_ref(), None, "/0", &exefs)?;
+            progress("Extrayendo romfs del juego base (puede tardar)");
+            extract(&base.program_nca, base.tik.as_ref(), None, "/1", &romfs)?;
+        }
     }
     if !exefs.join("main").is_file() {
         return Err(AppError::msg("la extracción terminó pero no hay exefs/main; revisa las claves (prod.keys) y el archivo"));

@@ -2,6 +2,7 @@
 name = "freeport"
 version = "0.2.67"
 edition = "2021"
+license = "MIT"
 
 [[bin]]
 name = "freeport"

@@ -128,12 +128,19 @@ streaming arranca directo en Modo TV y se maneja con el mando del cliente.
 Los ports nativos de PS4 (Bloodborne, Knack II, Uncharted…) necesitan el
 juego como carpeta descifrada (`CUSA…/eboot.bin`, `sce_module/`, `sce_sys/`),
 no como PKG. En la ficha de cualquier juego de PS4 instalado, **Importar PKG
-de PS4** acepta los «fake PKG» del juego base y de sus parches (en cualquier
-orden): Freeport los lee directamente (RSA/AES del formato fPKG, sin
-herramientas externas), extrae el juego a `<carpeta del port>/<TITLE_ID>` y
-aplica los parches encima. Si el catálogo indica dónde guarda el port su
-configuración (`rom.register`), deja la carpeta ya seleccionada en su
-launcher. Los PKG cifrados con licencia real (no fPKG) no se pueden abrir.
+de PS4** acepta los paquetes «fake PKG» (fPKG) que las herramientas de
+homebrew generan a partir de un volcado propio: el juego base y sus parches,
+en cualquier orden. Freeport los lee directamente, extrae el juego a
+`<carpeta del port>/<TITLE_ID>` y aplica los parches encima. Si el catálogo
+indica dónde guarda el port su configuración (`rom.register`), deja la
+carpeta ya seleccionada en su launcher.
+
+Solo abre fPKG. Las claves que incluye son las del propio formato fPKG,
+públicas y comunes a todas las herramientas de la escena; Freeport no
+contiene ninguna clave de Sony ni descifra paquetes comerciales de PSN (con
+uno de esos el importador se detiene y lo dice). Freeport no distribuye
+juegos ni explica dónde obtenerlos: el volcado tiene que ser de tu propia
+copia.
 
 ## Tests
 
@@ -169,3 +176,9 @@ MVP funcional en Linux: navegación filtrada por plataforma, instalación
 actualizaciones (botón + CI del catálogo), token opcional y modo portable.
 Pendiente/roadmap: peticiones condicionales con ETag, empaquetado Windows,
 navegación con mando, integración con ES-DE, y build de Android.
+
+## Licencia
+
+MIT (ver `LICENSE`). Freeport no incluye ni distribuye ningún juego: el
+catálogo enlaza a los repositorios de cada port y la app descarga sus
+releases públicas; los datos del juego los aporta siempre el usuario.

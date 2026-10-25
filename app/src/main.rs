@@ -157,6 +157,8 @@ struct App {
     runners: Vec<actions::Runner>,
     busy: RefCell<HashSet<String>>,
     install_progress: RefCell<std::collections::HashMap<String, f32>>,
+    /// Busy label override per project (e.g. "Importando parche 01.09").
+    phase: RefCell<std::collections::HashMap<String, String>>,
     detail: RefCell<Option<DetailState>>,
     mods_cache: RefCell<std::collections::HashMap<String, Vec<ModInfo>>>,
     mod_busy: RefCell<HashSet<String>>,
@@ -1007,6 +1009,8 @@ fn build_detail(app: &App, win: &MainWindow) {
         update_available: update,
         needs_rom: p.rom.mode == "copy",
         rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
+        is_ps4: p.system == "ps4",
+        phase: app.phase.borrow().get(&p.id).cloned().unwrap_or_default().into(),
         busy: app.busy.borrow().contains(&p.id),
         progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
         play_state: match app.launching.borrow().get(&p.id) { Some(false) => 1, Some(true) => 2, None => 0 },
@@ -1435,6 +1439,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         runners: actions::list_runners(),
         busy: RefCell::new(HashSet::new()),
         install_progress: RefCell::new(std::collections::HashMap::new()),
+        phase: RefCell::new(std::collections::HashMap::new()),
         detail: RefCell::new(None),
         mods_cache: RefCell::new(std::collections::HashMap::new()),
         mod_busy: RefCell::new(HashSet::new()),
@@ -2519,6 +2524,70 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    win.on_import_pkg({
+        let app = app.clone();
+        move |id| {
+            let id = id.to_string();
+            let Some(project) = app.find(&id) else { return };
+            if app.busy.borrow().contains(&id) {
+                return;
+            }
+            let Some(files) = rfd::FileDialog::new()
+                .set_title(format!("PKG de PS4 de {} (juego base y parches)", project.original_game))
+                .add_filter("PKG de PS4", &["pkg"])
+                .pick_files()
+            else {
+                return;
+            };
+            app.busy.borrow_mut().insert(id.clone());
+            app.install_progress.borrow_mut().insert(id.clone(), 0.0);
+            app.phase.borrow_mut().insert(id.clone(), "Leyendo PKG…".into());
+            ui_refresh();
+            let paths = app.paths.clone();
+            let pid = id.clone();
+            std::thread::spawn(move || {
+                let prog_id = pid.clone();
+                let mut last = (-1i32, String::new());
+                let mut on_prog = move |done: u64, total: u64, label: &str| {
+                    let pct = if total == 0 { 0 } else { ((done * 100) / total) as i32 };
+                    if pct == last.0 && label == last.1 {
+                        return;
+                    }
+                    last = (pct, label.to_string());
+                    let idc = prog_id.clone();
+                    let f = pct as f32 / 100.0;
+                    let text = format!("Importando {label}");
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((app, _)) = &*u.borrow() {
+                                app.install_progress.borrow_mut().insert(idc.clone(), f);
+                                app.phase.borrow_mut().insert(idc, text);
+                            }
+                        });
+                        ui_refresh();
+                    });
+                };
+                let res = actions::import_ps4_pkgs(&paths, &project, &files, &mut on_prog);
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((app, weak)) = &*u.borrow() {
+                            app.busy.borrow_mut().remove(&pid);
+                            app.install_progress.borrow_mut().remove(&pid);
+                            app.phase.borrow_mut().remove(&pid);
+                            if let Some(w) = weak.upgrade() {
+                                match &res {
+                                    Ok(dir) => w.set_notice(format!("PKG importado en {}", dir.display()).into()),
+                                    Err(e) => w.set_notice(format!("Error al importar el PKG: {e}").into()),
+                                }
+                            }
+                        }
+                    });
+                    ui_refresh();
+                });
+            });
+        }
+    });
+
     // Land on the library when there is one; the catalog is the storefront,
     // but day-to-day you open the app to play what you already installed.
     if !store::load_installed(&app.paths).unwrap_or_default().is_empty() {
@@ -2529,6 +2598,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     if let Some(id) = std::env::var("FREEPORT_DEBUG_OPEN").ok().filter(|s| !s.is_empty()) {
         win.invoke_open_game(id.into()); // dev aid: open a game page at startup
+    }
+    if let Some(spec) = std::env::var("FREEPORT_DEBUG_IMPORT_PKG").ok().filter(|s| !s.is_empty()) {
+        // dev aid: FREEPORT_DEBUG_IMPORT_PKG=<project id>:<pkg>,<pkg>… runs the
+        // PS4 PKG importer without the file dialog and prints progress.
+        if let Some((id, files)) = spec.split_once(':') {
+            if let Some(project) = app.find(id) {
+                let files: Vec<std::path::PathBuf> = files.split(',').map(std::path::PathBuf::from).collect();
+                let paths = app.paths.clone();
+                std::thread::spawn(move || {
+                    let mut last = -1i32;
+                    let r = actions::import_ps4_pkgs(&paths, &project, &files, &mut |d, t, l| {
+                        let pct = if t == 0 { 0 } else { ((d * 100) / t) as i32 };
+                        if pct != last {
+                            last = pct;
+                            eprintln!("[pkg] {l}: {pct}%");
+                        }
+                    });
+                    eprintln!("[pkg] resultado: {r:?}");
+                });
+            }
+        }
     }
     // ── Experimental 3D box viewer: GL overlay via the rendering notifier ──
     {

@@ -11,6 +11,8 @@ pub mod install;
 pub mod launch;
 pub mod mods;
 pub mod model;
+pub mod pkg;
+mod pkg_keys;
 pub mod platform;
 pub mod ra;
 pub mod ra_mod;

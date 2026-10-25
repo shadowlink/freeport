@@ -175,6 +175,14 @@ impl RepoRef {
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct RomRegister {
+    /// JSON settings file of the port's launcher (`~` expands to $HOME).
+    pub file: String,
+    /// Top-level key that holds the game folder / ROM path.
+    pub key: String,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RomInfo {
     #[serde(default)]
     pub required: bool,
@@ -195,6 +203,11 @@ pub struct RomInfo {
     pub subdir: Option<String>,
     #[serde(default)]
     pub notes: String,
+    /// Where the port's own launcher keeps the game/ROM path, so Freeport can
+    /// fill it in after a ROM pick or PKG import (JSON file + key). The port
+    /// then starts straight into the game instead of asking for the folder.
+    #[serde(default)]
+    pub register: Option<RomRegister>,
 }
 
 /// Fields normally refreshed by the catalog repo's CI probe, letting the app

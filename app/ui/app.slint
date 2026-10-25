@@ -214,6 +214,8 @@ struct DetailData {
     update-available: bool,
     needs-rom: bool,
     rom-ok: bool,
+    is-ps4: bool,      // PS4 port: offers the PKG importer
+    phase: string,     // busy label override (e.g. PKG import)
     busy: bool,
     progress: float,
     play-state: int,
@@ -373,6 +375,7 @@ export component MainWindow inherits Window {
     callback play(string);
     callback uninstall(string);
     callback pick-rom(string);
+    callback import-pkg(string);
     callback close-detail();
     callback install-mod(string, string);
     callback uninstall-mod(string, string);
@@ -415,6 +418,7 @@ export component MainWindow inherits Window {
     callback close-viewer3d();
     callback viewer3d-drag(length, length);
     callback viewer3d-release();
+    in-out property <string> notice;          // transient message bar (bottom); empty = hidden
     in-out property <string> rail-tip;        // window-level tooltip for the icon rail
     in-out property <length> rail-tip-y;
     in-out property <string> current-runner-label;
@@ -1186,7 +1190,9 @@ export component MainWindow inherits Window {
                                     VerticalLayout {
                                         spacing: 5px;
                                         width: 300px;
-                                        Text { text: root.detail.installed
+                                        Text { text: root.detail.phase != ""
+                                                   ? (root.detail.progress > 0 ? "\{root.detail.phase} \{floor(root.detail.progress * 100)}%" : root.detail.phase)
+                                                   : root.detail.installed
                                                    ? (root.detail.progress > 0 ? "Actualizando \{floor(root.detail.progress * 100)}%" : "Actualizando…")
                                                    : (root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…");
                                                color: #ffb23e; font-weight: 700; }
@@ -1210,6 +1216,7 @@ export component MainWindow inherits Window {
                                         clicked => { root.install(root.detail.id); }
                                     }
                                     if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
+                                    if root.detail.installed && root.detail.is-ps4: Btn { label: root.detail.rom-ok ? "PKG importado ✓" : "Importar PKG de PS4"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-pkg(root.detail.id); } }
                                     if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
                                         label: root.detail.ra-enabled
                                             ? "🏆 RetroAchievements ✓"
@@ -1411,6 +1418,16 @@ export component MainWindow inherits Window {
     }
 
     // ── Settings overlay ─────────────────────────────────
+    // ── Notice bar (window level, bottom) ──
+    if root.notice != "": Rectangle {
+        x: (root.width - self.width) / 2; y: root.height - 56px; height: 40px;
+        width: min(root.width - 40px, nt-l.preferred-width);
+        border-radius: 9px; background: #1c1f28; border-width: 1px; border-color: #2b2f3a;
+        drop-shadow-blur: 18px; drop-shadow-color: #000000aa;
+        nt-l := HorizontalLayout { padding-left: 14px; padding-right: 6px; spacing: 8px;
+            Text { text: root.notice; color: white; font-size: 13px; vertical-alignment: center; overflow: elide; }
+            Btn { label: "✕"; bg: #1c1f28; fg: #ffffff99; clicked => { root.notice = ""; } } }
+    }
     // ── Icon rail tooltip (window level, above the sidebar) ──
     if root.rail-tip != "": Rectangle {
         x: 74px; y: root.rail-tip-y + 8px; height: 28px;

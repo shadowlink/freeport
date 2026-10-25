@@ -421,7 +421,99 @@ pub fn set_rom(paths: &Paths, project: &Project, rom_source: &str) -> AppResult<
     let target = target_dir.join(target_name);
     std::fs::copy(source, &target)?;
     entry.rom_path = Some(target.display().to_string());
-    store::save_installed(paths, &installed)
+    store::save_installed(paths, &installed)?;
+    let _ = register_rom_path(project, &target);
+    Ok(())
+}
+
+/// Writes the ROM/dump path into the port's own launcher settings when the
+/// catalog says where they live (`rom.register`), so the port needs no manual
+/// folder pick. Best-effort: a missing or odd file is created/left alone.
+pub fn register_rom_path(project: &Project, path: &Path) -> AppResult<()> {
+    let Some(reg) = project.rom.register.as_ref() else { return Ok(()) };
+    let file = if let Some(rest) = reg.file.strip_prefix("~/") {
+        dirs::home_dir().unwrap_or_default().join(rest)
+    } else {
+        PathBuf::from(&reg.file)
+    };
+    let mut doc: serde_json::Value = std::fs::read_to_string(&file)
+        .ok()
+        .and_then(|t| serde_json::from_str(&t).ok())
+        .unwrap_or_else(|| serde_json::json!({}));
+    if !doc.is_object() {
+        return Ok(());
+    }
+    doc[&reg.key] = serde_json::Value::String(path.display().to_string());
+    if let Some(parent) = file.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    std::fs::write(&file, serde_json::to_string_pretty(&doc)?)?;
+    Ok(())
+}
+
+/// Imports PS4 fake PKGs (the base game plus any patches, in any order) into
+/// the game's folder as `<install>/<TITLE_ID>`, the plain-folder dump that
+/// the PS4 native ports read, and remembers it as the project's ROM path.
+/// `progress(done, total, label)` reports bytes of the package being written.
+pub fn import_ps4_pkgs(
+    paths: &Paths,
+    project: &Project,
+    pkgs: &[PathBuf],
+    progress: &mut dyn FnMut(u64, u64, &str),
+) -> AppResult<PathBuf> {
+    let mut installed = store::load_installed(paths)?;
+    let entry = installed
+        .get_mut(&project.id)
+        .ok_or_else(|| AppError::msg("instala el port antes de importar los PKG"))?;
+    if pkgs.is_empty() {
+        return Err(AppError::msg("no se ha elegido ningún PKG"));
+    }
+    let mut infos: Vec<(PathBuf, crate::pkg::PkgInfo)> = Vec::new();
+    for p in pkgs {
+        let i = crate::pkg::info(p)
+            .map_err(|e| AppError::msg(format!("{}: {e}", p.file_name().and_then(|n| n.to_str()).unwrap_or("PKG"))))?;
+        infos.push((p.clone(), i));
+    }
+    // Base game first, then patches by version, then add-ons.
+    infos.sort_by_key(|(_, i)| (if i.is_dlc() { 2 } else if i.is_patch() { 1 } else { 0 }, i.app_ver.clone()));
+    let title_id = infos[0].1.title_id.clone();
+    if infos.iter().any(|(_, i)| i.title_id != title_id) {
+        return Err(AppError::msg("los PKG elegidos son de juegos distintos"));
+    }
+    let install_dir = PathBuf::from(&entry.install_path);
+    let dest = install_dir.join(&title_id);
+    let has_base = infos.iter().any(|(_, i)| !i.is_patch() && !i.is_dlc());
+    if !has_base && !dest.join("eboot.bin").exists() {
+        return Err(AppError::msg(format!(
+            "falta el PKG del juego base: solo hay parches o DLC y {} no existe aún",
+            dest.display()
+        )));
+    }
+    for (path, info) in &infos {
+        let label = if info.is_dlc() {
+            format!("DLC {}", info.content_id.rsplit('-').next().unwrap_or(""))
+        } else if info.is_patch() {
+            format!("parche {}", info.app_ver)
+        } else {
+            "juego base".to_string()
+        };
+        let target = if info.is_dlc() {
+            // shadPS4-style add-on layout, next to the game folder.
+            install_dir
+                .join("addcont")
+                .join(&title_id)
+                .join(info.content_id.rsplit('-').next().unwrap_or("dlc"))
+        } else {
+            dest.clone()
+        };
+        crate::pkg::extract(path, &target, &mut |d, t| progress(d, t, &label))?;
+    }
+    entry.rom_path = Some(dest.display().to_string());
+    store::save_installed(paths, &installed)?;
+    if let Err(e) = register_rom_path(project, &dest) {
+        eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
+    }
+    Ok(dest)
 }
 
 /// Process-wide Discord Rich Presence (lazily connected, best-effort).
@@ -458,15 +550,29 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
         _ => std::env::remove_var("FREEPORT_RA_ROM"),
     }
 
+    // `{rom_path}` in a catalog env value expands to the imported dump/ROM
+    // folder (e.g. BB_GAME_DIR for bbport); the variable is dropped when the
+    // user has not set one yet.
+    let envs: std::collections::HashMap<String, String> = project
+        .launch_env
+        .iter()
+        .filter_map(|(k, v)| {
+            if v.contains("{rom_path}") {
+                entry.rom_path.as_ref().map(|r| (k.clone(), v.replace("{rom_path}", r)))
+            } else {
+                Some((k.clone(), v.clone()))
+            }
+        })
+        .collect();
     let mut child = if entry.windows {
         let cfg = store::load_config(paths)?;
         let runner = resolve_runner(&cfg, &project.id).ok_or_else(|| {
             AppError::msg("no hay ningún runner de Windows. Instala Wine o umu-launcher (Proton).")
         })?;
         let prefix = install_dir.join(".wineprefix");
-        launch::launch_windows_with(&bin, &runner, &prefix, &project.launch_env)?
+        launch::launch_windows_with(&bin, &runner, &prefix, &envs)?
     } else {
-        launch::launch_binary(&bin, &project.launch_env)?
+        launch::launch_binary(&bin, &envs)?
     };
     let pid = child.id();
 

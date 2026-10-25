@@ -123,6 +123,18 @@ Freeport en `~/.config/sunshine/apps.json` (con backup) con el comando
 `<AppImage> --tv`. Reinicia Sunshine y aparecerá en Moonlight; al abrirlo por
 streaming arranca directo en Modo TV y se maneja con el mando del cliente.
 
+## Importar PKG de PS4
+
+Los ports nativos de PS4 (Bloodborne, Knack II, Uncharted…) necesitan el
+juego como carpeta descifrada (`CUSA…/eboot.bin`, `sce_module/`, `sce_sys/`),
+no como PKG. En la ficha de cualquier juego de PS4 instalado, **Importar PKG
+de PS4** acepta los «fake PKG» del juego base y de sus parches (en cualquier
+orden): Freeport los lee directamente (RSA/AES del formato fPKG, sin
+herramientas externas), extrae el juego a `<carpeta del port>/<TITLE_ID>` y
+aplica los parches encima. Si el catálogo indica dónde guarda el port su
+configuración (`rom.register`), deja la carpeta ya seleccionada en su
+launcher. Los PKG cifrados con licencia real (no fPKG) no se pueden abrir.
+
 ## Tests
 
 ```bash

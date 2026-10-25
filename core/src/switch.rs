@@ -76,12 +76,63 @@ pub fn detect() -> Result<Tools, String> {
 fn run(cmd: &mut Command, what: &str) -> AppResult<String> {
     let out = cmd.output().map_err(|e| AppError::msg(format!("no se pudo ejecutar {what}: {e}")))?;
     let stdout = String::from_utf8_lossy(&out.stdout).to_string();
+    if stdout.contains("not readable") || String::from_utf8_lossy(&out.stderr).contains("not readable") {
+        return Err(AppError::msg(format!(
+            "{what}: nstool no pudo descifrar una partición (claves o ticket insuficientes)"
+        )));
+    }
     if !out.status.success() {
         let err = String::from_utf8_lossy(&out.stderr);
         let tail: String = err.lines().chain(stdout.lines()).rfind(|l| !l.is_empty()).unwrap_or("").chars().take(300).collect();
         return Err(AppError::msg(format!("{what} falló: {tail}")));
     }
     Ok(stdout)
+}
+
+/// Copy of the user's key file with only well-formed `name = hex` lines:
+/// emulator exports often carry entries hactool rejects outright (it then
+/// refuses the whole file). Written 0600 inside the import's temp folder.
+fn filtered_keyset(src: &Path, dest: &Path) -> AppResult<PathBuf> {
+    let text = std::fs::read_to_string(src)?;
+    let mut out = String::new();
+    for line in text.lines() {
+        let Some((name, val)) = line.split_once('=') else { continue };
+        let (name, val) = (name.trim(), val.trim());
+        let ok_name = !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '_');
+        let ok_val = !val.is_empty() && val.len() % 2 == 0 && val.chars().all(|c| c.is_ascii_hexdigit())
+            && matches!(val.len(), 32 | 64 | 96 | 128 | 256 | 512 | 1056);
+        if ok_name && ok_val {
+            out.push_str(name);
+            out.push_str(" = ");
+            out.push_str(val);
+            out.push('\n');
+        }
+    }
+    std::fs::write(dest, out)?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(dest, std::fs::Permissions::from_mode(0o600));
+    }
+    Ok(dest.to_path_buf())
+}
+
+/// Rights id and (still encrypted) title key of a `.tik`, as the tools expect
+/// them on the command line. Never logged.
+fn ticket_key(tik: &Path) -> AppResult<(String, String)> {
+    let b = std::fs::read(tik)?;
+    let sig_type = u32::from_le_bytes(b.get(0..4).ok_or_else(|| AppError::msg("ticket vacío"))?.try_into().unwrap());
+    // Body offset = 4 + signature + padding (RSA-4096 0x240, RSA-2048 0x140, ECDSA 0x80).
+    let body = match sig_type {
+        0x10000 | 0x10003 => 0x240,
+        0x10001 | 0x10004 => 0x140,
+        0x10002 | 0x10005 => 0x80,
+        _ => return Err(AppError::msg("ticket con firma desconocida")),
+    };
+    let key = b.get(body + 0x40..body + 0x50).ok_or_else(|| AppError::msg("ticket truncado"))?;
+    let rid = b.get(body + 0x160..body + 0x170).ok_or_else(|| AppError::msg("ticket truncado"))?;
+    let hex = |x: &[u8]| x.iter().map(|c| format!("{c:02x}")).collect::<String>();
+    Ok((hex(rid), hex(key)))
 }
 
 #[derive(Debug, Clone)]
@@ -103,7 +154,7 @@ fn field<'a>(text: &'a str, key: &str) -> Option<&'a str> {
 }
 
 /// Reads the content meta of an unpacked NSP/XCI partition directory.
-fn describe(tools: &Tools, pfs: &Path, scratch: &Path) -> AppResult<Content> {
+fn describe(tools: &Tools, home: &Path, pfs: &Path, scratch: &Path) -> AppResult<Content> {
     let entries: Vec<PathBuf> = std::fs::read_dir(pfs)?.flatten().map(|e| e.path()).collect();
     let cnmt_nca = entries
         .iter()
@@ -111,13 +162,13 @@ fn describe(tools: &Tools, pfs: &Path, scratch: &Path) -> AppResult<Content> {
         .ok_or_else(|| AppError::msg("el paquete no tiene metadatos (.cnmt.nca); ¿es un NSP de juego?"))?;
     let cdir = scratch.join("cnmt");
     std::fs::create_dir_all(&cdir)?;
-    run(Command::new(&tools.nstool).arg("-k").arg(&tools.keys).arg("-x").arg("/0").arg(&cdir).arg(cnmt_nca), "nstool (cnmt)")?;
+    run(nstool(tools, home).arg("-x").arg("/0").arg(&cdir).arg(cnmt_nca), "nstool (cnmt)")?;
     let cnmt = std::fs::read_dir(&cdir)?
         .flatten()
         .map(|e| e.path())
         .find(|p| p.extension().and_then(|e| e.to_str()) == Some("cnmt"))
         .ok_or_else(|| AppError::msg("no se pudo leer el .cnmt"))?;
-    let meta = run(Command::new(&tools.nstool).arg("-k").arg(&tools.keys).arg(&cnmt), "nstool (meta)")?;
+    let meta = run(nstool(tools, home).arg(&cnmt), "nstool (meta)")?;
     let kind = field(&meta, "Type").unwrap_or("").split(' ').next().unwrap_or("").to_string();
     let title = field(&meta, "TitleId").unwrap_or("").trim_start_matches("0x").to_lowercase();
     let app_id = field(&meta, "ApplicationId")
@@ -161,15 +212,37 @@ pub fn import(
     let tmp = install_dir.join(".switch-import");
     let _ = std::fs::remove_dir_all(&tmp);
     std::fs::create_dir_all(&tmp)?;
-    let result = import_inner(tools, install_dir, &tmp, files, progress);
+    // The tools run with a private HOME inside the temp folder: a cleaned copy
+    // of prod.keys plus a title.keys built from the packages' own tickets, so
+    // nstool can open an update against its base (two title keys at once).
+    // The user's real key files are never touched.
+    let home = tmp.join("home");
+    let switch_dir = home.join(".switch");
+    let result = match std::fs::create_dir_all(&switch_dir)
+        .map_err(AppError::from)
+        .and_then(|_| filtered_keyset(&tools.keys, &switch_dir.join("prod.keys")))
+    {
+        Ok(keys) => {
+            let tools = Tools { keys, ..tools.clone() };
+            import_inner(&tools, install_dir, &tmp, &home, files, progress)
+        }
+        Err(e) => Err(e),
+    };
     let _ = std::fs::remove_dir_all(&tmp);
     result
+}
+
+fn nstool(tools: &Tools, home: &Path) -> Command {
+    let mut c = Command::new(&tools.nstool);
+    c.env("HOME", home).env("USERPROFILE", home).arg("-k").arg(&tools.keys);
+    c
 }
 
 fn import_inner(
     tools: &Tools,
     install_dir: &Path,
     tmp: &Path,
+    home: &Path,
     files: &[PathBuf],
     progress: &mut dyn FnMut(&str),
 ) -> AppResult<PathBuf> {
@@ -196,8 +269,7 @@ fn import_inner(
         progress(&format!("Abriendo {name}"));
         let pfs = tmp.join(format!("pfs{i}"));
         std::fs::create_dir_all(&pfs)?;
-        let mut c = Command::new(&tools.nstool);
-        c.arg("-k").arg(&tools.keys);
+        let mut c = nstool(tools, home);
         if ext == "xci" {
             c.arg("-x").arg("/secure").arg(&pfs).arg(&src);
         } else {
@@ -206,7 +278,20 @@ fn import_inner(
         run(&mut c, "nstool")?;
         let scratch = tmp.join(format!("meta{i}"));
         std::fs::create_dir_all(&scratch)?;
-        contents.push(describe(tools, &pfs, &scratch)?);
+        contents.push(describe(tools, home, &pfs, &scratch)?);
+        // Register this package's ticket for nstool (title.keys: rights id = key).
+        if let Some(tik) = contents.last().and_then(|c| c.tik.clone()) {
+            let (rid, key) = ticket_key(&tik)?;
+            let tk = home.join(".switch/title.keys");
+            let mut text = std::fs::read_to_string(&tk).unwrap_or_default();
+            text.push_str(&format!("{rid} = {key}\n"));
+            std::fs::write(&tk, text)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = std::fs::set_permissions(&tk, std::fs::Permissions::from_mode(0o600));
+            }
+        }
     }
     let base = contents.iter().find(|c| c.kind == "Application").cloned();
     let app_id = base
@@ -227,12 +312,8 @@ fn import_inner(
     let _ = std::fs::remove_dir_all(&romfs);
     std::fs::create_dir_all(&dest)?;
 
-    let extract = |nca: &Path, tik: Option<&PathBuf>, basenca: Option<&PathBuf>, part: &str, out: &Path| -> AppResult<()> {
-        let mut c = Command::new(&tools.nstool);
-        c.arg("-k").arg(&tools.keys);
-        if let Some(t) = tik {
-            c.arg("--tik").arg(t);
-        }
+    let extract = |nca: &Path, basenca: Option<&PathBuf>, part: &str, out: &Path| -> AppResult<()> {
+        let mut c = nstool(tools, home);
         if let Some(b) = basenca {
             c.arg("--basenca").arg(b);
         }
@@ -247,16 +328,20 @@ fn import_inner(
         Some(p) => {
             let v = p.version >> 16;
             progress(&format!("Extrayendo exefs (actualización v{v})"));
-            extract(&p.program_nca, p.tik.as_ref(), Some(&base.program_nca), "/0", &exefs)?;
+            extract(&p.program_nca, Some(&base.program_nca), "/0", &exefs)?;
             progress(&format!("Extrayendo romfs (actualización v{v}, puede tardar)"));
-            extract(&p.program_nca, p.tik.as_ref(), Some(&base.program_nca), "/1", &romfs)?;
+            extract(&p.program_nca, Some(&base.program_nca), "/1", &romfs)?;
         }
         None => {
             progress("Extrayendo exefs del juego base");
-            extract(&base.program_nca, base.tik.as_ref(), None, "/0", &exefs)?;
+            extract(&base.program_nca, None, "/0", &exefs)?;
             progress("Extrayendo romfs del juego base (puede tardar)");
-            extract(&base.program_nca, base.tik.as_ref(), None, "/1", &romfs)?;
+            extract(&base.program_nca, None, "/1", &romfs)?;
         }
+    }
+    let romfs_files = std::fs::read_dir(&romfs).map(|d| d.count()).unwrap_or(0);
+    if romfs_files == 0 {
+        return Err(AppError::msg("la extracción terminó sin romfs; revisa las claves (prod.keys) y el archivo"));
     }
     if !exefs.join("main").is_file() {
         return Err(AppError::msg("la extracción terminó pero no hay exefs/main; revisa las claves (prod.keys) y el archivo"));

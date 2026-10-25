@@ -78,7 +78,7 @@ fn run(cmd: &mut Command, what: &str) -> AppResult<String> {
     let stdout = String::from_utf8_lossy(&out.stdout).to_string();
     if !out.status.success() {
         let err = String::from_utf8_lossy(&out.stderr);
-        let tail: String = err.lines().chain(stdout.lines()).filter(|l| !l.is_empty()).last().unwrap_or("").chars().take(300).collect();
+        let tail: String = err.lines().chain(stdout.lines()).rfind(|l| !l.is_empty()).unwrap_or("").chars().take(300).collect();
         return Err(AppError::msg(format!("{what} falló: {tail}")));
     }
     Ok(stdout)

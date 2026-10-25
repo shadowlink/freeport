@@ -177,9 +177,16 @@ impl RepoRef {
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RomRegister {
     /// JSON settings file of the port's launcher (`~` expands to $HOME).
-    pub file: String,
+    #[serde(default)]
+    pub file: Option<String>,
     /// Top-level key that holds the game folder / ROM path.
-    pub key: String,
+    #[serde(default)]
+    pub key: Option<String>,
+    /// Alternatively, a path the port expects its game files at: Freeport
+    /// creates a symlink there pointing to the imported folder (e.g. LAS
+    /// Recomp's `~/.local/share/lasrecomp/extracted`).
+    #[serde(default)]
+    pub link: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

@@ -5,14 +5,7 @@
 /// triple) because that is what the community projects encode in their release
 /// asset names and what the catalog's `asset_rules`/`cached.platforms` use.
 pub fn current_triple() -> String {
-    let os = match std::env::consts::OS {
-        "macos" => "macos",
-        other => other, // "linux", "windows", "android", ...
-    };
-    let arch = match std::env::consts::ARCH {
-        "x86_64" => "x86_64",
-        "aarch64" => "aarch64",
-        other => other,
-    };
+    let os = std::env::consts::OS;
+    let arch = std::env::consts::ARCH;
     format!("{os}-{arch}")
 }

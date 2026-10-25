@@ -327,7 +327,7 @@ async fn stage_install(
         &asset.browser_download_url,
         &archive,
         cancel.clone(),
-        |d, t| on_progress(d, t),
+        on_progress,
     )
     .await?;
 
@@ -431,23 +431,43 @@ pub fn set_rom(paths: &Paths, project: &Project, rom_source: &str) -> AppResult<
 /// folder pick. Best-effort: a missing or odd file is created/left alone.
 pub fn register_rom_path(project: &Project, path: &Path) -> AppResult<()> {
     let Some(reg) = project.rom.register.as_ref() else { return Ok(()) };
-    let file = if let Some(rest) = reg.file.strip_prefix("~/") {
-        dirs::home_dir().unwrap_or_default().join(rest)
-    } else {
-        PathBuf::from(&reg.file)
+    let expand = |p: &str| -> PathBuf {
+        match p.strip_prefix("~/") {
+            Some(rest) => dirs::home_dir().unwrap_or_default().join(rest),
+            None => PathBuf::from(p),
+        }
     };
-    let mut doc: serde_json::Value = std::fs::read_to_string(&file)
-        .ok()
-        .and_then(|t| serde_json::from_str(&t).ok())
-        .unwrap_or_else(|| serde_json::json!({}));
-    if !doc.is_object() {
-        return Ok(());
+    if let (Some(file), Some(key)) = (reg.file.as_deref(), reg.key.as_deref()) {
+        let file = expand(file);
+        let mut doc: serde_json::Value = std::fs::read_to_string(&file)
+            .ok()
+            .and_then(|t| serde_json::from_str(&t).ok())
+            .unwrap_or_else(|| serde_json::json!({}));
+        if doc.is_object() {
+            doc[key] = serde_json::Value::String(path.display().to_string());
+            if let Some(parent) = file.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            std::fs::write(&file, serde_json::to_string_pretty(&doc)?)?;
+        }
     }
-    doc[&reg.key] = serde_json::Value::String(path.display().to_string());
-    if let Some(parent) = file.parent() {
-        std::fs::create_dir_all(parent)?;
+    if let Some(link) = reg.link.as_deref() {
+        let link = expand(link);
+        // Only replace what we own: an existing symlink. A real folder there is
+        // the user's (or the port's own copy) and stays untouched.
+        if std::fs::symlink_metadata(&link).map(|m| m.file_type().is_symlink()).unwrap_or(false) {
+            std::fs::remove_file(&link)?;
+        }
+        if !link.exists() {
+            if let Some(parent) = link.parent() {
+                std::fs::create_dir_all(parent)?;
+            }
+            #[cfg(unix)]
+            std::os::unix::fs::symlink(path, &link)?;
+            #[cfg(windows)]
+            std::os::windows::fs::symlink_dir(path, &link)?;
+        }
     }
-    std::fs::write(&file, serde_json::to_string_pretty(&doc)?)?;
     Ok(())
 }
 

@@ -108,6 +108,7 @@ pub fn launch_binary(binary: &Path, envs: &std::collections::HashMap<String, Str
 /// - "umu:"            → umu-run with auto Proton (GE-Proton)
 /// - "umu:<path>"      → umu-run with a specific Proton at <path>
 /// - "proton:<path>"   → raw Proton at <path>
+///
 /// `prefix` is a per-game Wine/Proton prefix so saves persist between runs.
 pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path, envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
     if !exe.exists() {
@@ -147,6 +148,9 @@ pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path, envs: &st
     let (out, err) = log_to(cwd);
     cmd.current_dir(cwd).stdout(out).stderr(err);
     sanitize_env(&mut cmd);
+    for (k, v) in envs {
+        cmd.env(k, v);
+    }
     let child = cmd.spawn().map_err(|e| {
         AppError::msg(format!(
             "no se pudo lanzar el build de Windows con «{runner_id}»: {e}. Comprueba que Wine/Proton (umu) está instalado."

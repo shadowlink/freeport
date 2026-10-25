@@ -54,11 +54,11 @@ component Btn inherits Rectangle {
     border-radius: 6px;
     background: touch.pressed ? bg.darker(20%) : (touch.has-hover ? bg.brighter(18%) : bg);
     animate background { duration: 120ms; easing: ease-out; }
-    HorizontalLayout {
-        padding-left: 8px; padding-right: 8px;
-        Text { text: root.label; color: root.fg; font-size: 12px; font-weight: 700;
-               horizontal-alignment: center; vertical-alignment: center; }
-    }
+    preferred-width: t.preferred-width + 16px;
+    min-width: t.preferred-width + 16px;
+    t := Text { x: 8px; width: parent.width - 16px; height: parent.height;
+                text: root.label; color: root.fg; font-size: 12px; font-weight: 700;
+                horizontal-alignment: center; vertical-alignment: center; overflow: elide; }
     touch := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
 
@@ -69,19 +69,7 @@ component Cover inherits Rectangle {
     in property <image> source;
     in property <string> title;
     in property <bool> hovered;
-    clip: true;
     background: #14161d;
-    // Ambient fill: the same art, blown up and darkened.
-    Image {
-        source: root.source;
-        width: parent.width * 1.6;
-        height: parent.height * 1.6;
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
-        image-fit: cover;
-        opacity: 0.55;
-    }
-    Rectangle { background: #0b0c10bb; }
     // Placeholder title until the thumbnail loads.
     if root.source.width == 0: Text {
         x: 8px; width: parent.width - 16px; height: parent.height;
@@ -966,19 +954,20 @@ export component MainWindow inherits Window {
                     padding: 8px;
                     alignment: start;
                     // Shelf feel: boxes of different heights rest on the same baseline.
-                    for c in row.cards: VerticalLayout {
-                        alignment: end;
-                        gcard := Rectangle {
-                        // The frame takes the shape of the system's box: wide for
-                        // N64, square for PS1, tall for PSP. Landscape boxes get a
-                        // wider slot (Rust packs rows by width), so they don't shrink.
+                    // Plain rectangles with absolute geometry: no nested layouts per
+                    // card, so rows instantiate fast while scrolling.
+                    for c in row.cards: Rectangle {
                         property <length> slot-w: c.card-w > 0 ? c.card-w * 1px : root.card-w;
                         property <length> box-h: self.slot-w / (c.aspect > 0 ? c.aspect : 0.667);
                         width: self.slot-w;
-                        height: self.box-h + 86px;
-                        VerticalLayout {
-                            spacing: 4px;
-                            Rectangle {
+                        min-height: self.box-h + 86px;
+                        gcard := Rectangle {
+                            property <length> box-h: parent.box-h;
+                            width: parent.width;
+                            height: parent.box-h + 86px;
+                            y: parent.height - self.height;
+                            cover := Rectangle {
+                                x: 0; y: 0; width: parent.width;
                                 height: gcard.box-h;
                                 border-radius: 10px;
                                 background: #1c1f28;
@@ -999,7 +988,6 @@ export component MainWindow inherits Window {
                                 if c.experimental: Rectangle {
                                     x: 6px; y: 6px; height: 20px; width: ex-l.preferred-width;
                                     border-radius: 5px; background: #ff9f43;
-                                    drop-shadow-blur: 8px; drop-shadow-color: #000000aa;
                                     ex-l := HorizontalLayout { padding-left: 7px; padding-right: 7px;
                                         Text { text: "⚠ EXPERIMENTAL"; color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; } }
                                 }
@@ -1028,11 +1016,12 @@ export component MainWindow inherits Window {
                                     fav-ta := TouchArea { mouse-cursor: pointer; clicked => { root.toggle-favorite(c.id); } }
                                 }
                             }
-                            Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
+                            Text { x: 0; y: cover.height + 6px; width: parent.width; height: 16px;
+                                   text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
 
                             // Action row
                             if c.busy: HorizontalLayout {
-                                height: 28px;
+                                x: 0; y: cover.height + 26px; width: parent.width; height: 28px;
                                 spacing: 5px;
                                 VerticalLayout {
                                     horizontal-stretch: 1;
@@ -1047,7 +1036,7 @@ export component MainWindow inherits Window {
                                 Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.cancel-install(c.id); } }
                             }
                             if !c.busy && c.installed: HorizontalLayout {
-                                height: 28px; spacing: 5px;
+                                x: 0; y: cover.height + 26px; width: parent.width; height: 28px; spacing: 5px;
                                 Btn {
                                     label: c.play-state == 1 ? "▶ Jugando…" : (c.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
                                     bg: c.play-state == 2 ? #ff5d73 : #ffb23e;
@@ -1067,12 +1056,12 @@ export component MainWindow inherits Window {
                                 Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.request-uninstall(c.id); } }
                             }
                             if !c.busy && !c.installed: Btn {
+                                x: 0; y: cover.height + 27px; width: parent.width;
                                 label: c.install-error ? "⚠ Reintentar" : "↓ Instalar";
                                 bg: #1c1f28; fg: c.install-error ? #ff5d73 : #ffb23e;
                                 clicked => { root.install(c.id); }
                             }
                         }
-                    }
                     }
                     }
                 }

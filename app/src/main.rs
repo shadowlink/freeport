@@ -213,6 +213,7 @@ fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<free
 }
 
 thread_local! {
+    static SCROLLTEST_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
     static UI: RefCell<Option<(Rc<App>, Weak<MainWindow>)>> = const { RefCell::new(None) };
     // Keeps the periodic update-check timer alive for the process lifetime.
     static UPDATE_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
@@ -586,7 +587,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 is_new: any_new,
                 versions: g.members.len() as i32,
                 aspect: box_aspect(&p.system),
-                card_w: win.get_card_w() as f32 * slot_factor(box_aspect(&p.system)),
+                card_w: win.get_card_w() * slot_factor(box_aspect(&p.system)),
                 experimental: p.is_experimental(),
             },
         ));
@@ -599,7 +600,7 @@ fn rebuild(app: &App, win: &MainWindow) {
         .filter(|t| t.3 > 0 && t.4.installed)
         .map(|t| (t.3, t.4.clone()))
         .collect();
-    recent_pool.sort_by(|a, b| b.0.cmp(&a.0));
+    recent_pool.sort_by_key(|a| std::cmp::Reverse(a.0));
     let recent: Vec<CardItem> = recent_pool.into_iter().take(4).map(|t| t.1).collect();
 
     let cards: Vec<CardItem> = sortable.into_iter().map(|t| t.4).collect();
@@ -608,8 +609,8 @@ fn rebuild(app: &App, win: &MainWindow) {
     // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
     // the art isn't tiny, so rows hold a variable number of cards. The usable
     // width comes from the UI (window minus rail, sidebar and padding).
-    let base_w = win.get_card_w() as f32;
-    let avail = (win.get_grid_width() as f32 - 16.0).max(base_w);
+    let base_w = win.get_card_w();
+    let avail = (win.get_grid_width() - 16.0).max(base_w);
     let gap = 14.0;
     let pack = |cards: Vec<CardItem>, rows: &mut Vec<GridRow>| {
         let mut row: Vec<CardItem> = Vec::new();
@@ -1257,7 +1258,7 @@ fn build_tv(app: &App, win: &MainWindow) {
 
 fn exit_tv(win: &MainWindow) {
     win.set_tv_visible(false);
-    let _ = win.window().set_fullscreen(false);
+    win.window().set_fullscreen(false);
 }
 
 fn tv_input(app: &App, win: &MainWindow, button: &str) {
@@ -1760,7 +1761,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(w) = weak.upgrade() {
                 build_tv(&app, &w);
                 w.set_tv_visible(true);
-                let _ = w.window().set_fullscreen(true);
+                w.window().set_fullscreen(true);
             }
             // Prefetch full-resolution hero art for installed games (the grid
             // thumbnails are only 320px and look pixelated blown up in the hero).
@@ -1819,7 +1820,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    win.on_refresh(|| ui_refresh());
+    win.on_refresh(ui_refresh);
 
     win.on_toggle_favorite({
         let app = app.clone();
@@ -1840,11 +1841,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     win.on_open_folder({
         let app = app.clone();
         move |id| {
-            match actions::installed_dir(&app.paths, &id) {
-                Some(dir) => {
-                    let _ = open::that(dir);
-                }
-                None => {}
+            if let Some(dir) = actions::installed_dir(&app.paths, &id) {
+                let _ = open::that(dir);
             }
         }
     });
@@ -2550,7 +2548,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 let prog_id = pid.clone();
                 let mut last = (-1i32, String::new());
                 let mut on_prog = move |done: u64, total: u64, label: &str| {
-                    let pct = if total == 0 { 0 } else { ((done * 100) / total) as i32 };
+                    let pct = (done * 100).checked_div(total).unwrap_or(0) as i32;
                     if pct == last.0 && label == last.1 {
                         return;
                     }
@@ -2686,7 +2684,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 std::thread::spawn(move || {
                     let mut last = -1i32;
                     let r = actions::import_ps4_pkgs(&paths, &project, &files, &mut |d, t, l| {
-                        let pct = if t == 0 { 0 } else { ((d * 100) / t) as i32 };
+                        let pct = (d * 100).checked_div(t).unwrap_or(0) as i32;
                         if pct != last {
                             last = pct;
                             eprintln!("[pkg] {l}: {pct}%");
@@ -2859,7 +2857,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.invoke_open_viewer3d(id.into()); // dev aid: open the 3D viewer for a game
     }
 
-    if let Some(sz) = std::env::var("FREEPORT_DEBUG_SIZE").ok() {
+    if std::env::var_os("FREEPORT_DEBUG_SCROLLTEST").is_some() {
+        // dev aid: synthetic wheel scrolling over the grid, to measure frame
+        // rate with SLINT_DEBUG_PERFORMANCE=refresh_lazy,console.
+        let weak = win.as_weak();
+        let timer = slint::Timer::default();
+        let tick = std::rc::Rc::new(std::cell::Cell::new(0u32));
+        timer.start(slint::TimerMode::Repeated, std::time::Duration::from_millis(16), move || {
+            let Some(w) = weak.upgrade() else { return };
+            let t = tick.get();
+            tick.set(t + 1);
+            let dir = if (t / 150).is_multiple_of(2) { -1.0 } else { 1.0 };
+            w.window().dispatch_event(slint::platform::WindowEvent::PointerScrolled {
+                position: slint::LogicalPosition::new(900.0, 500.0),
+                delta_x: 0.0,
+                delta_y: 40.0 * dir,
+            });
+        });
+        SCROLLTEST_TIMER.with(|t| *t.borrow_mut() = Some(timer));
+    }
+    if let Ok(sz) = std::env::var("FREEPORT_DEBUG_SIZE") {
         // dev aid: force a window size, e.g. FREEPORT_DEBUG_SIZE=900x700 (after show)
         if let Some((w, h)) = sz.split_once('x') {
             if let (Ok(w), Ok(h)) = (w.parse::<f32>(), h.parse::<f32>()) {
@@ -3095,7 +3112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     if std::env::args().any(|a| a == "--tv") {
         build_tv(&app, &win);
         win.set_tv_visible(true);
-        let _ = win.window().set_fullscreen(true);
+        win.window().set_fullscreen(true);
     }
 
     // Dev aid: open a game page straight away (screenshot/UI iteration).

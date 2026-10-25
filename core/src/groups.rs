@@ -69,7 +69,7 @@ where
 /// 3. the most recently published release (`cached.published_at`, ISO-8601 so
 ///    lexical order is chronological),
 /// 4. the first member.
-/// Every tie is broken by input order, so the result is stable.
+///   Every tie is broken by input order, so the result is stable.
 pub fn pick_primary(members: &[&Project], native_triple: &str) -> usize {
     if members.len() <= 1 {
         return 0;

@@ -471,6 +471,52 @@ pub fn register_rom_path(project: &Project, path: &Path) -> AppResult<()> {
     Ok(())
 }
 
+/// Expands the catalog placeholders in env values / arguments.
+fn expand_vars(s: &str, install_dir: &Path, rom_path: Option<&str>) -> Option<String> {
+    let mut out = s.replace("{install_dir}", &install_dir.display().to_string());
+    if out.contains("{rom_path}") {
+        out = out.replace("{rom_path}", rom_path?);
+    }
+    Some(out)
+}
+
+/// Runs the port's own post-import step (`rom.after_import`), e.g. building
+/// the data image Savage Wind reads instead of the plain files. Blocking;
+/// the port's binary is the one Freeport launches.
+pub fn run_after_import(
+    project: &Project,
+    install_dir: &Path,
+    rom_path: &Path,
+    windows: bool,
+    progress: &mut dyn FnMut(&str),
+) -> AppResult<()> {
+    let Some(step) = project.rom.after_import.as_ref() else { return Ok(()) };
+    if windows {
+        return Ok(()); // (a Wine run of the port's setup is not attempted)
+    }
+    let hint_os = std::env::consts::OS;
+    let hint = project.launch.get(hint_os).and_then(|v| v.clone());
+    let bin = install::find_launch_binary(install_dir, hint.as_deref(), false)?;
+    let rom = rom_path.display().to_string();
+    progress("Preparando los datos del juego para el port (puede tardar varios minutos)");
+    let mut cmd = std::process::Command::new(&bin);
+    for a in &step.args {
+        cmd.arg(expand_vars(a, install_dir, Some(&rom)).unwrap_or_else(|| a.clone()));
+    }
+    for (k, v) in &step.env {
+        if let Some(v) = expand_vars(v, install_dir, Some(&rom)) {
+            cmd.env(k, v);
+        }
+    }
+    cmd.current_dir(install_dir);
+    let out = cmd.output().map_err(|e| AppError::msg(format!("no se pudo ejecutar el paso posterior del port: {e}")))?;
+    if !out.status.success() {
+        let tail: String = String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" | ");
+        return Err(AppError::msg(format!("el paso posterior del port falló: {tail}")));
+    }
+    Ok(())
+}
+
 /// Imports PS4 fake PKGs (the base game plus any patches, in any order) into
 /// the game's folder as `<install>/<TITLE_ID>`, the plain-folder dump that
 /// the PS4 native ports read, and remembers it as the project's ROM path.
@@ -501,7 +547,10 @@ pub fn import_ps4_pkgs(
         return Err(AppError::msg("los PKG elegidos son de juegos distintos"));
     }
     let install_dir = PathBuf::from(&entry.install_path);
-    let dest = install_dir.join(&title_id);
+    let dest = match project.rom.import_dir.as_deref() {
+        Some(rel) => install_dir.join(rel.replace("{title_id}", &title_id)),
+        None => install_dir.join(&title_id),
+    };
     let has_base = infos.iter().any(|(_, i)| !i.is_patch() && !i.is_dlc());
     if !has_base && !dest.join("eboot.bin").exists() {
         return Err(AppError::msg(format!(
@@ -551,12 +600,14 @@ pub fn import_switch_dumps(
         .get_mut(&project.id)
         .ok_or_else(|| AppError::msg("instala el port antes de importar el juego"))?;
     let install_dir = PathBuf::from(&entry.install_path);
-    let dest = crate::switch::import(&tools, &install_dir, files, progress)?;
+    let dest = crate::switch::import(&tools, &install_dir, project.rom.import_dir.as_deref(), files, progress)?;
     entry.rom_path = Some(dest.display().to_string());
+    let windows = entry.windows;
     store::save_installed(paths, &installed)?;
     if let Err(e) = register_rom_path(project, &dest) {
         eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
     }
+    run_after_import(project, &install_dir, &dest, windows, progress)?;
     Ok(dest)
 }
 
@@ -600,13 +651,7 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
     let envs: std::collections::HashMap<String, String> = project
         .launch_env
         .iter()
-        .filter_map(|(k, v)| {
-            if v.contains("{rom_path}") {
-                entry.rom_path.as_ref().map(|r| (k.clone(), v.replace("{rom_path}", r)))
-            } else {
-                Some((k.clone(), v.clone()))
-            }
-        })
+        .filter_map(|(k, v)| expand_vars(v, install_dir, entry.rom_path.as_deref()).map(|v| (k.clone(), v)))
         .collect();
     let mut child = if entry.windows {
         let cfg = store::load_config(paths)?;

@@ -187,6 +187,14 @@ where
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct AfterImport {
+    #[serde(default)]
+    pub args: Vec<String>,
+    #[serde(default)]
+    pub env: HashMap<String, String>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RomRegister {
     /// JSON settings file of the port's launcher (`~` expands to $HOME).
     #[serde(default)]
@@ -228,6 +236,17 @@ pub struct RomInfo {
     /// Lenient: an unknown shape here must never break the whole catalog.
     #[serde(default, deserialize_with = "lenient_opt")]
     pub register: Option<RomRegister>,
+    /// Where an imported dump goes, relative to the port's install folder
+    /// (`{title_id}` expands to the game's id). Default: `<install>/<title_id>`.
+    /// Ports that insist on their own layout (Savage Wind: `data/extracted`)
+    /// set it so the folder is where they expect it, with no copy.
+    #[serde(default)]
+    pub import_dir: Option<String>,
+    /// Command the port needs after an import (e.g. Savage Wind's
+    /// `--build-romfs`): its own launch binary with these arguments and env.
+    /// Placeholders: `{rom_path}`, `{install_dir}`.
+    #[serde(default, deserialize_with = "lenient_opt")]
+    pub after_import: Option<AfterImport>,
 }
 
 /// Fields normally refreshed by the catalog repo's CI probe, letting the app

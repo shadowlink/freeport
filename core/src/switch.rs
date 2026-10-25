@@ -206,6 +206,7 @@ fn describe(tools: &Tools, home: &Path, pfs: &Path, scratch: &Path) -> AppResult
 pub fn import(
     tools: &Tools,
     install_dir: &Path,
+    import_dir: Option<&str>,
     files: &[PathBuf],
     progress: &mut dyn FnMut(&str),
 ) -> AppResult<PathBuf> {
@@ -224,7 +225,7 @@ pub fn import(
     {
         Ok(keys) => {
             let tools = Tools { keys, ..tools.clone() };
-            import_inner(&tools, install_dir, &tmp, &home, files, progress)
+            import_inner(&tools, install_dir, import_dir, &tmp, &home, files, progress)
         }
         Err(e) => Err(e),
     };
@@ -241,6 +242,7 @@ fn nstool(tools: &Tools, home: &Path) -> Command {
 fn import_inner(
     tools: &Tools,
     install_dir: &Path,
+    import_dir: Option<&str>,
     tmp: &Path,
     home: &Path,
     files: &[PathBuf],
@@ -305,7 +307,10 @@ fn import_inner(
     let base = base.ok_or_else(|| {
         AppError::msg("hace falta el juego base (NSP/XCI de la aplicación) en la misma importación; las actualizaciones solas no bastan")
     })?;
-    let dest = install_dir.join(app_id.to_uppercase());
+    let dest = match import_dir {
+        Some(rel) => install_dir.join(rel.replace("{title_id}", &app_id.to_uppercase())),
+        None => install_dir.join(app_id.to_uppercase()),
+    };
     let exefs = dest.join("exefs");
     let romfs = dest.join("romfs");
     let _ = std::fs::remove_dir_all(&exefs);

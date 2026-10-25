@@ -123,6 +123,7 @@ fn extract_sync(archive: &Path, dest_dir: &Path) -> AppResult<()> {
 pub fn is_archive(name: &str) -> bool {
     let n = name.to_lowercase();
     n.ends_with(".zip")
+        || n.ends_with(".tar")
         || n.ends_with(".tar.gz")
         || n.ends_with(".tgz")
         || n.ends_with(".tar.xz")

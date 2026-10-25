@@ -352,9 +352,14 @@ mod lenient_tests {
 
     #[test]
     fn unknown_register_shape_does_not_break_rom_info() {
-        let j = r#"{"required":true,"mode":"in-app","register":{"something":"new","nested":[1,2]}}"#;
+        // A shape the app does not understand at all → None, not an error.
+        let j = r#"{"required":true,"mode":"in-app","register":[1,2]}"#;
         let r: RomInfo = serde_json::from_str(j).unwrap();
         assert!(r.register.is_none());
+        // Unknown keys inside a known object are simply ignored.
+        let j = r#"{"required":true,"mode":"in-app","register":{"something":"new"}}"#;
+        let r: RomInfo = serde_json::from_str(j).unwrap();
+        assert!(r.register.unwrap().file.is_none());
         let j = r#"{"required":true,"mode":"in-app","register":{"link":"~/x"}}"#;
         let r: RomInfo = serde_json::from_str(j).unwrap();
         assert_eq!(r.register.unwrap().link.as_deref(), Some("~/x"));

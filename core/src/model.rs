@@ -174,6 +174,18 @@ impl RepoRef {
     }
 }
 
+/// Deserializes an optional nested value, mapping any shape mismatch to
+/// `None` instead of failing the enclosing document. Catalogs grow new
+/// fields over time and older apps must keep loading them.
+fn lenient_opt<'de, D, T>(d: D) -> Result<Option<T>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: serde::de::DeserializeOwned,
+{
+    let v = serde_json::Value::deserialize(d)?;
+    Ok(serde_json::from_value::<T>(v).ok())
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct RomRegister {
     /// JSON settings file of the port's launcher (`~` expands to $HOME).
@@ -213,7 +225,8 @@ pub struct RomInfo {
     /// Where the port's own launcher keeps the game/ROM path, so Freeport can
     /// fill it in after a ROM pick or PKG import (JSON file + key). The port
     /// then starts straight into the game instead of asking for the folder.
-    #[serde(default)]
+    /// Lenient: an unknown shape here must never break the whole catalog.
+    #[serde(default, deserialize_with = "lenient_opt")]
     pub register: Option<RomRegister>,
 }
 
@@ -331,4 +344,19 @@ pub struct CatalogView {
     pub platform: String,
     pub systems: Vec<SystemInfo>,
     pub projects: Vec<ProjectView>,
+}
+
+#[cfg(test)]
+mod lenient_tests {
+    use super::*;
+
+    #[test]
+    fn unknown_register_shape_does_not_break_rom_info() {
+        let j = r#"{"required":true,"mode":"in-app","register":{"something":"new","nested":[1,2]}}"#;
+        let r: RomInfo = serde_json::from_str(j).unwrap();
+        assert!(r.register.is_none());
+        let j = r#"{"required":true,"mode":"in-app","register":{"link":"~/x"}}"#;
+        let r: RomInfo = serde_json::from_str(j).unwrap();
+        assert_eq!(r.register.unwrap().link.as_deref(), Some("~/x"));
+    }
 }

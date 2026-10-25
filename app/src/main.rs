@@ -2973,20 +2973,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let url = store::load_config(&paths).ok().and_then(|c| c.catalog_url);
         let handle2 = handle.clone();
         handle.spawn(async move {
-            if let Ok(cat) = actions::refresh_catalog(&client, &paths, url.as_deref()).await {
-                let _ = slint::invoke_from_event_loop(move || {
-                    UI.with(|u| {
-                        if let Some((app, _)) = &*u.borrow() {
-                            *app.catalog.borrow_mut() = cat;
-                        }
+            match actions::refresh_catalog(&client, &paths, url.as_deref()).await {
+                Ok(cat) => {
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((app, _)) = &*u.borrow() {
+                                *app.catalog.borrow_mut() = cat;
+                            }
+                        });
+                        ui_refresh();
+                        UI.with(|u| {
+                            if let Some((app, _)) = &*u.borrow() {
+                                spawn_missing_thumbs(app, &handle2);
+                            }
+                        });
                     });
-                    ui_refresh();
-                    UI.with(|u| {
-                        if let Some((app, _)) = &*u.borrow() {
-                            spawn_missing_thumbs(app, &handle2);
-                        }
+                }
+                Err(e) => {
+                    // Never fail silently: a stale local copy looks like lost
+                    // games and covers to the user.
+                    eprintln!("[freeport] catálogo remoto no disponible: {e}");
+                    let msg = format!("No se pudo cargar el catálogo remoto ({e}); se muestra la copia local.");
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((_, weak)) = &*u.borrow() {
+                                if let Some(w) = weak.upgrade() {
+                                    w.set_notice(msg.into());
+                                }
+                            }
+                        });
                     });
-                });
+                }
             }
         });
     }

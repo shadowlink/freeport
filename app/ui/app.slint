@@ -422,6 +422,14 @@ export component MainWindow inherits Window {
     in property <string> ra-status;
     callback ra-login(string, string);
     callback ra-logout();
+    // RomM (the user's own ROM library server)
+    in-out property <bool> romm-connected;
+    in-out property <string> romm-status;
+    in-out property <string> romm-url;
+    in-out property <string> romm-user;
+    callback romm-connect(string, string, string);
+    callback romm-forget();
+    callback romm-search(string);
     callback toggle-windows(bool);
     callback toggle-experimental-system(string, bool);
     callback set-runner(string);
@@ -765,6 +773,37 @@ export component MainWindow inherits Window {
                         spacing: 10px;
                         Btn { label: "Iniciar sesión"; clicked => { root.ra-login(ra-user.text, ra-pass.text); } }
                         Text { text: root.ra-status; color: #ffd166; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; }
+                    }
+                }
+            }
+        }
+        // RomM
+        Rectangle {
+            border-radius: 8px;
+            background: #1c1f28;
+            VerticalLayout {
+                padding: 12px;
+                spacing: 8px;
+                Text { text: "RomM (tu biblioteca de ROMs)"; color: white; font-weight: 800; }
+                Text { text: "Con un servidor RomM conectado, cada ficha ofrece «Buscar en RomM»: baja la ROM o el volcado del juego y lo deja donde el port lo espera.";
+                       color: #ffffff77; font-size: 11px; wrap: word-wrap; }
+                if root.romm-connected: HorizontalLayout {
+                    spacing: 10px;
+                    Text { text: root.romm-status; color: #4de1c1; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
+                    Btn { label: "Desconectar"; bg: #14161d; fg: #ff5d73; clicked => { root.romm-forget(); } }
+                }
+                if !root.romm-connected: VerticalLayout {
+                    spacing: 8px;
+                    romm-url-e := LineEdit { placeholder-text: "URL, p. ej. http://192.168.1.10:8080"; text: root.romm-url; }
+                    HorizontalLayout {
+                        spacing: 8px;
+                        romm-user-e := LineEdit { placeholder-text: "Usuario"; text: root.romm-user; }
+                        romm-pass-e := LineEdit { placeholder-text: "Contraseña"; input-type: password; }
+                    }
+                    HorizontalLayout {
+                        spacing: 10px;
+                        Btn { label: "Conectar"; clicked => { root.romm-connect(romm-url-e.text, romm-user-e.text, romm-pass-e.text); } }
+                        Text { text: root.romm-status; color: #ffd166; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; }
                     }
                 }
             }
@@ -1209,6 +1248,7 @@ export component MainWindow inherits Window {
                                     if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
                                     if root.detail.installed && root.detail.is-ps4: Btn { label: root.detail.rom-ok ? "PKG importado ✓" : "Importar PKG de PS4"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-pkg(root.detail.id); } }
                                     if root.detail.installed && root.detail.is-switch: Btn { label: root.detail.rom-ok ? "Juego importado ✓" : "Importar NSP/XCI/NSZ"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-switch(root.detail.id); } }
+                                    if root.detail.installed && root.romm-connected && !root.detail.busy: Btn { label: "Buscar en RomM"; bg: #1c1f28; fg: white; clicked => { root.romm-search(root.detail.id); } }
                                     if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
                                         label: root.detail.ra-enabled
                                             ? "🏆 RetroAchievements ✓"

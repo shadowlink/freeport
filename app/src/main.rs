@@ -159,6 +159,10 @@ struct App {
     install_progress: RefCell<std::collections::HashMap<String, f32>>,
     /// Busy label override per project (e.g. "Importando parche 01.09").
     phase: RefCell<std::collections::HashMap<String, String>>,
+    /// Last RomM search results shown in the chooser (by rom id).
+    romm_candidates: RefCell<Vec<freeport_core::romm::Rom>>,
+    /// Project the RomM chooser is for.
+    romm_project: RefCell<String>,
     detail: RefCell<Option<DetailState>>,
     mods_cache: RefCell<std::collections::HashMap<String, Vec<ModInfo>>>,
     mod_busy: RefCell<HashSet<String>>,
@@ -214,6 +218,7 @@ fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<free
 
 thread_local! {
     static SCROLLTEST_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
+    static RUNTIME: RefCell<Option<tokio::runtime::Handle>> = const { RefCell::new(None) };
     static UI: RefCell<Option<(Rc<App>, Weak<MainWindow>)>> = const { RefCell::new(None) };
     // Keeps the periodic update-check timer alive for the process lifetime.
     static UPDATE_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
@@ -1074,6 +1079,58 @@ fn build_detail(app: &App, win: &MainWindow) {
 }
 
 /// Rebuild the UI from the current app state (runs on the UI thread).
+/// Downloads a chosen RomM entry for `pid` with progress in the ficha, then
+/// hands it to the port (copy / import / register).
+fn romm_fetch_ui(app: &Rc<App>, pid: &str, rom: freeport_core::romm::Rom) {
+    let Some(project) = app.find(pid) else { return };
+    let cfg = store::load_config(&app.paths).unwrap_or_default();
+    let Some(romm) = freeport_core::romm::Romm::from_config(&cfg) else { return };
+    let id = pid.to_string();
+    app.busy.borrow_mut().insert(id.clone());
+    app.install_progress.borrow_mut().insert(id.clone(), 0.0);
+    app.phase.borrow_mut().insert(id.clone(), format!("Descargando {}", rom.fs_name));
+    ui_refresh();
+    let client = app.client.clone();
+    let paths = app.paths.clone();
+    let handle = RUNTIME.with(|r| r.borrow().clone());
+    let Some(handle) = handle else { return };
+    let prog_id = id.clone();
+    let on_prog = move |done: u64, total: u64, label: &str| {
+        let idc = prog_id.clone();
+        let f = if total == 0 { 0.0 } else { done as f32 / total as f32 };
+        let text = label.to_string();
+        let _ = slint::invoke_from_event_loop(move || {
+            UI.with(|u| {
+                if let Some((app, _)) = &*u.borrow() {
+                    app.install_progress.borrow_mut().insert(idc.clone(), f);
+                    app.phase.borrow_mut().insert(idc, text);
+                }
+            });
+            ui_refresh();
+        });
+    };
+    let pid2 = id.clone();
+    handle.spawn(async move {
+        let res = actions::romm_fetch(&client, &paths, &project, &romm, &rom, on_prog).await;
+        let _ = slint::invoke_from_event_loop(move || {
+            UI.with(|u| {
+                if let Some((app, weak)) = &*u.borrow() {
+                    app.busy.borrow_mut().remove(&pid2);
+                    app.install_progress.borrow_mut().remove(&pid2);
+                    app.phase.borrow_mut().remove(&pid2);
+                    if let Some(w) = weak.upgrade() {
+                        match &res {
+                            Ok(p) => w.set_notice(format!("ROM lista: {}", p.display()).into()),
+                            Err(e) => w.set_notice(format!("RomM: {e}").into()),
+                        }
+                    }
+                }
+            });
+            ui_refresh();
+        });
+    });
+}
+
 fn ui_refresh() {
     UI.with(|u| {
         if let Some((app, weak)) = &*u.borrow() {
@@ -1442,6 +1499,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         busy: RefCell::new(HashSet::new()),
         install_progress: RefCell::new(std::collections::HashMap::new()),
         phase: RefCell::new(std::collections::HashMap::new()),
+        romm_candidates: RefCell::new(Vec::new()),
+        romm_project: RefCell::new(String::new()),
         detail: RefCell::new(None),
         mods_cache: RefCell::new(std::collections::HashMap::new()),
         mod_busy: RefCell::new(HashSet::new()),
@@ -1673,6 +1732,158 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     });
+
+    RUNTIME.with(|r| *r.borrow_mut() = Some(handle.clone()));
+    {
+        let cfg = store::load_config(&app.paths).unwrap_or_default();
+        win.set_romm_url(cfg.romm_url.clone().unwrap_or_default().into());
+        win.set_romm_user(cfg.romm_user.clone().unwrap_or_default().into());
+        if let Some(r) = freeport_core::romm::Romm::from_config(&cfg) {
+            win.set_romm_connected(true);
+            win.set_romm_status(format!("Conectado a {}", r.url).into());
+        }
+    }
+    win.on_romm_connect({
+        let app = app.clone();
+        let handle = handle.clone();
+        let weak = win.as_weak();
+        move |url, user, pass| {
+            let url = url.trim().trim_end_matches('/').to_string();
+            if url.is_empty() {
+                if let Some(w) = weak.upgrade() { w.set_romm_status("Indica la URL de tu RomM".into()); }
+                return;
+            }
+            if let Some(w) = weak.upgrade() { w.set_romm_status("Conectando…".into()); }
+            let romm = freeport_core::romm::Romm { url: url.clone(), user: user.to_string(), pass: pass.to_string() };
+            let client = app.client.clone();
+            handle.spawn(async move {
+                let res = freeport_core::romm::probe(&client, &romm).await;
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((app, weak)) = &*u.borrow() {
+                            let Some(w) = weak.upgrade() else { return };
+                            match res {
+                                Ok((version, n)) => {
+                                    if let Ok(mut c) = store::load_config(&app.paths) {
+                                        c.romm_url = Some(romm.url.clone());
+                                        c.romm_user = Some(romm.user.clone());
+                                        c.romm_pass = Some(romm.pass.clone());
+                                        let _ = store::save_config(&app.paths, &c);
+                                    }
+                                    w.set_romm_connected(true);
+                                    w.set_romm_status(format!("Conectado a {} (RomM {version}, {n} sistemas con juegos)", romm.url).into());
+                                    ui_refresh();
+                                }
+                                Err(e) => {
+                                    w.set_romm_connected(false);
+                                    w.set_romm_status(e.to_string().into());
+                                }
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
+    win.on_romm_forget({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.romm_url = None;
+                c.romm_user = None;
+                c.romm_pass = None;
+                let _ = store::save_config(&app.paths, &c);
+            }
+            if let Some(w) = weak.upgrade() {
+                w.set_romm_connected(false);
+                w.set_romm_status("".into());
+            }
+            ui_refresh();
+        }
+    });
+    win.on_romm_search({
+        let app = app.clone();
+        let handle = handle.clone();
+        let weak = win.as_weak();
+        move |id| {
+            let id = id.to_string();
+            let Some(project) = app.find(&id) else { return };
+            let cfg = store::load_config(&app.paths).unwrap_or_default();
+            let Some(romm) = freeport_core::romm::Romm::from_config(&cfg) else { return };
+            if let Some(w) = weak.upgrade() { w.set_notice(format!("Buscando «{}» en RomM…", project.original_game).into()); }
+            let client = app.client.clone();
+            let pid = id.clone();
+            handle.spawn(async move {
+                let res = actions::romm_candidates(&client, &romm, &project).await;
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((app, weak)) = &*u.borrow() {
+                            let Some(w) = weak.upgrade() else { return };
+                            match res {
+                                Ok(list) if list.is_empty() => {
+                                    w.set_notice(format!("RomM no tiene nada parecido a «{}» en ese sistema", project.original_game).into());
+                                }
+                                Ok(list) => {
+                                    w.set_notice("".into());
+                                    let rows: Vec<VersionRow> = list
+                                        .iter()
+                                        .take(12)
+                                        .map(|r| VersionRow {
+                                            id: format!("romm:{}", r.id).into(),
+                                            name: r.name.clone().into(),
+                                            kind: "ROMM".into(),
+                                            is_windows: false,
+                                            installed: false,
+                                            active: false,
+                                            platforms: r.fs_name.clone().into(),
+                                            meta: format!("{:.1} MB", r.fs_size_bytes as f64 / 1048576.0).into(),
+                                        })
+                                        .collect();
+                                    *app.romm_candidates.borrow_mut() = list;
+                                    *app.romm_project.borrow_mut() = pid.clone();
+                                    open_chooser(app, &w, "romm", &format!("¿Cuál es {}?", project.original_game), rows);
+                                }
+                                Err(e) => w.set_notice(format!("RomM: {e}").into()),
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    });
+    if let Some(id) = std::env::var("FREEPORT_DEBUG_ROMM").ok().filter(|s| !s.is_empty()) {
+        // dev aid: FREEPORT_DEBUG_ROMM=<project id> searches RomM and fetches the best match.
+        if let Some(project) = app.find(&id) {
+            let cfg = store::load_config(&app.paths).unwrap_or_default();
+            if let Some(romm) = freeport_core::romm::Romm::from_config(&cfg) {
+                let client = app.client.clone();
+                handle.spawn(async move {
+                    let res = actions::romm_candidates(&client, &romm, &project).await;
+                    let _ = slint::invoke_from_event_loop(move || {
+                        match res {
+                            Ok(list) => {
+                                for r in list.iter().take(5) {
+                                    eprintln!("[romm] candidato {} «{}» {} ({} MB) score {:.2}", r.id, r.name, r.fs_name, r.fs_size_bytes / 1048576, freeport_core::romm::score(r, &project.original_game));
+                                }
+                                if let Some(best) = list.first().cloned() {
+                                    UI.with(|u| {
+                                        if let Some((app, _)) = &*u.borrow() {
+                                            *app.romm_candidates.borrow_mut() = list;
+                                            romm_fetch_ui(app, &project.id, best);
+                                        }
+                                    });
+                                }
+                            }
+                            Err(e) => eprintln!("[romm] error: {e}"),
+                        }
+                    });
+                });
+            } else {
+                eprintln!("[romm] sin configurar (romm_url)");
+            }
+        }
+    }
 
     win.on_toggle_ra({
         let app = app.clone();
@@ -2458,6 +2669,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let id = id.to_string();
             let mode = app.chooser_mode.borrow().clone();
             match mode.as_str() {
+                "romm" => {
+                    let rom_id: i64 = id.strip_prefix("romm:").and_then(|x| x.parse().ok()).unwrap_or(-1);
+                    let pid = app.romm_project.borrow().clone();
+                    let Some(rom) = app.romm_candidates.borrow().iter().find(|r| r.id == rom_id).cloned() else { return };
+                    romm_fetch_ui(&app, &pid, rom);
+                }
                 "install" => start_install(id),
                 "play" => {
                     if remember {

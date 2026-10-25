@@ -123,6 +123,19 @@ Freeport en `~/.config/sunshine/apps.json` (con backup) con el comando
 `<AppImage> --tv`. Reinicia Sunshine y aparecerá en Moonlight; al abrirlo por
 streaming arranca directo en Modo TV y se maneja con el mando del cliente.
 
+## RomM: traer las ROMs de tu propia biblioteca
+
+Si tienes un servidor [RomM](https://github.com/rommapp/romm), conéctalo en
+Ajustes (URL, usuario y contraseña; se guardan en `config.json` como las de
+RetroAchievements). A partir de ahí la ficha de cada juego instalado ofrece
+**Buscar en RomM**: busca el título en las plataformas de RomM que
+corresponden al sistema del port, te deja elegir entre los resultados y
+descarga el archivo a la carpeta del port. Después hace lo que el port
+necesite: para los que piden una ROM concreta la descomprime y la copia con
+el nombre esperado; los PKG de PS4 y los NSP/XCI/NSZ de Switch pasan por los
+importadores; el resto queda en `roms/` y se registra como ROM del juego.
+Freeport nunca sube nada a RomM.
+
 ## Importar PKG de PS4
 
 Los ports nativos de PS4 (Bloodborne, Knack II, Uncharted…) necesitan el

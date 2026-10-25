@@ -16,6 +16,7 @@ mod pkg_keys;
 pub mod platform;
 pub mod ra;
 pub mod ra_mod;
+pub mod romm;
 pub mod steam;
 pub mod store;
 pub mod switch;

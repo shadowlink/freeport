@@ -611,6 +611,140 @@ pub fn import_switch_dumps(
     Ok(dest)
 }
 
+fn rom_name_of(p: &Path) -> String {
+    p.file_name().and_then(|n| n.to_str()).unwrap_or("").to_string()
+}
+
+fn walk_files(dir: &Path) -> Vec<PathBuf> {
+    let mut out = Vec::new();
+    if let Ok(rd) = std::fs::read_dir(dir) {
+        for e in rd.flatten() {
+            let p = e.path();
+            if p.is_dir() {
+                out.extend(walk_files(&p));
+            } else {
+                out.push(p);
+            }
+        }
+    }
+    out
+}
+
+/// RomM entries that may be the game a port needs, best match first.
+pub async fn romm_candidates(
+    client: &reqwest::Client,
+    romm: &crate::romm::Romm,
+    project: &Project,
+) -> AppResult<Vec<crate::romm::Rom>> {
+    let slugs = crate::romm::slugs_for_system(&project.system);
+    let plats = crate::romm::platforms(client, romm).await?;
+    let ids: Vec<i64> = plats
+        .iter()
+        .filter(|p| slugs.contains(&p.slug.as_str()) || slugs.contains(&p.fs_slug.as_str()))
+        .map(|p| p.id)
+        .collect();
+    if ids.is_empty() {
+        return Err(AppError::msg(format!("tu RomM no tiene ninguna plataforma de {}", project.system)));
+    }
+    // Search by the shortest distinctive words of the title (RomM matches substrings).
+    let title = project.original_game.clone();
+    let mut found = crate::romm::search(client, romm, &ids, &title).await?;
+    if found.is_empty() {
+        let base = title.split([':', '-']).next().unwrap_or(&title).trim().to_string();
+        if base != title {
+            found = crate::romm::search(client, romm, &ids, &base).await?;
+        }
+    }
+    if found.is_empty() {
+        if let Some(w) = title.split_whitespace().filter(|w| w.len() > 3).max_by_key(|w| w.len()) {
+            found = crate::romm::search(client, romm, &ids, w).await?;
+        }
+    }
+    let mut scored: Vec<(f32, crate::romm::Rom)> = found.into_iter().map(|r| (crate::romm::score(&r, &title), r)).collect();
+    scored.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+    Ok(scored.into_iter().map(|(_, r)| r).collect())
+}
+
+/// Downloads a RomM entry into the port's folder and hands it to the port:
+/// copied into place for "copy" ROMs, run through the PS4/Switch importers
+/// for dumps, or kept in `<install>/roms/` (and registered) for in-app ports.
+pub async fn romm_fetch(
+    client: &reqwest::Client,
+    paths: &Paths,
+    project: &Project,
+    romm: &crate::romm::Romm,
+    rom: &crate::romm::Rom,
+    mut progress: impl FnMut(u64, u64, &str) + Send + 'static,
+) -> AppResult<PathBuf> {
+    let installed = store::load_installed(paths)?;
+    let entry = installed
+        .get(&project.id)
+        .ok_or_else(|| AppError::msg("instala el port antes de traer la ROM"))?;
+    let install_dir = PathBuf::from(&entry.install_path);
+    let roms_dir = install_dir.join("roms");
+    std::fs::create_dir_all(&roms_dir)?;
+    let file = roms_dir.join(&rom.fs_name);
+    progress(0, rom.fs_size_bytes, "Descargando de RomM");
+    let url = romm.content_url(rom);
+    install::download_to_file(client, &url, &file, |d, t| progress(d, t.max(rom.fs_size_bytes), "Descargando de RomM")).await?;
+    drop(installed);
+
+    let ext = file.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+    let project = project.clone();
+    let paths = paths.clone();
+    let file2 = file.clone();
+    // The rest is blocking file work; keep the async runtime free.
+    let result = tokio::task::spawn_blocking(move || -> AppResult<PathBuf> {
+        match (project.rom.mode.as_str(), ext.as_str()) {
+            (_, "pkg") if project.system == "ps4" => {
+                let dest = import_ps4_pkgs(&paths, &project, &[file2.clone()], &mut |d, t, l| progress(d, t, l))?;
+                let _ = std::fs::remove_file(&file2);
+                Ok(dest)
+            }
+            (_, "nsp" | "nsz" | "xci" | "xcz") if project.system == "switch" => {
+                let dest = import_switch_dumps(&paths, &project, &[file2.clone()], &mut |l| progress(0, 0, l))?;
+                let _ = std::fs::remove_file(&file2);
+                Ok(dest)
+            }
+            ("copy", _) => {
+                // RomM libraries usually keep ROMs zipped; the port wants the
+                // file inside. Unpack and take the biggest file (the ROM).
+                let mut src = file2.clone();
+                if install::is_archive(&rom_name_of(&file2)) {
+                    let unpack = file2.with_extension("unpacked");
+                    let _ = std::fs::remove_dir_all(&unpack);
+                    std::fs::create_dir_all(&unpack)?;
+                    tokio::runtime::Handle::current()
+                        .block_on(install::extract_archive(file2.clone(), unpack.clone()))?;
+                    let mut files: Vec<(u64, PathBuf)> = walk_files(&unpack)
+                        .into_iter()
+                        .map(|p| (std::fs::metadata(&p).map(|m| m.len()).unwrap_or(0), p))
+                        .collect();
+                    files.sort_by_key(|(sz, _)| std::cmp::Reverse(*sz));
+                    src = files.first().map(|(_, p)| p.clone()).ok_or_else(|| AppError::msg("el archivo de RomM está vacío"))?;
+                }
+                set_rom(&paths, &project, &src.to_string_lossy())?;
+                let _ = std::fs::remove_file(&file2);
+                let _ = std::fs::remove_dir_all(file2.with_extension("unpacked"));
+                let installed = store::load_installed(&paths)?;
+                Ok(installed.get(&project.id).and_then(|e| e.rom_path.clone()).map(PathBuf::from).unwrap_or(file2))
+            }
+            _ => {
+                let mut installed = store::load_installed(&paths)?;
+                if let Some(e) = installed.get_mut(&project.id) {
+                    e.rom_path = Some(file2.display().to_string());
+                }
+                store::save_installed(&paths, &installed)?;
+                let _ = register_rom_path(&project, &file2);
+                Ok(file2)
+            }
+        }
+    })
+    .await
+    .map_err(|e| AppError::msg(format!("tarea interrumpida: {e}")))??;
+    Ok(result)
+}
+
 /// Process-wide Discord Rich Presence (lazily connected, best-effort).
 fn presence() -> &'static crate::discord::DiscordPresence {
     use std::sync::OnceLock;

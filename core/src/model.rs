@@ -332,6 +332,14 @@ pub struct Config {
     #[serde(default)]
     pub crt: bool,
     /// RetroAchievements account (managed centrally; handed to the RA mod).
+    /// RomM server (the user's own ROM library): base URL and HTTP Basic
+    /// credentials, kept like the RetroAchievements ones.
+    #[serde(default)]
+    pub romm_url: Option<String>,
+    #[serde(default)]
+    pub romm_user: Option<String>,
+    #[serde(default)]
+    pub romm_pass: Option<String>,
     #[serde(default)]
     pub ra_user: Option<String>,
     #[serde(default)]

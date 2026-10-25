@@ -18,6 +18,7 @@ pub mod ra;
 pub mod ra_mod;
 pub mod steam;
 pub mod store;
+pub mod switch;
 pub mod thumbs;
 pub mod update;
 pub mod wiki;

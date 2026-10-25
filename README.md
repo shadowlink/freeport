@@ -142,6 +142,21 @@ uno de esos el importador se detiene y lo dice). Freeport no distribuye
 juegos ni explica dónde obtenerlos: el volcado tiene que ser de tu propia
 copia.
 
+## Importar volcados de Switch (NSP/XCI/NSZ)
+
+Las recompilaciones de Switch (LAS Recomp, B2recomp, Metroid Dread…) piden
+el juego como carpeta con `exefs/` y `romfs/`, no como NSP, XCI o NSZ. En la
+ficha de un juego de Switch instalado, **Importar NSP/XCI/NSZ** convierte el
+juego base y sus actualizaciones a esa carpeta en `<carpeta del port>/<ID>`.
+
+Freeport **no incluye claves de Nintendo ni código de descifrado**, y no
+descarga herramientas: solo ejecuta las que ya tengas instaladas con las
+claves de tu propia consola. El botón exige `nstool` (en el PATH o en
+`~/.local/bin`) y un `prod.keys` en `~/.switch/` o en la carpeta de claves
+de Ryujinx, Eden o yuzu; para `.nsz`/`.xcz` hace falta además `nsz`. Si
+falta algo, lo dice y no hace nada. La conversión usa espacio temporal
+junto al port (varias veces el tamaño del juego) y lo borra al terminar.
+
 ## Tests
 
 ```bash

@@ -215,6 +215,7 @@ struct DetailData {
     needs-rom: bool,
     rom-ok: bool,
     is-ps4: bool,      // PS4 port: offers the PKG importer
+    is-switch: bool,   // Switch port: offers the NSP/XCI importer
     phase: string,     // busy label override (e.g. PKG import)
     busy: bool,
     progress: float,
@@ -376,6 +377,7 @@ export component MainWindow inherits Window {
     callback uninstall(string);
     callback pick-rom(string);
     callback import-pkg(string);
+    callback import-switch(string);
     callback close-detail();
     callback install-mod(string, string);
     callback uninstall-mod(string, string);
@@ -1217,6 +1219,7 @@ export component MainWindow inherits Window {
                                     }
                                     if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
                                     if root.detail.installed && root.detail.is-ps4: Btn { label: root.detail.rom-ok ? "PKG importado ✓" : "Importar PKG de PS4"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-pkg(root.detail.id); } }
+                                    if root.detail.installed && root.detail.is-switch: Btn { label: root.detail.rom-ok ? "Juego importado ✓" : "Importar NSP/XCI/NSZ"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-switch(root.detail.id); } }
                                     if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
                                         label: root.detail.ra-enabled
                                             ? "🏆 RetroAchievements ✓"

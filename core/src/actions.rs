@@ -516,6 +516,30 @@ pub fn import_ps4_pkgs(
     Ok(dest)
 }
 
+/// Imports Switch dumps (NSP/XCI/NSZ) for a Switch port with the user's own
+/// tools and keys (see `switch::detect`), stores the folder as the ROM path
+/// and registers it with the port's launcher when the catalog says how.
+pub fn import_switch_dumps(
+    paths: &Paths,
+    project: &Project,
+    files: &[PathBuf],
+    progress: &mut dyn FnMut(&str),
+) -> AppResult<PathBuf> {
+    let tools = crate::switch::detect().map_err(AppError::msg)?;
+    let mut installed = store::load_installed(paths)?;
+    let entry = installed
+        .get_mut(&project.id)
+        .ok_or_else(|| AppError::msg("instala el port antes de importar el juego"))?;
+    let install_dir = PathBuf::from(&entry.install_path);
+    let dest = crate::switch::import(&tools, &install_dir, files, progress)?;
+    entry.rom_path = Some(dest.display().to_string());
+    store::save_installed(paths, &installed)?;
+    if let Err(e) = register_rom_path(project, &dest) {
+        eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
+    }
+    Ok(dest)
+}
+
 /// Process-wide Discord Rich Presence (lazily connected, best-effort).
 fn presence() -> &'static crate::discord::DiscordPresence {
     use std::sync::OnceLock;

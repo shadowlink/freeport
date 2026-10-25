@@ -1010,6 +1010,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         needs_rom: p.rom.mode == "copy",
         rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
         is_ps4: p.system == "ps4",
+        is_switch: p.system == "switch",
         phase: app.phase.borrow().get(&p.id).cloned().unwrap_or_default().into(),
         busy: app.busy.borrow().contains(&p.id),
         progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
@@ -2587,6 +2588,82 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
         }
     });
+
+    win.on_import_switch({
+        let app = app.clone();
+        move |id| {
+            let id = id.to_string();
+            let Some(project) = app.find(&id) else { return };
+            if app.busy.borrow().contains(&id) {
+                return;
+            }
+            let Some(weak_win) = UI.with(|u| u.borrow().as_ref().map(|(_, w)| w.clone())) else { return };
+            if let Err(msg) = freeport_core::switch::detect() {
+                if let Some(w) = weak_win.upgrade() {
+                    w.set_notice(format!("Para importar volcados de Switch {msg}. Freeport no incluye claves ni herramientas de Nintendo.").into());
+                }
+                return;
+            }
+            let Some(files) = rfd::FileDialog::new()
+                .set_title(format!("Volcado de {} (juego base y actualizaciones)", project.original_game))
+                .add_filter("Switch (NSP, XCI, NSZ, XCZ)", &["nsp", "xci", "nsz", "xcz"])
+                .pick_files()
+            else {
+                return;
+            };
+            app.busy.borrow_mut().insert(id.clone());
+            app.install_progress.borrow_mut().insert(id.clone(), 0.0);
+            app.phase.borrow_mut().insert(id.clone(), "Preparando…".into());
+            ui_refresh();
+            let paths = app.paths.clone();
+            let pid = id.clone();
+            std::thread::spawn(move || {
+                let prog_id = pid.clone();
+                let mut on_prog = move |label: &str| {
+                    let idc = prog_id.clone();
+                    let text = label.to_string();
+                    let _ = slint::invoke_from_event_loop(move || {
+                        UI.with(|u| {
+                            if let Some((app, _)) = &*u.borrow() {
+                                app.phase.borrow_mut().insert(idc, text);
+                            }
+                        });
+                        ui_refresh();
+                    });
+                };
+                let res = actions::import_switch_dumps(&paths, &project, &files, &mut on_prog);
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((app, weak)) = &*u.borrow() {
+                            app.busy.borrow_mut().remove(&pid);
+                            app.install_progress.borrow_mut().remove(&pid);
+                            app.phase.borrow_mut().remove(&pid);
+                            if let Some(w) = weak.upgrade() {
+                                match &res {
+                                    Ok(dir) => w.set_notice(format!("Juego importado en {}", dir.display()).into()),
+                                    Err(e) => w.set_notice(format!("Error al importar: {e}").into()),
+                                }
+                            }
+                        }
+                    });
+                    ui_refresh();
+                });
+            });
+        }
+    });
+    if let Some(spec) = std::env::var("FREEPORT_DEBUG_IMPORT_SWITCH").ok().filter(|s| !s.is_empty()) {
+        // dev aid: FREEPORT_DEBUG_IMPORT_SWITCH=<project id>:<file>,<file>…
+        if let Some((id, files)) = spec.split_once(':') {
+            if let Some(project) = app.find(id) {
+                let files: Vec<std::path::PathBuf> = files.split(',').map(std::path::PathBuf::from).collect();
+                let paths = app.paths.clone();
+                std::thread::spawn(move || {
+                    let r = actions::import_switch_dumps(&paths, &project, &files, &mut |l| eprintln!("[switch] {l}"));
+                    eprintln!("[switch] resultado: {r:?}");
+                });
+            }
+        }
+    }
 
     // Land on the library when there is one; the catalog is the storefront,
     // but day-to-day you open the app to play what you already installed.

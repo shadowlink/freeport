@@ -232,6 +232,32 @@ fn nested_archive_to_unwrap(dir: &Path) -> Option<PathBuf> {
     }
 }
 
+/// Archive kind by magic bytes. Release assets are sometimes mislabeled (a
+/// plain tar uploaded as `.zip`), so the content wins over the extension.
+fn sniff_kind(archive: &Path) -> Option<&'static str> {
+    use std::io::Read;
+    let mut head = [0u8; 512];
+    let n = std::fs::File::open(archive).ok()?.read(&mut head).ok()?;
+    let h = &head[..n];
+    if h.starts_with(b"PK\x03\x04") || h.starts_with(b"PK\x05\x06") {
+        Some("zip")
+    } else if h.starts_with(&[0x1f, 0x8b]) {
+        Some("tar.gz")
+    } else if h.starts_with(&[0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00]) {
+        Some("tar.xz")
+    } else if h.starts_with(b"7z\xbc\xaf\x27\x1c") {
+        Some("7z")
+    } else if h.starts_with(b"Rar!\x1a\x07") {
+        Some("rar")
+    } else if h.starts_with(b"!<arch>") {
+        Some("deb")
+    } else if n >= 262 && &h[257..262] == b"ustar" {
+        Some("tar")
+    } else {
+        None
+    }
+}
+
 fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
     std::fs::create_dir_all(dest_dir)?;
     let name = archive
@@ -239,32 +265,56 @@ fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
         .and_then(|n| n.to_str())
         .unwrap_or("")
         .to_lowercase();
-
-    if name.ends_with(".zip") {
-        let file = std::fs::File::open(archive)?;
-        let mut zip = zip::ZipArchive::new(file)?;
-        zip.extract(dest_dir)?;
-        Ok(())
+    let by_name = if name.ends_with(".zip") {
+        "zip"
     } else if name.ends_with(".tar.gz") || name.ends_with(".tgz") {
-        let file = std::fs::File::open(archive)?;
-        let gz = flate2::read::GzDecoder::new(file);
-        let mut tar = tar::Archive::new(gz);
-        tar.unpack(dest_dir)?;
-        Ok(())
+        "tar.gz"
     } else if name.ends_with(".tar.xz") || name.ends_with(".txz") {
-        extract_tar_xz(archive, dest_dir)
+        "tar.xz"
+    } else if name.ends_with(".tar") {
+        "tar"
     } else if name.ends_with(".deb") {
-        extract_deb(archive, dest_dir)
+        "deb"
     } else if name.ends_with(".7z") {
-        sevenz_rust::decompress_file(archive, dest_dir)
-            .map_err(|e| AppError::msg(format!("error al descomprimir 7z: {e}")))?;
-        Ok(())
+        "7z"
     } else if name.ends_with(".rar") {
-        extract_rar(archive, dest_dir)
+        "rar"
     } else {
-        Err(AppError::msg(format!(
-            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar.gz, .tar.xz, .deb, .7z, .rar)"
-        )))
+        ""
+    };
+    let kind = sniff_kind(archive).unwrap_or(by_name);
+
+    match kind {
+        "zip" => {
+            let file = std::fs::File::open(archive)?;
+            let mut zip = zip::ZipArchive::new(file)?;
+            zip.extract(dest_dir)?;
+            Ok(())
+        }
+        "tar.gz" => {
+            let file = std::fs::File::open(archive)?;
+            let gz = flate2::read::GzDecoder::new(file);
+            let mut tar = tar::Archive::new(gz);
+            tar.unpack(dest_dir)?;
+            Ok(())
+        }
+        "tar" => {
+            let file = std::fs::File::open(archive)?;
+            let mut tar = tar::Archive::new(file);
+            tar.unpack(dest_dir)?;
+            Ok(())
+        }
+        "tar.xz" => extract_tar_xz(archive, dest_dir),
+        "deb" => extract_deb(archive, dest_dir),
+        "7z" => {
+            sevenz_rust::decompress_file(archive, dest_dir)
+                .map_err(|e| AppError::msg(format!("error al descomprimir 7z: {e}")))?;
+            Ok(())
+        }
+        "rar" => extract_rar(archive, dest_dir),
+        _ => Err(AppError::msg(format!(
+            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar, .tar.gz, .tar.xz, .deb, .7z, .rar)"
+        ))),
     }
 }
 
@@ -528,6 +578,27 @@ mod tests {
             assert_eq!(auto.file_name().unwrap(), "TheGame");
         }
         let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn tar_mislabeled_as_zip() {
+        let dir = scratch("tar_as_zip");
+        let archive = dir.join("Game-v1.0-windows-x64.zip");
+        {
+            let file = std::fs::File::create(&archive).unwrap();
+            let mut tar = tar::Builder::new(file);
+            let data = b"MZ fake exe";
+            let mut h = tar::Header::new_gnu();
+            h.set_size(data.len() as u64);
+            h.set_mode(0o644);
+            h.set_cksum();
+            tar.append_data(&mut h, "Game/Game.exe", &data[..]).unwrap();
+            tar.finish().unwrap();
+        }
+        let dest = dir.join("out");
+        extract_sync(&archive, &dest).unwrap();
+        let bin = find_launch_binary(&dest, Some("Game.exe"), true).unwrap();
+        assert!(bin.ends_with("Game.exe"));
     }
 
     #[test]

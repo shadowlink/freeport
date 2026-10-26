@@ -1,4 +1,6 @@
-import { ListView, LineEdit, ScrollView, CheckBox, ComboBox } from "std-widgets.slint";
+import { ListView, LineEdit, ScrollView, ComboBox } from "std-widgets.slint";
+
+// ── Data ───────────────────────────────────────────────────────────────────
 
 struct CardItem {
     id: string,
@@ -23,7 +25,7 @@ struct CardItem {
     is-new: bool,        // recently added to the catalog
     versions: int,       // projects folded into this card (1 = plain project)
     aspect: float,       // width/height of the system's original box (1.43 N64, 1.0 PS1, 0.58 PSP…)
-    card-w: float,       // px: slot width for this card (landscape boxes get a wider slot)
+    card-w: float,       // px: slot width for this card (box height is shared by the whole grid)
     experimental: bool,  // tier experimental: shown with a warning badge
 }
 
@@ -45,88 +47,6 @@ struct VersionRow {
     meta: string,        // latest tag
 }
 
-component Btn inherits Rectangle {
-    in property <string> label;
-    in property <color> fg: #0b0c10;
-    in property <color> bg: #ffb23e;
-    callback clicked;
-    height: 26px;
-    border-radius: 6px;
-    background: touch.pressed ? bg.darker(20%) : (touch.has-hover ? bg.brighter(18%) : bg);
-    animate background { duration: 120ms; easing: ease-out; }
-    preferred-width: t.preferred-width + 16px;
-    min-width: t.preferred-width + 16px;
-    t := Text { x: 8px; width: parent.width - 16px; height: parent.height;
-                text: root.label; color: root.fg; font-size: 12px; font-weight: 700;
-                horizontal-alignment: center; vertical-alignment: center; overflow: elide; }
-    touch := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
-}
-
-// Cover art that never crops the boxart: the full image is shown (contain),
-// centered on an ambient fill made from the same art (scaled up + darkened),
-// so mismatched aspect ratios look intentional instead of cutting off logos.
-component Cover inherits Rectangle {
-    in property <image> source;
-    in property <string> title;
-    in property <bool> hovered;
-    background: #14161d;
-    // Placeholder title until the thumbnail loads.
-    if root.source.width == 0: Text {
-        x: 8px; width: parent.width - 16px; height: parent.height;
-        text: root.title; color: #ffffff88; font-size: 12px; font-weight: 700;
-        wrap: word-wrap; horizontal-alignment: center; vertical-alignment: center;
-    }
-    // Foreground: the full cover, never cropped.
-    Image {
-        source: root.source;
-        width: root.hovered ? parent.width * 1.05 : parent.width;
-        height: root.hovered ? parent.height * 1.05 : parent.height;
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
-        image-fit: contain;
-        animate width, height { duration: 220ms; easing: ease-out; }
-    }
-}
-
-// Header sort selector chip.
-component SortChip inherits Rectangle {
-    in property <string> label;
-    in property <string> mode;
-    in property <string> active;
-    callback pick(string);
-    height: 26px;
-    border-radius: 6px;
-    background: root.active == root.mode ? #ffb23e : #1c1f28;
-    animate background { duration: 120ms; easing: ease-out; }
-    HorizontalLayout {
-        padding-left: 10px; padding-right: 10px;
-        Text { text: root.label; color: root.active == root.mode ? #0b0c10 : #ffffffaa;
-               font-size: 12px; font-weight: 700; vertical-alignment: center; }
-    }
-    TouchArea { mouse-cursor: pointer; clicked => { root.pick(root.mode); } }
-}
-
-// Thin progress bar. `value` in 0.0..1.0; when < 0 shows an indeterminate sweep.
-component Bar inherits Rectangle {
-    in property <float> value;
-    in property <color> fill: #ffb23e;
-    height: 6px;
-    border-radius: 3px;
-    background: #00000066;
-    clip: true;
-    property <float> sweep;
-    animate sweep { duration: 1100ms; iteration-count: -1; easing: ease-in-out; }
-    init => { self.sweep = 1.0; }
-    Rectangle {
-        x: root.value >= 0 ? 0px : (parent.width * 0.6) * root.sweep;
-        width: root.value >= 0 ? parent.width * clamp(root.value, 0.0, 1.0) : parent.width * 0.4;
-        height: parent.height;
-        border-radius: 3px;
-        background: root.fill;
-        animate width { duration: 180ms; easing: ease-out; }
-    }
-}
-
 struct SysRow {
     id: string,
     name: string,
@@ -136,21 +56,6 @@ struct SysRow {
     has-logo: bool,
     exp-on: bool,     // experimental ports of this system are listed
     exp-hidden: int,  // experimental ports currently hidden
-}
-
-// Window control button (minimize / maximize / close).
-component WinBtn inherits Rectangle {
-    in property <string> symbol;
-    in property <color> hover-bg: #ffffff26;
-    callback clicked;
-    width: 40px;
-    height: 28px;
-    border-radius: 6px;
-    background: ta.has-hover ? root.hover-bg : #00000000;
-    animate background { duration: 120ms; easing: ease-out; }
-    Text { text: root.symbol; color: white; font-size: 14px;
-           horizontal-alignment: center; vertical-alignment: center; }
-    ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
 
 struct FactRow {
@@ -239,17 +144,124 @@ struct DetailData {
     screens: [ScreenShot],
 }
 
+// ── Building blocks ────────────────────────────────────────────────────────
+// Palette: bg #0b0c10 · panel #14161d · raised #1c1f28 · line #262a35 ·
+// accent #ffb23e (primary) · ok #4de1c1 · danger #ff5d73 · warn #ff9f43.
+
+// Button. `kind`: "primary" (amber), "secondary" (raised), "ghost" (text only),
+// "danger" (red text). `big` gives the page-level size.
+component Btn inherits Rectangle {
+    in property <string> label;
+    in property <string> kind: "primary";
+    in property <bool> big: false;
+    in property <color> fg: root.kind == "primary" ? #0b0c10
+                          : (root.kind == "danger" ? #ff5d73 : (root.kind == "ghost" ? #ffffffcc : white));
+    in property <color> bg: root.kind == "primary" ? #ffb23e : (root.kind == "ghost" ? #00000000 : #1c1f28);
+    out property <bool> hovered: touch.has-hover;
+    callback clicked;
+    height: root.big ? 36px : 28px;
+    border-radius: 7px;
+    background: touch.pressed ? bg.darker(20%)
+              : (touch.has-hover ? (root.kind == "ghost" ? #ffffff14 : bg.brighter(18%)) : bg);
+    border-width: root.kind == "secondary" || root.kind == "danger" ? 1px : 0px;
+    border-color: #2b2f3a;
+    animate background { duration: 120ms; easing: ease-out; }
+    preferred-width: t.preferred-width + (root.big ? 28px : 20px);
+    min-width: t.preferred-width + (root.big ? 28px : 20px);
+    t := Text { x: root.big ? 14px : 10px; width: parent.width - (root.big ? 28px : 20px); height: parent.height;
+                text: root.label; color: root.fg; font-size: root.big ? 13px : 12px; font-weight: 700;
+                horizontal-alignment: center; vertical-alignment: center; overflow: elide; }
+    touch := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
+}
+
+// Cover art that never crops the boxart: the full image is shown (contain) on
+// a dark slot. Slots already follow the system's box shape, so the art fills it.
+component Cover inherits Rectangle {
+    in property <image> source;
+    in property <string> title;
+    in property <bool> hovered;
+    background: #14161d;
+    if root.source.width == 0: Text {
+        x: 8px; width: parent.width - 16px; height: parent.height;
+        text: root.title; color: #ffffff66; font-size: 12px; font-weight: 700;
+        wrap: word-wrap; horizontal-alignment: center; vertical-alignment: center;
+    }
+    Image {
+        source: root.source;
+        width: root.hovered ? parent.width * 1.04 : parent.width;
+        height: root.hovered ? parent.height * 1.04 : parent.height;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        image-fit: contain;
+        animate width, height { duration: 220ms; easing: ease-out; }
+    }
+}
+
+// Segmented option (S / M / L, sort modes…).
+component Seg inherits Rectangle {
+    in property <string> label;
+    in property <string> mode;
+    in property <string> active;
+    callback pick(string);
+    height: 28px;
+    width: max(34px, sg-t.preferred-width + 18px);
+    border-radius: 6px;
+    background: root.active == root.mode ? #ffb23e : (sg-ta.has-hover ? #ffffff10 : #00000000);
+    animate background { duration: 120ms; easing: ease-out; }
+    sg-t := Text { width: 100%; height: 100%; text: root.label; color: root.active == root.mode ? #0b0c10 : #ffffffaa;
+                   font-size: 12px; font-weight: 700; horizontal-alignment: center; vertical-alignment: center; }
+    sg-ta := TouchArea { mouse-cursor: pointer; clicked => { root.pick(root.mode); } }
+}
+
+// On/off switch.
+component Toggle inherits Rectangle {
+    in-out property <bool> checked;
+    callback toggled(bool);
+    width: 40px; height: 22px; border-radius: 11px;
+    background: root.checked ? #ffb23e : (tg-ta.has-hover ? #3a3f4c : #2b2f3a);
+    animate background { duration: 140ms; easing: ease-out; }
+    Rectangle {
+        x: root.checked ? 20px : 2px; y: 2px; width: 18px; height: 18px; border-radius: 9px;
+        background: root.checked ? #0b0c10 : #ffffffcc;
+        animate x { duration: 140ms; easing: ease-out; }
+    }
+    tg-ta := TouchArea { mouse-cursor: pointer; clicked => { root.checked = !root.checked; root.toggled(root.checked); } }
+}
+
+// Thin progress bar. `value` in 0.0..1.0; when < 0 shows an indeterminate sweep.
+component Bar inherits Rectangle {
+    in property <float> value;
+    in property <color> fill: #ffb23e;
+    height: 5px;
+    border-radius: 3px;
+    background: #ffffff1a;
+    clip: true;
+    property <float> sweep;
+    animate sweep { duration: 1100ms; iteration-count: -1; easing: ease-in-out; }
+    init => { self.sweep = 1.0; }
+    Rectangle {
+        x: root.value >= 0 ? 0px : (parent.width * 0.6) * root.sweep;
+        width: root.value >= 0 ? parent.width * clamp(root.value, 0.0, 1.0) : parent.width * 0.4;
+        height: parent.height;
+        border-radius: 3px;
+        background: root.fill;
+        animate width { duration: 180ms; easing: ease-out; }
+    }
+}
+
+// Small status chip: tinted text on a translucent fill of the same colour.
 component Tag inherits Rectangle {
     in property <string> label;
-    in property <color> fg: white;
-    in property <color> bg: #000000aa;
+    in property <color> tint: #ffffffcc;
+    in property <bool> solid: false;
     border-radius: 4px;
-    background: bg;
-    height: 16px;
-    HorizontalLayout {
-        padding-left: 4px;
-        padding-right: 4px;
-        Text { text: root.label; color: root.fg; font-size: 9px; font-weight: 800; vertical-alignment: center; }
+    background: root.solid ? root.tint : root.tint.with-alpha(0.16);
+    height: 18px;
+    width: tg-l.preferred-width;
+    tg-l := HorizontalLayout {
+        padding-left: 6px; padding-right: 6px;
+        Text { text: root.label; color: root.solid ? #0b0c10 : root.tint; font-size: 9px; font-weight: 800;
+               vertical-alignment: center; letter-spacing: 0.4px; }
     }
 }
 
@@ -258,13 +270,12 @@ component KindPill inherits Rectangle {
     in property <string> kind;
     height: 18px;
     width: kp-l.preferred-width;
-    border-radius: 5px;
+    border-radius: 4px;
     background: root.kind == "RECOMP" ? #ffb23e : #3fa7e0;
-    drop-shadow-blur: 6px; drop-shadow-color: #000000aa;
     kp-l := HorizontalLayout {
         padding-left: 7px; padding-right: 7px;
-        Text { text: root.kind == "RECOMP" ? "⟳ RECOMP" : "⚓ PORT";
-               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; }
+        Text { text: root.kind == "RECOMP" ? "RECOMP" : "PORT";
+               color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.5px; }
     }
 }
 
@@ -272,59 +283,132 @@ component KindPill inherits Rectangle {
 component VersionChip inherits Rectangle {
     in property <VersionRow> ver;
     callback clicked;
-    height: 36px;
+    height: 38px;
     width: vc-l.preferred-width;
     border-radius: 8px;
-    background: root.ver.active ? #ffb23e22 : (vc-ta.has-hover ? #ffffff14 : #ffffff0a);
+    background: root.ver.active ? #ffb23e1f : (vc-ta.has-hover ? #ffffff12 : #ffffff08);
     border-width: 1px;
-    border-color: root.ver.active ? #ffb23e : #ffffff22;
+    border-color: root.ver.active ? #ffb23e : #ffffff1f;
     animate background, border-color { duration: 150ms; }
     vc-l := HorizontalLayout {
         padding-left: 10px; padding-right: 10px; spacing: 8px;
         VerticalLayout {
             alignment: center; spacing: 1px;
             Text { text: root.ver.name; color: root.ver.active ? #ffb23e : white; font-size: 12px; font-weight: 800; }
-            Text { text: (root.ver.kind == "RECOMP" ? "⟳ Recomp" : "⚓ Port")
+            Text { text: (root.ver.kind == "RECOMP" ? "Recomp" : "Port")
                          + (root.ver.platforms != "" ? " · " + root.ver.platforms : "")
                          + (root.ver.is-windows ? " · Wine/Proton" : "")
                          + (root.ver.meta != "" ? " · " + root.ver.meta : "");
-                   color: #ffffff88; font-size: 9px; }
+                   color: #ffffff80; font-size: 9px; }
         }
         if root.ver.installed: Text { text: "✓"; color: #4de1c1; font-size: 13px; font-weight: 900; vertical-alignment: center; }
     }
     vc-ta := TouchArea { mouse-cursor: root.ver.active ? MouseCursor.default : MouseCursor.pointer; clicked => { root.clicked(); } }
 }
 
-// Section header with an accent bar — used across the game page.
+// Section header with an accent bar.
 component SectionHeader inherits HorizontalLayout {
     in property <string> label;
     in property <string> meta;
     in property <color> accent: #ffb23e;
     spacing: 10px;
     alignment: start;
-    Rectangle { width: 4px; height: 20px; border-radius: 2px; background: root.accent; }
-    Text { text: root.label; font-size: 17px; font-weight: 800; color: white; vertical-alignment: center; }
-    if root.meta != "": Text { text: root.meta; color: #ffffff77; font-size: 12px; vertical-alignment: center; }
+    Rectangle { width: 3px; height: 18px; border-radius: 2px; background: root.accent; }
+    Text { text: root.label; font-size: 16px; font-weight: 800; color: white; vertical-alignment: center; }
+    if root.meta != "": Text { text: root.meta; color: #ffffff66; font-size: 12px; vertical-alignment: center; }
 }
 
-// Icon rail button. The tooltip is drawn by the window (see `rail-tip`): drawn
-// here it would be painted over by the sidebar next to the rail.
-component RailBtn inherits Rectangle {
+// Sidebar navigation entry: icon + label, optional count badge.
+component NavItem inherits Rectangle {
     in property <image> icon;
+    in property <string> label;
     in property <bool> active;
+    in property <int> badge: 0;
     callback clicked;
-    callback hover(bool);
-    width: 44px; height: 44px; border-radius: 10px;
-    background: root.active ? #ffb23e26 : (rb-ta.has-hover ? #ffffff12 : #00000000);
+    height: 36px; border-radius: 8px;
+    background: root.active ? #ffb23e1a : (nv-ta.has-hover ? #ffffff0a : #00000000);
     animate background { duration: 130ms; easing: ease-out; }
-    Rectangle { x: 0px; y: 10px; width: 3px; height: 24px; border-radius: 2px;
+    Rectangle { x: 0px; y: 9px; width: 3px; height: 18px; border-radius: 2px;
                 background: root.active ? #ffb23e : #00000000; animate background { duration: 160ms; } }
-    Image { source: root.icon; width: 22px; height: 22px;
-            x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2;
-            colorize: root.active ? #ffb23e : (rb-ta.has-hover ? white : #ffffffaa); }
-    rb-ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); }
-                         changed has-hover => { root.hover(self.has-hover); } }
+    HorizontalLayout {
+        padding-left: 14px; padding-right: 10px; spacing: 10px;
+        Image { source: root.icon; width: 18px; height: 18px; y: (parent.height - 18px) / 2;
+                colorize: root.active ? #ffb23e : (nv-ta.has-hover ? white : #ffffffb0); }
+        Text { text: root.label; color: root.active ? white : #ffffffcc; font-size: 13px; font-weight: 700;
+               vertical-alignment: center; horizontal-stretch: 1; }
+        if root.badge > 0: Rectangle {
+            width: 22px; height: 18px; border-radius: 9px; background: #ffb23e; y: (parent.height - 18px) / 2;
+            Text { text: "\{root.badge}"; color: #0b0c10; font-size: 10px; font-weight: 900;
+                   horizontal-alignment: center; vertical-alignment: center; }
+        }
+    }
+    nv-ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
 }
+
+// Sidebar console entry: colour logo, name, count.
+component SideRow inherits Rectangle {
+    in property <string> label;
+    in property <int> count;
+    in property <image> logo;
+    in property <bool> has-logo;
+    in property <bool> active;
+    in property <image> icon;      // shown in the logo slot when there is no logo
+    callback clicked;
+    height: 36px; border-radius: 8px;
+    background: root.active ? #ffb23e1a : (sr-ta.has-hover ? #ffffff0a : #00000000);
+    animate background { duration: 130ms; easing: ease-out; }
+    Rectangle { x: 0px; y: 8px; width: 3px; height: 18px; border-radius: 2px;
+                background: root.active ? #ffb23e : #00000000; animate background { duration: 160ms; } }
+    HorizontalLayout {
+        padding-left: 12px; padding-right: 10px; spacing: 10px;
+        Rectangle {
+            width: 70px;
+            if root.has-logo: Image { source: root.logo; width: 70px; height: 24px; image-fit: contain;
+                                      horizontal-alignment: left; y: (parent.height - 24px) / 2;
+                                      opacity: root.active ? 1.0 : 0.92; }
+            if !root.has-logo: Image { source: root.icon; width: 18px; height: 18px; x: 2px; y: (parent.height - 18px) / 2;
+                                       colorize: root.active ? #ffb23e : #ffffffaa; }
+        }
+        Text { text: root.label; color: root.active ? white : #ffffffcc; font-size: 12px; font-weight: 600;
+               vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
+        Text { text: "\{root.count}"; color: #ffffff55; font-size: 11px; vertical-alignment: center; }
+    }
+    sr-ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
+}
+
+// Settings section: title, description, content.
+component SettingsCard inherits Rectangle {
+    in property <string> title;
+    in property <string> desc;
+    border-radius: 10px;
+    background: #14161d;
+    border-width: 1px; border-color: #262a35;
+    VerticalLayout {
+        padding: 18px;
+        spacing: 12px;
+        VerticalLayout {
+            spacing: 4px;
+            Text { text: root.title; color: white; font-size: 15px; font-weight: 800; }
+            if root.desc != "": Text { text: root.desc; color: #ffffff77; font-size: 12px; wrap: word-wrap; }
+        }
+        @children
+    }
+}
+
+// A labelled row inside a settings card: text on the left, control on the right.
+component SettingRow inherits HorizontalLayout {
+    in property <string> label;
+    in property <string> hint;
+    spacing: 14px;
+    VerticalLayout {
+        alignment: center; spacing: 2px; horizontal-stretch: 1;
+        Text { text: root.label; color: white; font-size: 13px; }
+        if root.hint != "": Text { text: root.hint; color: #ffffff66; font-size: 11px; wrap: word-wrap; }
+    }
+    @children
+}
+
+// ── Window ─────────────────────────────────────────────────────────────────
 
 export component MainWindow inherits Window {
     in property <[SysRow]> systems;
@@ -344,12 +428,12 @@ export component MainWindow inherits Window {
     in property <[CardItem]> recent;
     // "Nuevas incorporaciones" strip (catalog tab): games added in the last week.
     in property <[CardItem]> newcomers;
-    // Catalog filters
-    // Card size (from settings): width of a grid card slot.
-    in property <length> card-w: 158px;
+    // Card size (from settings): height of every box in the grid; widths follow
+    // each system's box shape so a row reads like a shelf.
+    in property <length> card-h: 190px;
     in-out property <string> card-size: "m";
     callback set-card-size(string);
-    // Library footprint on disk ("3.2 GB"), shown in the sidebar.
+    // Library footprint on disk ("3.2 GB"), shown in settings.
     in property <string> library-size;
     // Add-to-Steam (game page side panel)
     callback add-steam(string);
@@ -392,7 +476,8 @@ export component MainWindow inherits Window {
     // Settings
     in-out property <bool> settings-visible;
     in-out property <bool> show-windows;
-    in property <[SysRow]> settings-systems;  // every system, for the per-system experimental switches
+    in property <[SysRow]> settings-systems;    // first half of every system (per-system experimental switches)
+    in property <[SysRow]> settings-systems-b;  // second half (two columns)
     in property <bool> active-exp-on;         // header: experimentals shown for the selected system
     in property <int> active-exp-hidden;      // header: how many are hidden for it
     // Experimental 3D box viewer (box painted by OpenGL inside `v3-*`)
@@ -409,7 +494,7 @@ export component MainWindow inherits Window {
     callback viewer3d-drag(length, length);
     callback viewer3d-release();
     in-out property <string> notice;          // transient message bar (bottom); empty = hidden
-    in-out property <string> rail-tip;        // window-level tooltip for the icon rail
+    in-out property <string> rail-tip;        // (kept for compatibility; unused)
     in-out property <length> rail-tip-y;
     in-out property <string> current-runner-label;
     in property <string> version;
@@ -457,1020 +542,833 @@ export component MainWindow inherits Window {
     // Retro CRT effect
     in-out property <bool> crt-visible;
     callback toggle-crt(bool);
-    // Frameless window controls
-    in-out property <bool> win-maximized;
-    callback win-minimize();
-    callback win-maximize();
-    callback win-close();
-    callback title-press();
-    callback resize-press(string);
 
     preferred-width: 1180px;
     preferred-height: 760px;
-    min-width: 900px;
-    min-height: 600px;
+    min-width: 860px;
+    min-height: 560px;
     title: "Freeport";
-    no-frame: true;
     background: #0b0c10;
-    default-font-size: 14px;
+    default-font-size: 13px;
     default-font-family: "DejaVu Sans";
 
-    // Responsive column count for the cover grid. Card slot = card-w + 14px gap;
-    // main area = window width minus the 64px icon rail, the 244px console sidebar and grid padding.
-    out property <int> cols: max(1, floor((root.width - 308px - 24px) / (root.card-w + 14px)));
+    // Layout constants shared with Rust's row packer.
+    property <length> side-w: 240px;
+    property <length> grid-pad: 24px;
     // Pixel width the grid rows can use (Rust packs variable-width cards into it).
-    out property <length> grid-width: root.width - 308px - 24px;
+    out property <length> grid-width: root.width - root.side-w - 2 * root.grid-pad;
+    // Coarse column estimate: repack when it changes (not on every resize pixel).
+    out property <int> cols: max(1, floor(root.grid-width / (root.card-h * 0.75 + 14px)));
     changed cols => { root.refresh(); }
+    // Narrow main column (set from Rust on repack): shorter header labels.
+    in property <bool> narrow;
 
-    VerticalLayout {
-    // ── Custom titlebar (frameless) ─────────────
-    Rectangle {
-        height: 40px;
-        background: #101219;
-        // Drag region (behind the buttons; brand/spacer let events fall through).
-        // Drag starts on the first move after a press so a plain double-click can
-        // still reach `double-clicked` (maximize) instead of grabbing a move.
-        drag-ta := TouchArea {
-            mouse-cursor: default;
-            property <bool> drag-started;
-            pointer-event(e) => {
-                if (e.kind == PointerEventKind.down && e.button == PointerEventButton.left) {
-                    self.drag-started = false;
-                }
-            }
-            moved => {
-                if (self.pressed && !self.drag-started) {
-                    self.drag-started = true;
-                    root.title-press();
-                }
-            }
-            double-clicked => { root.win-maximize(); }
-        }
-        HorizontalLayout {
-            padding-left: 14px;
-            padding-right: 6px;
-            spacing: 6px;
-            Image { source: @image-url("../assets/logo.svg"); width: 22px; height: 22px; y: (parent.height - 22px) / 2; }
-            Text { text: "FREEPORT"; color: #ffb23e; font-weight: 900; font-size: 15px; letter-spacing: 1px;
-                   vertical-alignment: center; }
-            Rectangle { horizontal-stretch: 1; }
-            WinBtn { symbol: "–"; clicked => { root.win-minimize(); } }
-            WinBtn { symbol: root.win-maximized ? "❐" : "▢"; clicked => { root.win-maximize(); } }
-            WinBtn { symbol: "✕"; hover-bg: #e04b5a; clicked => { root.win-close(); } }
-        }
-    }
-    // ── Content area (holds base view + modal overlays) ─────────────
-    Rectangle {
-        vertical-stretch: 1;
+    // Navigation helpers: every sidebar action lands on a clean view.
+    function go-catalog() { root.settings-visible = false; root.library-tab = false; root.active-system = ""; root.close-detail(); }
+    function go-library() { root.settings-visible = false; root.library-tab = true; root.active-system = ""; root.close-detail(); }
+    function go-system(id: string) { root.settings-visible = false; root.active-system = id; root.close-detail(); }
+
     HorizontalLayout {
-        // ── Icon rail ───────────────────────────
+        // ── Sidebar: brand, navigation, consoles ─────────────────────────
         Rectangle {
-            width: 64px;
+            width: root.side-w;
             background: #0e1016;
             VerticalLayout {
-                padding-top: 10px; padding-bottom: 12px; padding-left: 10px; padding-right: 10px;
-                spacing: 6px;
-                RailBtn { icon: @image-url("../assets/icons/catalog.svg");
-                          active: !root.library-tab && !root.settings-visible;
-                          clicked => { root.settings-visible = false; root.library-tab = false; root.active-system = ""; root.refresh(); }
-                          hover(h) => { root.rail-tip = h ? "Catálogo" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
-                RailBtn { icon: @image-url("../assets/icons/library.svg");
-                          active: root.library-tab && !root.settings-visible;
-                          clicked => { root.settings-visible = false; root.library-tab = true; root.active-system = ""; root.refresh(); }
-                          hover(h) => { root.rail-tip = h ? "Mi biblioteca" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
-                Rectangle { vertical-stretch: 1; }
-                RailBtn { icon: @image-url("../assets/icons/tv.svg"); active: false;
-                          clicked => { root.open-tv(); }
-                          hover(h) => { root.rail-tip = h ? "Modo TV" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
-                RailBtn { icon: @image-url("../assets/icons/settings.svg");
-                          active: root.settings-visible;
-                          clicked => { root.settings-visible = true; }
-                          hover(h) => { root.rail-tip = h ? "Configuración" : ""; root.rail-tip-y = self.absolute-position.y - 40px; } }
-            }
-        }
-
-        Rectangle { width: 1px; background: #2b2f3a; }
-        // ── Console sidebar (search, "Todos", one tile per system) ──
-        if !root.settings-visible: Rectangle {
-            width: 244px;
-            background: #14161d;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 10px;
-                // Bulk update: visible while something is pending or running.
-                if root.updates-pending > 0 || root.bulk-busy: Rectangle {
-                    height: root.bulk-busy ? 88px : (root.bulk-label != "" ? 62px : 42px);
-                    border-radius: 8px;
-                    background: bulk-ta.has-hover && !root.bulk-busy ? #ffd16630 : #ffd1661c;
-                    border-width: 1px;
-                    border-color: #ffd16655;
-                    animate background { duration: 130ms; easing: ease-out; }
-                    bulk-ta := TouchArea { mouse-cursor: pointer; clicked => { if (!root.bulk-busy) { root.update-all(); } } }
-                    VerticalLayout {
-                        padding: 10px;
-                        spacing: 6px;
-                        HorizontalLayout {
-                            spacing: 8px;
-                            Text { text: root.bulk-busy ? "Actualizando juegos…" : "↑ Actualizar todo";
-                                   color: #ffd166; font-weight: 800; font-size: 13px;
-                                   vertical-alignment: center; horizontal-stretch: 1; }
-                            if !root.bulk-busy: Rectangle {
-                                width: 22px; height: 22px; border-radius: 11px; background: #ffd166;
-                                Text { text: "\{root.updates-pending}"; color: #0b0c10; font-size: 11px; font-weight: 900;
-                                       horizontal-alignment: center; vertical-alignment: center; }
-                            }
-                        }
-                        if root.bulk-busy: VerticalLayout {
-                            spacing: 4px;
-                            Bar { value: root.bulk-progress; fill: #ffd166; }
-                            HorizontalLayout {
-                                spacing: 6px;
-                                Text { text: root.bulk-label; color: #ffffff99; font-size: 10px; overflow: elide;
-                                       vertical-alignment: center; horizontal-stretch: 1; }
-                                Rectangle {
-                                    width: 18px; height: 18px; border-radius: 4px;
-                                    background: bc-ta.has-hover ? #ff5d7333 : #00000000;
-                                    Text { text: "✕"; color: #ff5d73; font-size: 11px; font-weight: 900;
-                                           horizontal-alignment: center; vertical-alignment: center; }
-                                    bc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.cancel-update-all(); } }
-                                }
-                            }
-                        }
-                        if !root.bulk-busy && root.bulk-label != "": Text {
-                            text: root.bulk-label; color: #ffffff99; font-size: 10px; wrap: word-wrap;
-                        }
-                    }
-                }
-                LineEdit {
-                    placeholder-text: "Buscar juego…";
-                    text <=> root.search-text;
-                    edited => { root.refresh(); }
-                }
-                Rectangle {
-                    height: 46px;
-                    border-radius: 10px;
-                    background: root.active-system == "" ? #ffb23e1f : (all-touch.has-hover ? #ffffff0a : #1a1d26);
-                    border-width: 1px; border-color: root.active-system == "" ? #ffb23e : #262a35;
-                    animate background, border-color { duration: 130ms; easing: ease-out; }
-                    all-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = ""; root.refresh(); } }
-                    HorizontalLayout {
-                        padding-left: 8px; padding-right: 10px; spacing: 10px;
-                        Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #0e1016; border-width: 1px; border-color: #2b2f3a;
-                            Image { source: @image-url("../assets/icons/catalog.svg"); width: 18px; height: 18px;
-                                    x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; colorize: #ffffff; } }
-                        Text { text: "Todos los juegos"; color: white; font-weight: 700; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
-                    }
-                }
-                ListView {
-                    for s in root.systems: Rectangle {
-                        height: 50px;
-                        Rectangle {
-                            y: 2px; height: 46px; width: parent.width;
-                            border-radius: 10px;
-                            background: root.active-system == s.id ? #ffb23e1f : (row-touch.has-hover ? #ffffff0a : #1a1d26);
-                            border-width: 1px; border-color: root.active-system == s.id ? s.color : #262a35;
-                            animate background, border-color { duration: 130ms; easing: ease-out; }
-                            row-touch := TouchArea { mouse-cursor: pointer; clicked => { root.active-system = s.id; root.refresh(); } }
-                            HorizontalLayout {
-                                padding-left: 8px; padding-right: 10px; spacing: 10px;
-                                // Light plate so every logo (dark ones included) reads the same.
-                                Rectangle { width: 74px; height: 30px; y: 8px; border-radius: 6px; background: #0e1016; border-width: 1px; border-color: #2b2f3a;
-                                    if s.has-logo: Image { source: s.logo; width: 66px; height: 22px;
-                                            x: (parent.width - self.width) / 2; y: (parent.height - self.height) / 2; image-fit: contain; }
-                                    if !s.has-logo: Text { text: s.name; color: white; font-size: 10px; font-weight: 900;
-                                            horizontal-alignment: center; vertical-alignment: center; width: 100%; height: 100%; overflow: elide; }
-                                }
-                                Text { text: s.name; color: white; font-size: 13px; font-weight: 700; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
-                                Text { text: "\{s.count}"; color: #ffffff77; font-size: 12px; vertical-alignment: center; }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        Rectangle { width: 1px; background: #2b2f3a; }
-        // ── Main ────────────────────────────────
-        VerticalLayout {
-            if root.update-available: Rectangle {
-                height: 54px;
-                background: #ffb23e;
-                opacity: 0;
-                init => { self.opacity = 1; }
-                animate opacity { duration: 260ms; easing: ease-out; }
+                padding-top: 14px; padding-bottom: 10px; padding-left: 10px; padding-right: 10px;
+                spacing: 4px;
                 HorizontalLayout {
-                    padding-left: 16px;
-                    padding-right: 12px;
-                    spacing: 12px;
-                    // Text column: a plain stretching Rectangle whose texts are sized
-                    // to 100% of it. A layout-managed Text keeps its preferred width
-                    // as minimum in Slint and pushes the buttons off-screen on narrow
-                    // windows; absolute sizing inside a min-width: 0 box never does.
-                    Rectangle {
-                        horizontal-stretch: 1;
-                        min-width: 0px;
-                        VerticalLayout {
-                            width: 100%;
-                            alignment: center;
-                            spacing: 3px;
-                            Text {
-                                width: 100%;
-                                text: root.update-busy ? "Actualizando…"
-                                      : (root.update-error ? "La actualización falló"
-                                         : "Nueva versión v\{root.update-version} disponible");
-                                color: #0b0c10; font-weight: 800; overflow: elide; wrap: no-wrap;
-                            }
-                            if root.update-busy: Bar { value: -1; height: 6px; fill: #0b0c10; }
-                            if !root.update-busy && root.update-notes != "": Text {
-                                width: 100%;
-                                text: root.update-notes; color: #0b0c10cc; font-size: 11px; overflow: elide; wrap: no-wrap;
-                            }
-                        }
-                    }
-                    // Buttons: fixed width, vertically centered in the 54px band.
-                    if !root.update-busy: VerticalLayout {
-                        alignment: center;
-                        horizontal-stretch: 0;
-                        Btn { label: root.update-error ? "Reintentar" : "Actualizar"; bg: #0b0c10; fg: #ffb23e; clicked => { root.do-update(); } }
-                    }
-                    if !root.update-busy: VerticalLayout {
-                        alignment: center;
-                        horizontal-stretch: 0;
-                        Btn { label: "Después"; bg: #ffffff44; fg: #0b0c10; clicked => { root.dismiss-update(); } }
+                    padding-left: 10px; padding-right: 6px; padding-bottom: 8px; spacing: 9px;
+                    Image { source: @image-url("../assets/logo.svg"); width: 22px; height: 22px; y: (parent.height - 22px) / 2; }
+                    Text { text: "Freeport"; color: white; font-weight: 800; font-size: 16px; vertical-alignment: center; horizontal-stretch: 1; }
+                }
+                NavItem { icon: @image-url("../assets/icons/catalog.svg"); label: "Catálogo";
+                          active: !root.library-tab && !root.settings-visible;
+                          clicked => { root.go-catalog(); } }
+                NavItem { icon: @image-url("../assets/icons/library.svg"); label: "Mi biblioteca";
+                          active: root.library-tab && !root.settings-visible; badge: root.updates-pending;
+                          clicked => { root.go-library(); } }
+                NavItem { icon: @image-url("../assets/icons/tv.svg"); label: "Modo TV"; active: false;
+                          clicked => { root.open-tv(); } }
+                NavItem { icon: @image-url("../assets/icons/settings.svg"); label: "Configuración";
+                          active: root.settings-visible;
+                          clicked => { root.settings-visible = true; } }
+                Rectangle { height: 1px; background: #1f232d; }
+                Text { text: "CONSOLAS"; color: #ffffff55; font-size: 10px; font-weight: 800; letter-spacing: 1px;
+                       height: 26px; vertical-alignment: center; x: 14px; }
+                SideRow { label: "Todas"; count: root.header-count; has-logo: false; icon: @image-url("../assets/icons/catalog.svg");
+                          active: root.active-system == "" && !root.settings-visible;
+                          clicked => { root.go-system(""); } }
+                ListView {
+                    vertical-stretch: 1;
+                    for s in root.systems: SideRow {
+                        label: s.name; count: s.count; logo: s.logo; has-logo: s.has-logo;
+                        active: root.active-system == s.id && !root.settings-visible;
+                        clicked => { root.go-system(s.id); }
                     }
                 }
+                Text { text: "v\{root.version}"; color: #ffffff33; font-size: 10px; x: 14px; height: 18px; vertical-alignment: center; }
             }
+        }
+        Rectangle { width: 1px; background: #1f232d; }
+
+        // ── Main column ─────────────────────────────────────────────────
+        VerticalLayout {
+            // Self-update banner. Absolute geometry: nothing here can push the
+            // buttons out of view, whatever the window width.
+            if root.update-available: Rectangle {
+                height: 44px;
+                background: #1c1f28;
+                Rectangle { x: 0; width: 3px; height: 100%; background: #ffb23e; }
+                Rectangle { y: parent.height - 1px; height: 1px; background: #262a35; }
+                Text {
+                    x: 18px; y: 0; height: parent.height;
+                    width: parent.width - 18px - (root.update-busy ? 200px : 214px);
+                    text: root.update-busy ? "Actualizando Freeport…"
+                          : (root.update-error ? "La actualización falló"
+                             : (root.update-notes != ""
+                                ? "Freeport v\{root.update-version} disponible · \{root.update-notes}"
+                                : "Freeport v\{root.update-version} disponible"));
+                    color: white; font-size: 12px; font-weight: 700; overflow: elide; vertical-alignment: center;
+                }
+                if root.update-busy: Bar { x: parent.width - 190px; y: (parent.height - 5px) / 2; width: 176px; value: -1; }
+                if !root.update-busy: Btn { x: parent.width - 204px; y: 8px; width: 100px;
+                                            label: root.update-error ? "Reintentar" : "Actualizar"; clicked => { root.do-update(); } }
+                if !root.update-busy: Btn { x: parent.width - 96px; y: 8px; width: 84px; kind: "ghost"; label: "Después";
+                                            clicked => { root.dismiss-update(); } }
+            }
+
+            // ── Settings ────────────────────────────────────────────────
             if root.settings-visible: ScrollView {
                 vertical-stretch: 1;
                 VerticalLayout {
-                    padding: 24px;
+                    padding-left: 28px; padding-right: 28px; padding-top: 22px; padding-bottom: 28px;
                     spacing: 14px;
                     alignment: start;
-                    Text { text: "Configuración"; font-size: 24px; font-weight: 900; color: white; }
-        Rectangle {
-            border-radius: 8px;
-            background: #1c1f28;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 10px;
-                HorizontalLayout {
-                    spacing: 10px;
-                    CheckBox { checked <=> root.show-windows; toggled => { root.toggle-windows(root.show-windows); } }
-                    Text { text: "Mostrar juegos de Windows (Wine/Proton)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
-                }
-                if root.show-windows: ComboBox {
-                    model: root.runner-labels;
-                    current-value <=> root.current-runner-label;
-                    selected(v) => { root.set-runner(v); }
-                }
-                VerticalLayout {
-                    spacing: 6px;
-                    Text { text: "Ports experimentales por sistema"; color: white; }
-                    Text { text: "Proyectos nuevos, de un solo autor o con pocas descargas. Marcados con ⚠. Desactivados no se muestran, ni siquiera los instalados.";
-                           color: #ffffff77; font-size: 11px; wrap: word-wrap; }
-                    for sys in root.settings-systems: HorizontalLayout {
-                        spacing: 10px;
-                        height: 30px;
-                        CheckBox { checked: sys.exp-on; toggled => { root.toggle-experimental-system(sys.id, self.checked); } }
-                        if sys.has-logo: Image { source: sys.logo; width: 90px; height: 18px; image-fit: contain; horizontal-alignment: left; y: 6px; }
-                        if !sys.has-logo: Text { text: sys.name; color: white; font-size: 13px; vertical-alignment: center; width: 90px; }
-                        Text { text: sys.exp-hidden > 1 ? "\{sys.exp-hidden} ocultos" : (sys.exp-hidden == 1 ? "1 oculto" : (sys.exp-on ? "mostrando" : "ninguno"));
-                               color: #ffffff66; font-size: 11px; vertical-alignment: center; horizontal-stretch: 1; }
+                    VerticalLayout {
+                        spacing: 2px;
+                        Text { text: "Configuración"; font-size: 22px; font-weight: 800; color: white; }
+                        Text { text: "Freeport \{root.version} · \{root.platform-label}"
+                                     + (root.library-size != "" ? " · biblioteca \{root.library-size}" : "");
+                               color: #ffffff66; font-size: 12px; }
                     }
-                }
-                HorizontalLayout {
-                    spacing: 10px;
-                    CheckBox { checked <=> root.crt-visible; toggled => { root.toggle-crt(root.crt-visible); } }
-                    Text { text: "Efecto CRT (scanlines retro)"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
-                }
-                HorizontalLayout {
-                    spacing: 8px;
-                    Text { text: "Tamaño de carátulas"; color: white; vertical-alignment: center; horizontal-stretch: 1; }
-                    SortChip { label: "S"; mode: "s"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
-                    SortChip { label: "M"; mode: "m"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
-                    SortChip { label: "L"; mode: "l"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
-                }
-            }
-        }
-        // RetroAchievements account
-        Rectangle {
-            border-radius: 8px;
-            background: #1c1f28;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 8px;
-                Text { text: "RetroAchievements"; color: white; font-weight: 800; }
-                if root.ra-logged-in: HorizontalLayout {
-                    spacing: 10px;
-                    Text { text: root.ra-status; color: #4de1c1; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
-                    Btn { label: "Cerrar sesión"; bg: #14161d; fg: #ff5d73; clicked => { root.ra-logout(); } }
-                }
-                if !root.ra-logged-in: VerticalLayout {
-                    spacing: 8px;
-                    ra-user := LineEdit { placeholder-text: "Usuario de RetroAchievements"; }
-                    ra-pass := LineEdit { placeholder-text: "Contraseña"; input-type: password; }
-                    HorizontalLayout {
-                        spacing: 10px;
-                        Btn { label: "Iniciar sesión"; clicked => { root.ra-login(ra-user.text, ra-pass.text); } }
-                        Text { text: root.ra-status; color: #ffd166; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; }
+                    SettingsCard {
+                        title: "Juegos de Windows";
+                        desc: "Muchos ports solo publican binario para Windows. Activa esto para verlos en el catálogo y lanzarlos con Wine o Proton.";
+                        SettingRow { label: "Mostrar juegos de Windows";
+                            Toggle { checked <=> root.show-windows; y: (parent.height - 22px) / 2; toggled(v) => { root.toggle-windows(v); } } }
+                        if root.show-windows: SettingRow { label: "Runner por defecto"; hint: "Se puede cambiar por juego desde su ficha.";
+                            ComboBox { width: 300px; model: root.runner-labels; current-value <=> root.current-runner-label;
+                                       selected(v) => { root.set-runner(v); } } }
                     }
-                }
-            }
-        }
-        // RomM
-        Rectangle {
-            border-radius: 8px;
-            background: #1c1f28;
-            VerticalLayout {
-                padding: 12px;
-                spacing: 8px;
-                Text { text: "RomM (tu biblioteca de ROMs)"; color: white; font-weight: 800; }
-                Text { text: "Con un servidor RomM conectado, cada ficha ofrece «Buscar en RomM»: baja la ROM o el volcado del juego y lo deja donde el port lo espera.";
-                       color: #ffffff77; font-size: 11px; wrap: word-wrap; }
-                if root.romm-connected: HorizontalLayout {
-                    spacing: 10px;
-                    Text { text: root.romm-status; color: #4de1c1; font-size: 13px; vertical-alignment: center; horizontal-stretch: 1; }
-                    Btn { label: "Desconectar"; bg: #14161d; fg: #ff5d73; clicked => { root.romm-forget(); } }
-                }
-                if !root.romm-connected: VerticalLayout {
-                    spacing: 8px;
-                    romm-url-e := LineEdit { placeholder-text: "URL, p. ej. http://192.168.1.10:8080"; text: root.romm-url; }
-                    HorizontalLayout {
-                        spacing: 8px;
-                        romm-user-e := LineEdit { placeholder-text: "Usuario"; text: root.romm-user; }
-                        romm-pass-e := LineEdit { placeholder-text: "Contraseña"; input-type: password; }
+                    SettingsCard {
+                        title: "Apariencia";
+                        SettingRow { label: "Tamaño de las carátulas";
+                            HorizontalLayout { spacing: 2px; alignment: end;
+                                Rectangle { border-radius: 7px; background: #0e1016; border-width: 1px; border-color: #262a35;
+                                    HorizontalLayout { padding: 2px; spacing: 2px;
+                                        Seg { label: "S"; mode: "s"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
+                                        Seg { label: "M"; mode: "m"; active: root.card-size; pick(m) => { root.set-card-size(m); } }
+                                        Seg { label: "L"; mode: "l"; active: root.card-size; pick(m) => { root.set-card-size(m); } } } } } }
+                        SettingRow { label: "Efecto CRT"; hint: "Líneas de barrido y viñeta sobre toda la interfaz.";
+                            Toggle { checked <=> root.crt-visible; y: (parent.height - 22px) / 2; toggled(v) => { root.toggle-crt(v); } } }
                     }
-                    HorizontalLayout {
-                        spacing: 10px;
-                        Btn { label: "Conectar"; clicked => { root.romm-connect(romm-url-e.text, romm-user-e.text, romm-pass-e.text); } }
-                        Text { text: root.romm-status; color: #ffd166; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; }
-                    }
-                }
-            }
-        }
-        HorizontalLayout {
-            spacing: 10px;
-            Btn { label: root.catalog-busy ? "Actualizando…" : "Actualizar catálogo";
-                  bg: root.catalog-busy ? #1c1f28 : #ffb23e; fg: root.catalog-busy ? #ffb23e : #0b0c10;
-                  clicked => { if (!root.catalog-busy) { root.refresh-catalog(); } } }
-            Btn { label: "Buscar actualizaciones"; bg: #1c1f28; fg: white; clicked => { root.check-updates(); } }
-        }
-                    Text { text: root.settings-msg; color: #ffd166; font-size: 12px; }
-                    Rectangle { height: 1px; background: #2b2f3a; }
-                    Text { text: root.library-size != ""
-                               ? "Freeport \{root.version} · \{root.platform-label} · biblioteca \{root.library-size}"
-                               : "Freeport \{root.version} · \{root.platform-label}";
-                           color: #ffffff77; font-size: 12px; }
-                }
-            }
-            if !root.settings-visible: VerticalLayout {
-            Rectangle {
-                height: 64px;
-                HorizontalLayout {
-                    padding-left: 22px;
-                    padding-right: 22px;
-                    padding-top: 14px;
-                    padding-bottom: 6px;
-                    spacing: 10px;
-                    Text { text: root.header-title; color: white; font-size: 24px; font-weight: 900; vertical-alignment: center; }
-                    Text { text: root.header-count == 1 ? "1 juego" : "\{root.header-count} juegos"; color: #ffffff99; font-size: 14px; vertical-alignment: center; }
-                    Rectangle { horizontal-stretch: 1; }
-                    if root.active-system != "" && (root.active-exp-hidden > 0 || root.active-exp-on): Rectangle {
-                        height: 28px; width: hx-l.preferred-width; border-radius: 8px;
-                        background: root.active-exp-on ? #ff9f4326 : (hx-ta.has-hover ? #ffffff14 : #1c1f28);
-                        border-width: 1px; border-color: root.active-exp-on ? #ff9f43 : #2b2f3a;
-                        hx-l := HorizontalLayout { padding-left: 10px; padding-right: 10px; spacing: 6px;
-                            Text { text: root.active-exp-on ? "⚠ Experimentales visibles" : (root.active-exp-hidden == 1 ? "⚠ 1 experimental oculto" : "⚠ \{root.active-exp-hidden} experimentales ocultos");
-                                   color: root.active-exp-on ? #ff9f43 : #ffffffaa; font-size: 12px; font-weight: 700; vertical-alignment: center; } }
-                        hx-ta := TouchArea { mouse-cursor: pointer; clicked => { root.toggle-experimental-system(root.active-system, !root.active-exp-on); } }
-                    }
-                }
-            }
-            // "Nuevas incorporaciones": what landed in the catalog this week,
-            // showcased on its own band at the top of the catalog tab.
-            if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: Rectangle {
-                height: 158px;
-                background: #10131c;
-                VerticalLayout {
-                    padding-left: 22px;
-                    padding-right: 22px;
-                    padding-top: 12px;
-                    padding-bottom: 12px;
-                    spacing: 10px;
-                    SectionHeader { label: "✦ Nuevas incorporaciones"; accent: #7de17d; }
-                    ScrollView {
-                        height: 96px;
+                    SettingsCard {
+                        title: "Ports experimentales";
+                        desc: "Proyectos nuevos, de un solo autor o con pocas descargas. Van marcados con ⚠ y agrupados al final de cada lista. Si desactivas una consola, sus ports experimentales no se muestran, ni siquiera los instalados.";
                         HorizontalLayout {
-                            spacing: 12px;
-                            alignment: start;
-                            for c in root.newcomers: Rectangle {
-                                width: 252px;
-                                height: 92px;
-                                border-radius: 12px;
-                                clip: true;
-                                background: #191c26;
-                                border-width: 1px;
-                                border-color: nc-ta.has-hover ? #7de17d : #343947;
-                                drop-shadow-blur: 12px;
-                                drop-shadow-color: #00000066;
-                                animate border-color { duration: 150ms; easing: ease-out; }
-                                Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.16; }
-                                nc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                            spacing: 24px;
+                            VerticalLayout { spacing: 2px; horizontal-stretch: 1; alignment: start;
+                                for sys in root.settings-systems: HorizontalLayout {
+                                    spacing: 10px; height: 32px;
+                                    Toggle { checked: sys.exp-on; y: 5px; toggled(v) => { root.toggle-experimental-system(sys.id, v); } }
+                                    Rectangle { width: 64px;
+                                        if sys.has-logo: Image { source: sys.logo; width: 64px; height: 20px; image-fit: contain; horizontal-alignment: left; y: 6px; }
+                                        if !sys.has-logo: Text { text: sys.name; color: white; font-size: 11px; font-weight: 800; vertical-alignment: center; height: 100%; } }
+                                    Text { text: sys.name; color: #ffffffcc; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
+                                    Text { text: sys.exp-hidden > 1 ? "\{sys.exp-hidden} ocultos" : (sys.exp-hidden == 1 ? "1 oculto" : "");
+                                           color: #ffffff55; font-size: 11px; vertical-alignment: center; }
+                                }
+                            }
+                            VerticalLayout { spacing: 2px; horizontal-stretch: 1; alignment: start;
+                                for sys in root.settings-systems-b: HorizontalLayout {
+                                    spacing: 10px; height: 32px;
+                                    Toggle { checked: sys.exp-on; y: 5px; toggled(v) => { root.toggle-experimental-system(sys.id, v); } }
+                                    Rectangle { width: 64px;
+                                        if sys.has-logo: Image { source: sys.logo; width: 64px; height: 20px; image-fit: contain; horizontal-alignment: left; y: 6px; }
+                                        if !sys.has-logo: Text { text: sys.name; color: white; font-size: 11px; font-weight: 800; vertical-alignment: center; height: 100%; } }
+                                    Text { text: sys.name; color: #ffffffcc; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
+                                    Text { text: sys.exp-hidden > 1 ? "\{sys.exp-hidden} ocultos" : (sys.exp-hidden == 1 ? "1 oculto" : "");
+                                           color: #ffffff55; font-size: 11px; vertical-alignment: center; }
+                                }
+                            }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 14px;
+                        SettingsCard {
+                            horizontal-stretch: 1;
+                            title: "RetroAchievements";
+                            desc: "Logros en los recomps compatibles. La contraseña no se guarda: solo el token de sesión.";
+                            if root.ra-logged-in: HorizontalLayout {
+                                spacing: 10px;
+                                Text { text: root.ra-status; color: #4de1c1; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
+                                Btn { label: "Cerrar sesión"; kind: "danger"; clicked => { root.ra-logout(); } }
+                            }
+                            if !root.ra-logged-in: VerticalLayout {
+                                spacing: 8px;
+                                ra-user := LineEdit { placeholder-text: "Usuario"; height: 32px; }
+                                ra-pass := LineEdit { placeholder-text: "Contraseña"; input-type: password; height: 32px; }
                                 HorizontalLayout {
-                                    padding: 10px;
-                                    spacing: 12px;
+                                    spacing: 10px;
+                                    Btn { label: "Iniciar sesión"; clicked => { root.ra-login(ra-user.text, ra-pass.text); } }
+                                    Text { text: root.ra-status; color: #ffd166; font-size: 11px; vertical-alignment: center; horizontal-stretch: 1; wrap: word-wrap; }
+                                }
+                            }
+                        }
+                        SettingsCard {
+                            horizontal-stretch: 1;
+                            title: "RomM";
+                            desc: "Con un servidor RomM conectado, cada ficha ofrece «Buscar en RomM»: baja la ROM o el volcado y lo deja donde el port lo espera.";
+                            if root.romm-connected: HorizontalLayout {
+                                spacing: 10px;
+                                Text { text: root.romm-status; color: #4de1c1; font-size: 12px; vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
+                                Btn { label: "Desconectar"; kind: "danger"; clicked => { root.romm-forget(); } }
+                            }
+                            if !root.romm-connected: VerticalLayout {
+                                spacing: 8px;
+                                romm-url-e := LineEdit { placeholder-text: "URL, p. ej. http://192.168.1.10:8080"; text: root.romm-url; height: 32px; }
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    romm-user-e := LineEdit { placeholder-text: "Usuario"; text: root.romm-user; height: 32px; }
+                                    romm-pass-e := LineEdit { placeholder-text: "Contraseña"; input-type: password; height: 32px; }
+                                }
+                                HorizontalLayout {
+                                    spacing: 10px;
+                                    Btn { label: "Conectar"; clicked => { root.romm-connect(romm-url-e.text, romm-user-e.text, romm-pass-e.text); } }
+                                    Text { text: root.romm-status; color: #ffd166; font-size: 11px; vertical-alignment: center; horizontal-stretch: 1; wrap: word-wrap; }
+                                }
+                            }
+                        }
+                    }
+                    SettingsCard {
+                        title: "Catálogo y actualizaciones";
+                        desc: "El catálogo se descarga al arrancar; aquí puedes forzarlo. Freeport avisa solo cuando hay una versión nueva.";
+                        HorizontalLayout {
+                            spacing: 10px; alignment: start;
+                            Btn { label: root.catalog-busy ? "Actualizando…" : "Actualizar catálogo"; kind: root.catalog-busy ? "secondary" : "primary";
+                                  clicked => { if (!root.catalog-busy) { root.refresh-catalog(); } } }
+                            Btn { label: "Buscar actualizaciones de Freeport"; kind: "secondary"; clicked => { root.check-updates(); } }
+                        }
+                        if root.settings-msg != "": Text { text: root.settings-msg; color: #ffd166; font-size: 12px; wrap: word-wrap; }
+                    }
+                }
+            }
+
+            // ── Game page (inside the main column: the sidebar stays) ────
+            if !root.settings-visible && root.detail-visible: detail-root := Rectangle {
+                vertical-stretch: 1;
+                background: #0b0c10;
+                opacity: 0;
+                init => { self.opacity = 1; }
+                animate opacity { duration: 170ms; easing: ease-out; }
+                TouchArea { }
+                // Width available to wrapping text in the left body column.
+                property <length> body-w: max(160px, dscroll.visible-width - 2 * root.grid-pad - 22px - 270px);
+                VerticalLayout {
+                    Rectangle {
+                        height: 48px;
+                        background: #0e1016;
+                        Rectangle { y: parent.height - 1px; height: 1px; background: #1f232d; }
+                        HorizontalLayout {
+                            padding-left: 14px; padding-right: 14px; padding-top: 9px; padding-bottom: 9px;
+                            spacing: 10px;
+                            Btn { label: "← Volver"; kind: "ghost"; clicked => { root.close-detail(); } }
+                            Text { text: root.detail.title; color: #ffffff77; font-size: 12px; vertical-alignment: center; overflow: elide; horizontal-stretch: 1; }
+                            if root.detail.installed && root.detail.update-available && !root.detail.busy: Btn {
+                                label: root.detail.new-version != "" ? "↑ Actualizar a \{root.detail.new-version}" : "↑ Actualizar";
+                                clicked => { root.install(root.detail.id); }
+                            }
+                        }
+                    }
+                    dscroll := ScrollView {
+                        VerticalLayout {
+                            width: dscroll.visible-width;
+                            spacing: 0px;
+                            // ── Hero: the cover as ambient backdrop, content on top ──
+                            Rectangle {
+                                height: 340px;
+                                clip: true;
+                                Image { source: root.detail.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.22; }
+                                Rectangle { background: @linear-gradient(180deg, #0b0c1055 0%, #0b0c10 96%); }
+                                HorizontalLayout {
+                                    padding: root.grid-pad;
+                                    spacing: 24px;
+                                    alignment: start;
                                     Rectangle {
-                                        width: 50px; border-radius: 6px; clip: true;
+                                        width: min(320px, 260px * (root.detail.aspect > 0 ? root.detail.aspect : 0.667));
+                                        height: self.width / (root.detail.aspect > 0 ? root.detail.aspect : 0.667);
+                                        y: parent.height - self.height - root.grid-pad;
+                                        border-radius: 10px; clip: true;
+                                        border-width: 1px; border-color: #ffffff1f;
+                                        drop-shadow-blur: 28px; drop-shadow-color: #00000099;
+                                        Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; }
+                                    }
+                                    VerticalLayout {
+                                        alignment: end;
+                                        spacing: 10px;
+                                        HorizontalLayout {
+                                            spacing: 6px;
+                                            alignment: start;
+                                            KindPill { kind: root.detail.kind; }
+                                            if root.detail.tier == "experimental": Tag { label: "EXPERIMENTAL"; tint: #ff9f43; }
+                                            if root.detail.tier == "curado": Tag { label: "CURADO"; tint: #4de1c1; }
+                                            if root.detail.is-windows: Tag { label: "WINDOWS · WINE/PROTON"; tint: #9fc3ff; }
+                                            if root.detail.installed && root.detail.version != "": Tag { label: "INSTALADO · \{root.detail.version}"; tint: #4de1c1; }
+                                            if root.detail.update-available && root.detail.new-version != "": Tag { label: "↑ NUEVA \{root.detail.new-version}"; tint: #ffd166; }
+                                        }
+                                        Text { text: root.detail.title; font-size: 30px; font-weight: 900; color: white; wrap: word-wrap; }
+                                        Text { text: root.detail.subtitle; font-size: 14px; color: #ffb23e; wrap: word-wrap; }
+                                        if root.detail.has-versions: HorizontalLayout {
+                                            spacing: 6px;
+                                            alignment: start;
+                                            Text { text: "VERSIONES"; color: #ffffff66; font-size: 10px; font-weight: 800;
+                                                   vertical-alignment: center; letter-spacing: 0.6px; }
+                                            for v in root.detail.versions: VersionChip {
+                                                ver: v;
+                                                clicked => { if !v.active { root.open-game(v.id); } }
+                                            }
+                                        }
+                                        if root.detail.has-versions && root.detail.default-labels.length > 1: HorizontalLayout {
+                                            spacing: 8px;
+                                            alignment: start;
+                                            Text { text: "Al jugar desde la tarjeta"; color: #ffffff77; font-size: 11px; vertical-alignment: center; }
+                                            ComboBox {
+                                                width: 260px; height: 30px;
+                                                model: root.detail.default-labels;
+                                                current-index: root.detail.default-index;
+                                                selected => { root.set-default-version(root.detail.id, self.current-index); }
+                                            }
+                                        }
+                                        if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
+                                        if root.detail.busy: HorizontalLayout {
+                                            spacing: 10px;
+                                            alignment: start;
+                                            VerticalLayout {
+                                                spacing: 6px;
+                                                width: 320px;
+                                                Text { text: root.detail.phase != ""
+                                                           ? (root.detail.progress > 0 ? "\{root.detail.phase} \{floor(root.detail.progress * 100)}%" : root.detail.phase)
+                                                           : root.detail.installed
+                                                           ? (root.detail.progress > 0 ? "Actualizando \{floor(root.detail.progress * 100)}%" : "Actualizando…")
+                                                           : (root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…");
+                                                       color: #ffb23e; font-weight: 700; }
+                                                Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 6px; }
+                                            }
+                                            Btn { label: "Cancelar"; kind: "danger"; clicked => { root.cancel-install(root.detail.id); } }
+                                        }
+                                        if !root.detail.busy: HorizontalLayout {
+                                            spacing: 8px;
+                                            alignment: start;
+                                            if root.detail.installed: Btn {
+                                                big: true;
+                                                label: root.detail.play-state == 1 ? "Jugando…" : (root.detail.play-state == 2 ? "⚠ Reintentar" : "▶  Jugar");
+                                                kind: root.detail.play-state == 2 ? "danger" : "primary";
+                                                clicked => { if (root.detail.play-state != 1) { root.play(root.detail.id); } }
+                                            }
+                                            if !root.detail.installed: Btn {
+                                                big: true;
+                                                label: root.detail.install-error ? "⚠ Reintentar" : "↓  Instalar";
+                                                kind: root.detail.install-error ? "danger" : "primary";
+                                                clicked => { root.install(root.detail.id); }
+                                            }
+                                            if root.detail.installed && root.detail.update-available: Btn {
+                                                big: true; kind: "secondary"; fg: #ffd166;
+                                                label: root.detail.new-version != "" ? "↑ Actualizar a \{root.detail.new-version}" : "↑ Actualizar";
+                                                clicked => { root.install(root.detail.id); }
+                                            }
+                                            if root.detail.installed && root.detail.needs-rom: Btn { big: true; kind: "secondary"; label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
+                                            if root.detail.installed && root.detail.is-ps4: Btn { big: true; kind: "secondary"; label: root.detail.rom-ok ? "PKG importado ✓" : "Importar PKG de PS4"; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-pkg(root.detail.id); } }
+                                            if root.detail.installed && root.detail.is-switch: Btn { big: true; kind: "secondary"; label: root.detail.rom-ok ? "Juego importado ✓" : "Importar NSP/XCI/NSZ"; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-switch(root.detail.id); } }
+                                            if root.detail.installed && root.romm-connected: Btn { big: true; kind: "secondary"; label: "Buscar en RomM"; clicked => { root.romm-search(root.detail.id); } }
+                                            if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
+                                                big: true; kind: "secondary";
+                                                label: root.detail.ra-enabled
+                                                    ? "RetroAchievements ✓"
+                                                    : (root.detail.ra-beta ? "RetroAchievements (beta)" : "RetroAchievements");
+                                                fg: root.detail.ra-enabled ? #4de1c1 : white;
+                                                clicked => { root.toggle-ra(root.detail.id, !root.detail.ra-enabled); }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            // ── Body: content column + facts panel ──
+                            HorizontalLayout {
+                                padding: root.grid-pad;
+                                padding-top: 14px;
+                                spacing: 22px;
+                                alignment: start;
+                                VerticalLayout {
+                                    horizontal-stretch: 1;
+                                    spacing: 22px;
+                                    if root.detail.has-screens: VerticalLayout {
+                                        spacing: 10px;
+                                        SectionHeader { label: "Capturas"; }
+                                        ScrollView {
+                                            height: 152px;
+                                            HorizontalLayout {
+                                                spacing: 10px;
+                                                alignment: start;
+                                                for s in root.detail.screens: Rectangle {
+                                                    width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
+                                                    Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
+                                                    sc-ta := TouchArea { mouse-cursor: pointer;
+                                                        clicked => { root.viewer-image = s.img; root.viewer-visible = true; } }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if root.detail.about != "": VerticalLayout {
+                                        spacing: 10px;
+                                        SectionHeader { label: "Acerca del juego"; }
+                                        Text { text: root.detail.about; color: #ffffffcc; font-size: 13px; wrap: word-wrap;
+                                               width: detail-root.body-w; }
+                                    }
+                                    if root.detail.port-notes != "": Rectangle {
+                                        border-radius: 10px;
+                                        background: #14161d;
+                                        border-width: 1px;
+                                        border-color: #262a35;
+                                        VerticalLayout {
+                                            padding: 16px;
+                                            spacing: 8px;
+                                            Text { text: "Cómo funciona (ROM / instalación)"; font-size: 13px; font-weight: 800; color: #ffb23e; }
+                                            Text { text: root.detail.port-notes; color: #ffffffbb; font-size: 12px; wrap: word-wrap;
+                                                   width: detail-root.body-w - 32px; }
+                                        }
+                                    }
+                                    if root.detail.changelog != "": VerticalLayout {
+                                        spacing: 10px;
+                                        SectionHeader { label: "Novedades"; meta: root.detail.last-updated; }
+                                        Rectangle {
+                                            border-radius: 10px;
+                                            background: #14161d;
+                                            border-width: 1px;
+                                            border-color: #262a35;
+                                            VerticalLayout {
+                                                padding: 16px;
+                                                Text { text: root.detail.changelog; color: #ffffffcc; font-size: 12px; wrap: word-wrap;
+                                                       width: detail-root.body-w - 32px; }
+                                            }
+                                        }
+                                    }
+                                    if root.detail.ra-summary != "": VerticalLayout {
+                                        spacing: 10px;
+                                        SectionHeader { label: "Logros"; meta: root.detail.ra-summary; }
+                                        VerticalLayout {
+                                            spacing: 6px;
+                                            for row in root.detail.badge-rows: HorizontalLayout {
+                                                spacing: 6px;
+                                                alignment: start;
+                                                for b in row: Rectangle {
+                                                    width: 44px; height: 44px; border-radius: 6px; clip: true;
+                                                    background: #14161d;
+                                                    border-width: 1px;
+                                                    border-color: b.unlocked ? #ffb23e88 : #262a35;
+                                                    opacity: b.unlocked ? 1.0 : 0.4;
+                                                    if b.has-img: Image { source: b.img; width: 100%; height: 100%; image-fit: cover; }
+                                                    if !b.has-img: Text { text: "?"; color: #ffffff44; font-size: 16px;
+                                                                          horizontal-alignment: center; vertical-alignment: center; }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if root.detail.has-related: VerticalLayout {
+                                        spacing: 10px;
+                                        SectionHeader { label: "Relacionados"; }
+                                        ScrollView {
+                                            height: 200px;
+                                            HorizontalLayout {
+                                                spacing: 12px;
+                                                alignment: start;
+                                                for r in root.detail.related: rel := Rectangle {
+                                                    property <length> rel-w: clamp(160px * (r.aspect > 0 ? r.aspect : 0.667), 96px, 230px);
+                                                    width: self.rel-w; height: 190px;
+                                                    VerticalLayout {
+                                                        spacing: 5px;
+                                                        alignment: start;
+                                                        Rectangle { height: 160px; border-radius: 8px; clip: true; background: #14161d;
+                                                            rel-cover := Cover { width: 100%; height: 100%; source: r.cover; title: r.title; hovered: rel-ta.has-hover; }
+                                                            rel-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(r.id); } }
+                                                        }
+                                                        Text { text: r.title; color: #ffffffcc; font-size: 11px; overflow: elide; }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if root.detail.has-mods: VerticalLayout {
+                                        spacing: 10px;
+                                        SectionHeader { label: "Mods"; }
+                                        for m in root.detail.mods: Rectangle {
+                                            height: 74px;
+                                            border-radius: 8px;
+                                            background: #14161d;
+                                            border-width: 1px;
+                                            border-color: m.installed ? #4de1c144 : #262a35;
+                                            HorizontalLayout {
+                                                padding: 10px;
+                                                spacing: 10px;
+                                                Rectangle {
+                                                    width: 54px; height: 54px; border-radius: 8px; background: #1c1f28; clip: true;
+                                                    if m.has-icon: Image { source: m.icon; width: 100%; height: 100%; image-fit: cover; }
+                                                    if !m.has-icon: Text { text: "◈"; font-size: 24px; color: #ffffff66;
+                                                                           horizontal-alignment: center; vertical-alignment: center; }
+                                                }
+                                                VerticalLayout {
+                                                    horizontal-stretch: 1;
+                                                    spacing: 3px;
+                                                    HorizontalLayout {
+                                                        spacing: 6px;
+                                                        alignment: start;
+                                                        Text { text: m.name; color: white; font-weight: 700; font-size: 13px; overflow: elide; }
+                                                        if m.installed: Tag { label: "INSTALADO"; tint: #4de1c1; }
+                                                    }
+                                                    Text { text: "\{m.owner} · \{m.downloads} descargas"; color: #ffffff99; font-size: 11px; }
+                                                    if !m.busy: Text { text: m.description; color: #ffffff88; font-size: 11px; overflow: elide; }
+                                                    if m.busy: Bar { value: m.progress > 0 ? m.progress : -1; }
+                                                }
+                                                if m.busy: Text { text: m.phase == "extract" ? "Extrayendo…" : (m.progress > 0 ? "\{floor(m.progress * 100)}%" : "…");
+                                                                  color: #ffb23e; font-size: 11px; font-weight: 700; vertical-alignment: center; }
+                                                if !m.busy && m.update: Btn { label: "Actualizar"; kind: "secondary"; fg: #ffd166; clicked => { root.install-mod(root.detail.id, m.full-name); } }
+                                                if !m.busy && m.installed && !m.update: Btn { label: "Quitar"; kind: "danger"; clicked => { root.uninstall-mod(root.detail.id, m.full-name); } }
+                                                if !m.busy && !m.installed: Btn { label: "Instalar"; clicked => { root.install-mod(root.detail.id, m.full-name); } }
+                                            }
+                                        }
+                                    }
+                                } // end left content column
+                                // ── Facts panel (right) ──
+                                VerticalLayout {
+                                    width: 270px;
+                                    spacing: 8px;
+                                    alignment: start;
+                                    Rectangle {
+                                        border-radius: 10px;
+                                        background: #14161d;
+                                        border-width: 1px;
+                                        border-color: #262a35;
+                                        VerticalLayout {
+                                            padding: 16px;
+                                            spacing: 10px;
+                                            Text { text: "FICHA TÉCNICA"; color: #ffffff66; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
+                                            for f in root.detail.facts: VerticalLayout {
+                                                spacing: 1px;
+                                                Text { text: f.label; color: #ffffff66; font-size: 10px; }
+                                                Text { text: f.value; color: f.accent; font-size: 13px; font-weight: 600; wrap: word-wrap; width: 238px; }
+                                            }
+                                        }
+                                    }
+                                    if root.detail.repo-url != "": Btn { label: root.detail.repo-label; kind: "secondary"; clicked => { root.open-url(root.detail.repo-url); } }
+                                    if root.detail.installed: Btn { label: "Abrir carpeta"; kind: "secondary"; clicked => { root.open-folder(root.detail.id); } }
+                                    if root.detail.installed: Btn { label: "Añadir a Steam"; kind: "secondary"; clicked => { root.add-steam(root.detail.id); } }
+                                    Btn { label: "Ver la caja en 3D"; kind: "secondary"; clicked => { root.open-viewer3d(root.detail.id); } }
+                                    if root.detail.installed: Btn { label: "Eliminar del equipo"; kind: "danger"; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
+                                    if root.detail-msg != "": Text { text: root.detail-msg; color: #ffd166; font-size: 11px; wrap: word-wrap; width: 270px; }
+                                }
+                            } // end body row
+                        }
+                    }
+                }
+            }
+
+            // ── Catalog / library ───────────────────────────────────────
+            if !root.settings-visible && !root.detail-visible: VerticalLayout {
+                // Header: title, count, filters, search. Inside a Flickable so its
+                // content can never widen the column (and push things off-screen).
+                Flickable {
+                    height: 62px;
+                    interactive: false;
+                    HorizontalLayout {
+                        padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 14px; padding-bottom: 10px;
+                        spacing: 10px;
+                        Text { text: root.header-title; color: white; font-size: 22px; font-weight: 800; vertical-alignment: center; }
+                        Text { text: root.header-count == 1 ? "1 juego" : "\{root.header-count} juegos"; color: #ffffff66; font-size: 13px; vertical-alignment: center; }
+                        Rectangle { horizontal-stretch: 1; }
+                        if root.active-system != "" && (root.active-exp-hidden > 0 || root.active-exp-on): Rectangle {
+                            height: 30px; width: hx-l.preferred-width; border-radius: 7px; y: (parent.height - 30px) / 2;
+                            background: root.active-exp-on ? #ff9f4322 : (hx-ta.has-hover ? #ffffff12 : #14161d);
+                            border-width: 1px; border-color: root.active-exp-on ? #ff9f43 : #262a35;
+                            hx-l := HorizontalLayout { padding-left: 10px; padding-right: 10px;
+                                Text { text: root.narrow
+                                           ? (root.active-exp-on ? "⚠ visibles" : "⚠ \{root.active-exp-hidden} ocultos")
+                                           : (root.active-exp-on ? "⚠ Experimentales visibles" : (root.active-exp-hidden == 1 ? "⚠ 1 experimental oculto" : "⚠ \{root.active-exp-hidden} experimentales ocultos"));
+                                       color: root.active-exp-on ? #ff9f43 : #ffffffaa; font-size: 11px; font-weight: 700; vertical-alignment: center; } }
+                            hx-ta := TouchArea { mouse-cursor: pointer; clicked => { root.toggle-experimental-system(root.active-system, !root.active-exp-on); } }
+                        }
+                        if root.library-tab && (root.updates-pending > 0 || root.bulk-busy): Btn {
+                            y: (parent.height - 30px) / 2; height: 30px; horizontal-stretch: 0;
+                            kind: root.bulk-busy ? "secondary" : "primary";
+                            label: root.bulk-busy ? "Actualizando…"
+                                 : (root.narrow ? "↑ \{root.updates-pending}"
+                                    : (root.updates-pending == 1 ? "↑ Actualizar 1 juego" : "↑ Actualizar \{root.updates-pending} juegos"));
+                            clicked => { if (!root.bulk-busy) { root.update-all(); } }
+                        }
+                        Rectangle {
+                            width: root.narrow ? 140px : 200px; height: 32px; y: (parent.height - 32px) / 2;
+                            LineEdit { width: 100%; height: 100%; placeholder-text: "Buscar juego…"; font-size: 12px;
+                                       text <=> root.search-text; edited => { root.refresh(); } }
+                        }
+                    }
+                }
+                if root.bulk-busy: Rectangle {
+                    height: 30px;
+                    HorizontalLayout {
+                        padding-left: root.grid-pad; padding-right: root.grid-pad; spacing: 10px;
+                        VerticalLayout { alignment: center; horizontal-stretch: 1; Bar { value: root.bulk-progress; } }
+                        Text { text: root.bulk-label; color: #ffffff99; font-size: 11px; overflow: elide; vertical-alignment: center; width: 320px; }
+                        Btn { label: "Cancelar"; kind: "ghost"; height: 24px; y: 3px; clicked => { root.cancel-update-all(); } }
+                    }
+                }
+                if !root.bulk-busy && root.bulk-label != "": Rectangle {
+                    height: 24px;
+                    Text { x: root.grid-pad; width: parent.width - 2 * root.grid-pad; height: 100%; text: root.bulk-label; color: #ffd166; font-size: 11px; overflow: elide; vertical-alignment: center; }
+                }
+                Rectangle { height: 1px; background: #1f232d; }
+
+                // "Nuevas incorporaciones": what landed in the catalog this week.
+                if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: Rectangle {
+                    height: 150px;
+                    background: #0e1016;
+                    VerticalLayout {
+                        padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 12px; padding-bottom: 12px;
+                        spacing: 10px;
+                        SectionHeader { label: "Nuevas incorporaciones"; accent: #7de17d; }
+                        ScrollView {
+                            height: 90px;
+                            HorizontalLayout {
+                                spacing: 10px;
+                                alignment: start;
+                                for c in root.newcomers: Rectangle {
+                                    width: 262px;
+                                    height: 86px;
+                                    border-radius: 10px;
+                                    clip: true;
+                                    background: nc-ta.has-hover ? #1c1f28 : #14161d;
+                                    border-width: 1px;
+                                    border-color: nc-ta.has-hover ? #7de17d88 : #262a35;
+                                    animate border-color, background { duration: 150ms; easing: ease-out; }
+                                    nc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                                    HorizontalLayout {
+                                        padding: 9px;
+                                        spacing: 10px;
+                                        Rectangle {
+                                            width: 50px; border-radius: 5px; clip: true;
+                                            Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            spacing: 3px;
+                                            horizontal-stretch: 1;
+                                            Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
+                                            Text { text: c.is-windows ? "\{c.meta} · Windows" : c.meta; color: #ffffff77; font-size: 11px; overflow: elide; }
+                                            HorizontalLayout {
+                                                spacing: 4px;
+                                                alignment: start;
+                                                if c.installed: Tag { label: "INSTALADO"; tint: #4de1c1; }
+                                                if !c.installed: Tag { label: "NUEVO"; tint: #7de17d; }
+                                                if c.experimental: Tag { label: "⚠ EXPERIMENTAL"; tint: #ff9f43; }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Rectangle { y: parent.height - 1px; height: 1px; background: #1f232d; }
+                }
+                if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: VerticalLayout {
+                    padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 14px; padding-bottom: 2px;
+                    SectionHeader { label: "Todo el catálogo"; }
+                }
+                // "Seguir jugando": last-played shelf (library).
+                if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: Rectangle {
+                    height: 142px;
+                    background: #0e1016;
+                    VerticalLayout {
+                        padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 12px; padding-bottom: 12px;
+                        spacing: 10px;
+                        SectionHeader { label: "Seguir jugando"; }
+                        // ScrollView: the strip never dictates the column's minimum width.
+                        ScrollView {
+                            height: 90px;
+                            HorizontalLayout {
+                            spacing: 10px;
+                            alignment: start;
+                            for c in root.recent: Rectangle {
+                                width: 290px;
+                                height: 86px;
+                                border-radius: 10px;
+                                clip: true;
+                                background: rc-ta.has-hover ? #1c1f28 : #14161d;
+                                border-width: 1px;
+                                border-color: rc-ta.has-hover ? #ffb23e88 : #262a35;
+                                animate border-color, background { duration: 150ms; easing: ease-out; }
+                                rc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                                HorizontalLayout {
+                                    padding: 9px;
+                                    spacing: 10px;
+                                    Rectangle {
+                                        width: 50px; border-radius: 5px; clip: true;
                                         Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
                                     }
                                     VerticalLayout {
                                         alignment: center;
                                         spacing: 3px;
                                         horizontal-stretch: 1;
-                                        Text { text: c.title; color: white; font-size: 13px; font-weight: 700; overflow: elide; }
-                                        Text { text: c.meta; color: #ffffff88; font-size: 11px; overflow: elide; }
-                                        HorizontalLayout {
-                                            spacing: 4px;
-                                            alignment: start;
-                                            if c.installed: Tag { label: "INSTALADO"; fg: #0b0c10; bg: #4de1c1; }
-                                            if !c.installed: Tag { label: "NUEVO"; fg: #0b0c10; bg: #7de17d; }
-                                            if c.experimental: Tag { label: "⚠ EXPERIMENTAL"; fg: #0b0c10; bg: #ff9f43; }
-                                            if c.is-windows: Tag { label: "WIN"; fg: white; bg: #2b6fb3; }
+                                        Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
+                                        Text { text: c.meta; color: #ffffff77; font-size: 11px; overflow: elide; }
+                                    }
+                                    VerticalLayout {
+                                        alignment: center;
+                                        Rectangle {
+                                            width: 38px; height: 38px; border-radius: 19px;
+                                            background: rp-ta.has-hover ? #ffb23e : #ffb23e22;
+                                            animate background { duration: 120ms; }
+                                            Text { text: "▶"; color: rp-ta.has-hover ? #0b0c10 : #ffb23e; font-size: 14px; font-weight: 900;
+                                                   horizontal-alignment: center; vertical-alignment: center; }
+                                            rp-ta := TouchArea { mouse-cursor: pointer; clicked => { root.play(c.id); } }
                                         }
                                     }
                                 }
                             }
-                        }
-                    }
-                }
-                Rectangle { y: parent.height - 1px; height: 1px; background: #2b2f3a; }
-            }
-            if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: VerticalLayout {
-                padding-left: 22px;
-                padding-right: 22px;
-                padding-top: 14px;
-                padding-bottom: 4px;
-                SectionHeader { label: "Todo el catálogo"; }
-            }
-            // "Seguir jugando": last-played shelf on its own band, visually
-            // separated from the full grid below (distinct background +
-            // divider + a header for the grid section).
-            if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: Rectangle {
-                height: 148px;
-                background: #10131c;
-                VerticalLayout {
-                    padding-left: 22px;
-                    padding-right: 22px;
-                    padding-top: 12px;
-                    padding-bottom: 14px;
-                    spacing: 10px;
-                    SectionHeader { label: "▶ Seguir jugando"; }
-                    HorizontalLayout {
-                        spacing: 12px;
-                        alignment: start;
-                        for c in root.recent: Rectangle {
-                            width: 296px;
-                            height: 92px;
-                            border-radius: 12px;
-                            clip: true;
-                            background: #191c26;
-                            border-width: 1px;
-                            border-color: rc-ta.has-hover ? #ffb23e : #343947;
-                            drop-shadow-blur: 12px;
-                            drop-shadow-color: #00000066;
-                            animate border-color { duration: 150ms; easing: ease-out; }
-                            Image { source: c.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.18; }
-                            rc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
-                            HorizontalLayout {
-                                padding: 10px;
-                                spacing: 12px;
-                                Rectangle {
-                                    width: 50px; border-radius: 6px; clip: true;
-                                    Cover { width: 100%; height: 100%; source: c.cover; title: c.title; }
-                                }
-                                VerticalLayout {
-                                    alignment: center;
-                                    spacing: 3px;
-                                    horizontal-stretch: 1;
-                                    Text { text: c.title; color: white; font-size: 13px; font-weight: 700; overflow: elide; }
-                                    Text { text: c.meta; color: #ffffff88; font-size: 11px; overflow: elide; }
-                                }
-                                VerticalLayout {
-                                    alignment: center;
-                                    Rectangle {
-                                        width: 40px; height: 40px; border-radius: 20px;
-                                        background: rp-ta.has-hover ? #ffb23e : #ffb23e22;
-                                        Text { text: "▶"; color: rp-ta.has-hover ? #0b0c10 : #ffb23e; font-size: 15px; font-weight: 900;
-                                               horizontal-alignment: center; vertical-alignment: center; }
-                                        rp-ta := TouchArea { mouse-cursor: pointer; clicked => { root.play(c.id); } }
-                                    }
-                                }
                             }
                         }
                     }
+                    Rectangle { y: parent.height - 1px; height: 1px; background: #1f232d; }
                 }
-                // Divider under the band.
-                Rectangle { y: parent.height - 1px; height: 1px; background: #2b2f3a; }
-            }
-            // Header for the full grid, so both sections read as sections.
-            if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: VerticalLayout {
-                padding-left: 22px;
-                padding-right: 22px;
-                padding-top: 14px;
-                padding-bottom: 4px;
-                SectionHeader { label: "Toda la biblioteca"; }
-            }
-            Rectangle {
-            vertical-stretch: 1;
-            ListView {
-                for row in root.rows: VerticalLayout {
-                    if row.header != "": HorizontalLayout {
-                        padding-left: 14px; padding-right: 14px; padding-top: 18px; padding-bottom: 4px;
-                        SectionHeader { label: row.header; accent: #ff9f43; }
-                    }
-                    if row.cards.length > 0: HorizontalLayout {
-                    spacing: 14px;
-                    padding: 8px;
-                    alignment: start;
-                    // Shelf feel: boxes of different heights rest on the same baseline.
-                    // Plain rectangles with absolute geometry: no nested layouts per
-                    // card, so rows instantiate fast while scrolling.
-                    for c in row.cards: Rectangle {
-                        property <length> slot-w: c.card-w > 0 ? c.card-w * 1px : root.card-w;
-                        property <length> box-h: self.slot-w / (c.aspect > 0 ? c.aspect : 0.667);
-                        width: self.slot-w;
-                        min-height: self.box-h + 86px;
-                        gcard := Rectangle {
-                            property <length> box-h: parent.box-h;
-                            width: parent.width;
-                            height: parent.box-h + 86px;
-                            y: parent.height - self.height;
-                            cover := Rectangle {
-                                x: 0; y: 0; width: parent.width;
-                                height: gcard.box-h;
-                                border-radius: 10px;
-                                background: #1c1f28;
-                                clip: true;
-                                border-width: 2px;
-                                border-color: cover-ta.has-hover ? (c.installed ? #4de1c1 : #ffb23e)
-                                                                 : (c.installed ? #4de1c1 : #2b2f3a);
-                                drop-shadow-blur: cover-ta.has-hover ? 20px : 0px;
-                                drop-shadow-color: cover-ta.has-hover ? (c.installed ? #4de1c1aa : #ffb23e99) : #00000000;
-                                animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
-                                Cover {
-                                    width: 100%; height: 100%;
-                                    source: c.cover; title: c.title; hovered: cover-ta.has-hover;
-                                }
-                                // Cover art stays clean: no badges over it. State lives in the
-                                // border colour (installed), the action row below and the ficha.
-                                // The one badge allowed on the art: unstable ports must be obvious.
-                                if c.experimental: Rectangle {
-                                    x: 6px; y: 6px; height: 20px; width: ex-l.preferred-width;
-                                    border-radius: 5px; background: #ff9f43;
-                                    ex-l := HorizontalLayout { padding-left: 7px; padding-right: 7px;
-                                        Text { text: "⚠ EXPERIMENTAL"; color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.4px; } }
-                                }
-                                cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
-                                // Hover quick-play (installed games): big center button.
-                                Rectangle {
-                                    visible: c.installed && !c.busy && c.play-state != 1
-                                             && (cover-ta.has-hover || quick-ta.has-hover);
-                                    x: (parent.width - 48px) / 2; y: (parent.height - 48px) / 2;
-                                    width: 48px; height: 48px; border-radius: 24px;
-                                    background: quick-ta.has-hover ? #ffb23e : #ffb23eee;
-                                    drop-shadow-blur: 16px; drop-shadow-color: #000000cc;
-                                    Text { text: "▶"; color: #0b0c10; font-size: 20px; font-weight: 900;
-                                           horizontal-alignment: center; vertical-alignment: center; }
-                                    quick-ta := TouchArea { enabled: parent.visible; mouse-cursor: pointer;
-                                                            clicked => { root.play(c.id); } }
-                                }
-                                // Favorite star (top-right)
-                                Rectangle {
-                                    x: parent.width - 28px; y: 6px; width: 22px; height: 22px;
-                                    border-radius: 11px;
-                                    background: fav-ta.has-hover ? #000000cc : #00000088;
-                                    visible: c.favorite || cover-ta.has-hover || fav-ta.has-hover;
-                                    Text { text: c.favorite ? "★" : "☆"; color: c.favorite ? #ffd166 : white;
-                                           font-size: 13px; horizontal-alignment: center; vertical-alignment: center; }
-                                    fav-ta := TouchArea { mouse-cursor: pointer; clicked => { root.toggle-favorite(c.id); } }
-                                }
-                            }
-                            Text { x: 0; y: cover.height + 6px; width: parent.width; height: 16px;
-                                   text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
+                if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: VerticalLayout {
+                    padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 14px; padding-bottom: 2px;
+                    SectionHeader { label: "Toda la biblioteca"; }
+                }
 
-                            // Action row
-                            if c.busy: HorizontalLayout {
-                                x: 0; y: cover.height + 26px; width: parent.width; height: 28px;
-                                spacing: 5px;
-                                VerticalLayout {
-                                    horizontal-stretch: 1;
-                                    spacing: 4px;
-                                    Text { text: c.installed
-                                               ? (c.progress > 0 ? "Actualizando \{floor(c.progress * 100)}%" : "Actualizando…")
-                                               : (c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…");
-                                           color: #ffb23e; font-size: 11px; font-weight: 700;
-                                           horizontal-alignment: center; }
-                                    Bar { value: c.progress > 0 ? c.progress : -1; }
-                                }
-                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.cancel-install(c.id); } }
+                // ── Grid: shelves of boxes, one height per row ──
+                Rectangle {
+                    vertical-stretch: 1;
+                    ListView {
+                        for row in root.rows: VerticalLayout {
+                            if row.header != "": HorizontalLayout {
+                                padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 18px; padding-bottom: 6px;
+                                SectionHeader { label: row.header; accent: #ff9f43; }
                             }
-                            if !c.busy && c.installed: HorizontalLayout {
-                                x: 0; y: cover.height + 26px; width: parent.width; height: 28px; spacing: 5px;
-                                Btn {
-                                    label: c.play-state == 1 ? "▶ Jugando…" : (c.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
-                                    bg: c.play-state == 2 ? #ff5d73 : #ffb23e;
-                                    fg: c.play-state == 2 ? white : #0b0c10;
-                                    horizontal-stretch: 1;
-                                    clicked => { if (c.play-state != 1) { root.play(c.id); } }
-                                }
-                                if c.update-available: Btn {
-                                    label: "↑"; bg: #ffd166; fg: #0b0c10;
-                                    clicked => { root.install(c.id); }
-                                }
-                                if c.needs-rom: Btn {
-                                    label: c.rom-ok ? "ROM ✓" : "ROM";
-                                    bg: #1c1f28; fg: c.rom-ok ? #4de1c1 : white;
-                                    clicked => { root.pick-rom(c.id); }
-                                }
-                                Btn { label: "✕"; bg: #1c1f28; fg: #ff5d73; clicked => { root.request-uninstall(c.id); } }
-                            }
-                            if !c.busy && !c.installed: Btn {
-                                x: 0; y: cover.height + 27px; width: parent.width;
-                                label: c.install-error ? "⚠ Reintentar" : "↓ Instalar";
-                                bg: #1c1f28; fg: c.install-error ? #ff5d73 : #ffb23e;
-                                clicked => { root.install(c.id); }
-                            }
-                        }
-                    }
-                    }
-                }
-            }
-            if root.header-count == 0: Rectangle {
-                width: 100%; height: 100%;
-                VerticalLayout {
-                    alignment: center;
-                    spacing: 6px;
-                    Text { text: root.library-tab ? "Tu biblioteca está vacía"
-                                 : (root.search-text != "" ? "Sin resultados para «\{root.search-text}»" : "Nada por aquí");
-                           color: #ffffffcc; font-size: 18px; font-weight: 800; horizontal-alignment: center; }
-                    Text { text: root.library-tab ? "Instala un juego desde el catálogo"
-                                 : "Prueba otra búsqueda o cambia de consola";
-                           color: #ffffff77; font-size: 13px; horizontal-alignment: center; }
-                }
-            }
-            }
-            }
-        }
-    }
-
-    // ── Game detail overlay ──────────────────────────────
-    if root.detail-visible: detail-root := Rectangle {
-        width: 100%;
-        height: 100%;
-        background: #0b0c10;
-        opacity: 0;
-        init => { self.opacity = 1; }
-        animate opacity { duration: 170ms; easing: ease-out;  }
-        // Absorb clicks so they don't fall through to the catalog grid behind.
-        TouchArea { }
-        // Width available to wrapping text in the left body column.
-        property <length> body-w: max(160px, dscroll.visible-width - 336px);
-        VerticalLayout {
-            Rectangle {
-                height: 46px;
-                background: #101219;
-                HorizontalLayout {
-                    padding: 8px;
-                    spacing: 8px;
-                    Btn { label: "← Volver"; bg: #1c1f28; fg: white; clicked => { root.close-detail(); } }
-                    Rectangle { horizontal-stretch: 1; }
-                    if root.detail.installed && root.detail.update-available && !root.detail.busy: Btn {
-                        label: root.detail.new-version != "" ? "↑ Actualizar a \{root.detail.new-version}" : "↑ Actualizar";
-                        bg: #ffd166; fg: #0b0c10;
-                        clicked => { root.install(root.detail.id); }
-                    }
-                }
-            }
-            dscroll := ScrollView {
-                VerticalLayout {
-                    // Explicit width = visible area so wrapping text reflows
-                    // instead of overflowing/overlapping.
-                    width: dscroll.visible-width;
-                    spacing: 0px;
-                    // ── Hero: the cover as ambient backdrop, content on top ──
-                    Rectangle {
-                        height: 352px;
-                        clip: true;
-                        Image { source: root.detail.cover; width: 100%; height: 100%; image-fit: cover; opacity: 0.28; }
-                        Rectangle { background: @linear-gradient(180deg, #0b0c1033 0%, #0b0c10 97%); }
-                        HorizontalLayout {
-                            padding: 22px;
-                            spacing: 24px;
-                            alignment: start;
-                            Rectangle {
-                                // Original box shape, 270px tall, capped at 330px wide.
-                                width: min(330px, 270px * (root.detail.aspect > 0 ? root.detail.aspect : 0.667));
-                                height: self.width / (root.detail.aspect > 0 ? root.detail.aspect : 0.667);
-                                y: parent.height - self.height - 22px;
-                                border-radius: 12px; clip: true;
-                                border-width: 1px; border-color: #ffffff22;
-                                drop-shadow-blur: 30px; drop-shadow-color: #00000099;
-                                Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; }
-                            }
-                            VerticalLayout {
-                                alignment: end;
-                                spacing: 9px;
-                                HorizontalLayout {
-                                    spacing: 8px;
-                                    alignment: start;
-                                    KindPill { kind: root.detail.kind; }
-                                    if root.detail.tier == "experimental": Tag { label: "EXPERIMENTAL"; fg: #0b0c10; bg: #ff9f43; height: 18px; }
-                                    if root.detail.tier == "curado": Tag { label: "CURADO"; fg: #0b0c10; bg: #4de1c1; height: 18px; }
-                                    if root.detail.is-windows: Tag { label: "WIN · Wine/Proton"; fg: white; bg: #2b6fb3; height: 18px; }
-                                    if root.detail.installed && root.detail.version != "": Tag { label: "INSTALADO · \{root.detail.version}"; fg: #0b0c10; bg: #4de1c1; height: 18px; }
-                                    if root.detail.update-available && root.detail.new-version != "": Tag { label: "↑ NUEVA \{root.detail.new-version}"; fg: #0b0c10; bg: #ffd166; height: 18px; }
-                                }
-                                Text { text: root.detail.title; font-size: 32px; font-weight: 900; color: white; wrap: word-wrap; }
-                                Text { text: root.detail.subtitle; font-size: 15px; color: #ffb23e; wrap: word-wrap; }
-                                if root.detail.has-versions: HorizontalLayout {
-                                    spacing: 6px;
-                                    alignment: start;
-                                    Text { text: "VERSIONES"; color: #ffffff66; font-size: 10px; font-weight: 800;
-                                           vertical-alignment: center; letter-spacing: 0.6px; }
-                                    for v in root.detail.versions: VersionChip {
-                                        ver: v;
-                                        clicked => { if !v.active { root.open-game(v.id); } }
-                                    }
-                                }
-                                if root.detail.has-versions && root.detail.default-labels.length > 1: HorizontalLayout {
-                                    spacing: 8px;
-                                    alignment: start;
-                                    Text { text: "Al jugar desde la tarjeta"; color: #ffffff77; font-size: 11px; vertical-alignment: center; }
-                                    ComboBox {
-                                        width: 260px; height: 30px;
-                                        model: root.detail.default-labels;
-                                        current-index: root.detail.default-index;
-                                        selected => { root.set-default-version(root.detail.id, self.current-index); }
-                                    }
-                                }
-                                if root.detail.stats != "": Text { text: root.detail.stats; font-size: 12px; color: #ffffff99; }
-                                if root.detail.busy: HorizontalLayout {
-                                    spacing: 10px;
-                                    alignment: start;
-                                    VerticalLayout {
-                                        spacing: 5px;
-                                        width: 300px;
-                                        Text { text: root.detail.phase != ""
-                                                   ? (root.detail.progress > 0 ? "\{root.detail.phase} \{floor(root.detail.progress * 100)}%" : root.detail.phase)
-                                                   : root.detail.installed
-                                                   ? (root.detail.progress > 0 ? "Actualizando \{floor(root.detail.progress * 100)}%" : "Actualizando…")
-                                                   : (root.detail.progress > 0 ? "Instalando \{floor(root.detail.progress * 100)}%" : "Instalando…");
-                                               color: #ffb23e; font-weight: 700; }
-                                        Bar { value: root.detail.progress > 0 ? root.detail.progress : -1; height: 8px; }
-                                    }
-                                    Btn { label: "✕ Cancelar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.cancel-install(root.detail.id); } }
-                                }
-                                if !root.detail.busy: HorizontalLayout {
-                                    spacing: 8px;
-                                    alignment: start;
-                                    Btn { label: "⬡ 3D"; bg: #1c1f28; fg: #4de1c1; clicked => { root.open-viewer3d(root.detail.id); } }
-                                    if root.detail.installed: Btn {
-                                        label: root.detail.play-state == 1 ? "▶ Jugando…" : (root.detail.play-state == 2 ? "⚠ Reintentar" : "▶ Jugar");
-                                        bg: root.detail.play-state == 2 ? #ff5d73 : #ffb23e;
-                                        fg: root.detail.play-state == 2 ? white : #0b0c10;
-                                        clicked => { if (root.detail.play-state != 1) { root.play(root.detail.id); } }
-                                    }
-                                    if root.detail.installed && root.detail.update-available: Btn {
-                                        label: root.detail.new-version != "" ? "↑ Actualizar a \{root.detail.new-version}" : "↑ Actualizar";
-                                        bg: #ffd166; fg: #0b0c10;
-                                        clicked => { root.install(root.detail.id); }
-                                    }
-                                    if root.detail.installed && root.detail.needs-rom: Btn { label: root.detail.rom-ok ? "ROM ✓" : "Seleccionar ROM"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.pick-rom(root.detail.id); } }
-                                    if root.detail.installed && root.detail.is-ps4: Btn { label: root.detail.rom-ok ? "PKG importado ✓" : "Importar PKG de PS4"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-pkg(root.detail.id); } }
-                                    if root.detail.installed && root.detail.is-switch: Btn { label: root.detail.rom-ok ? "Juego importado ✓" : "Importar NSP/XCI/NSZ"; bg: #1c1f28; fg: root.detail.rom-ok ? #4de1c1 : white; clicked => { root.import-switch(root.detail.id); } }
-                                    if root.detail.installed && root.romm-connected && !root.detail.busy: Btn { label: "Buscar en RomM"; bg: #1c1f28; fg: white; clicked => { root.romm-search(root.detail.id); } }
-                                    if root.detail.installed && root.detail.ra-eligible && root.ra-logged-in: Btn {
-                                        label: root.detail.ra-enabled
-                                            ? "🏆 RetroAchievements ✓"
-                                            : (root.detail.ra-beta ? "🏆 RetroAchievements (beta)" : "🏆 RetroAchievements");
-                                        bg: root.detail.ra-enabled ? #123430 : #1c1f28;
-                                        fg: root.detail.ra-enabled ? #4de1c1 : white;
-                                        clicked => { root.toggle-ra(root.detail.id, !root.detail.ra-enabled); }
-                                    }
-                                    if root.detail.installed: Btn { label: "Eliminar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
-                                    if !root.detail.installed: Btn {
-                                        label: root.detail.install-error ? "⚠ Reintentar" : "↓ Instalar";
-                                        bg: root.detail.install-error ? #ff5d73 : #ffb23e;
-                                        fg: root.detail.install-error ? white : #0b0c10;
-                                        clicked => { root.install(root.detail.id); }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    // ── Body: content column + facts panel ──
-                    HorizontalLayout {
-                    padding: 22px;
-                    padding-top: 16px;
-                    spacing: 22px;
-                    alignment: start;
-                    VerticalLayout {
-                    horizontal-stretch: 1;
-                    spacing: 20px;
-                    if root.detail.has-screens: VerticalLayout {
-                        spacing: 8px;
-                        SectionHeader { label: "Capturas"; }
-                        ScrollView {
-                            height: 152px;
-                            HorizontalLayout {
-                                spacing: 10px;
+                            if row.cards.length > 0: HorizontalLayout {
+                                spacing: 14px;
+                                padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 10px; padding-bottom: 10px;
                                 alignment: start;
-                                for s in root.detail.screens: Rectangle {
-                                    width: 260px; height: 146px; border-radius: 8px; background: #1c1f28; clip: true;
-                                    Image { source: s.img; width: 100%; height: 100%; image-fit: cover; }
-                                    sc-ta := TouchArea { mouse-cursor: pointer;
-                                        clicked => { root.viewer-image = s.img; root.viewer-visible = true; } }
-                                }
-                            }
-                        }
-                    }
-                    if root.detail.about != "": VerticalLayout {
-                        spacing: 8px;
-                        SectionHeader { label: "Acerca del juego"; }
-                        Text { text: root.detail.about; color: #ffffffcc; font-size: 14px; wrap: word-wrap;
-                               width: detail-root.body-w; }
-                    }
-                    if root.detail.port-notes != "": Rectangle {
-                        border-radius: 12px;
-                        background: #14161d;
-                        border-width: 1px;
-                        border-color: #2b2f3a;
-                        VerticalLayout {
-                            padding: 14px;
-                            spacing: 6px;
-                            HorizontalLayout {
-                                spacing: 8px; alignment: start;
-                                Text { text: "ℹ"; color: #ffb23e; font-size: 15px; font-weight: 900; }
-                                Text { text: "Cómo funciona (ROM / instalación)"; font-size: 14px; font-weight: 800; color: white; vertical-alignment: center; }
-                            }
-                            Text { text: root.detail.port-notes; color: #ffffffbb; font-size: 13px; wrap: word-wrap;
-                                   width: detail-root.body-w - 28px; }
-                        }
-                    }
-                    if root.detail.changelog != "": VerticalLayout {
-                        spacing: 8px;
-                        SectionHeader { label: "Novedades"; meta: root.detail.last-updated; }
-                        Rectangle {
-                            border-radius: 12px;
-                            background: #14161d;
-                            border-width: 1px;
-                            border-color: #2b2f3a;
-                            VerticalLayout {
-                                padding: 14px;
-                                Text { text: root.detail.changelog; color: #ffffffcc; font-size: 13px; wrap: word-wrap;
-                                       width: detail-root.body-w - 28px; }
-                            }
-                        }
-                    }
-                    if root.detail.ra-summary != "": VerticalLayout {
-                        spacing: 8px;
-                        SectionHeader { label: "🏆 Logros"; meta: root.detail.ra-summary; }
-                        VerticalLayout {
-                            spacing: 6px;
-                            for row in root.detail.badge-rows: HorizontalLayout {
-                                spacing: 6px;
-                                alignment: start;
-                                for b in row: Rectangle {
-                                    width: 44px; height: 44px; border-radius: 6px; clip: true;
-                                    background: #14161d;
-                                    border-width: 1px;
-                                    border-color: b.unlocked ? #ffb23e88 : #2b2f3a;
-                                    opacity: b.unlocked ? 1.0 : 0.4;
-                                    if b.has-img: Image { source: b.img; width: 100%; height: 100%; image-fit: cover; }
-                                    if !b.has-img: Text { text: "?"; color: #ffffff44; font-size: 16px;
-                                                          horizontal-alignment: center; vertical-alignment: center; }
-                                }
-                            }
-                        }
-                    }
-                    if root.detail.has-related: VerticalLayout {
-                        spacing: 8px;
-                        SectionHeader { label: "Relacionados"; }
-                        ScrollView {
-                            height: 205px;
-                            HorizontalLayout {
-                                spacing: 12px;
-                                alignment: start;
-                                for r in root.detail.related: rel := Rectangle {
-                                    property <length> rel-w: min(150px, 165px * (r.aspect > 0 ? r.aspect : 0.667));
-                                    width: self.rel-w; height: 190px;
-                                    VerticalLayout {
-                                        spacing: 4px;
-                                        alignment: end;
-                                        Rectangle { height: rel.rel-w / (r.aspect > 0 ? r.aspect : 0.667); border-radius: 8px; clip: true;
-                                            rel-cover := Cover { width: 100%; height: 100%; source: r.cover; title: r.title; hovered: rel-ta.has-hover; }
-                                            rel-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(r.id); } }
+                                // Plain rectangles with absolute geometry: no nested layouts
+                                // per card, so rows instantiate fast while scrolling.
+                                for c in row.cards: Rectangle {
+                                    property <length> slot-w: c.card-w > 0 ? c.card-w * 1px : root.card-h * 0.7;
+                                    property <bool> hov: cover-ta.has-hover || act-btn.hovered || fav-ta.has-hover || cancel-ta.has-hover;
+                                    width: self.slot-w;
+                                    height: root.card-h + 44px;
+                                    cover := Rectangle {
+                                        x: 0; y: 0; width: parent.width; height: root.card-h;
+                                        border-radius: 8px;
+                                        background: #14161d;
+                                        clip: true;
+                                        border-width: c.installed ? 2px : 1px;
+                                        border-color: hov ? (c.installed ? #4de1c1 : #ffb23e) : (c.installed ? #4de1c1aa : #262a35);
+                                        drop-shadow-blur: hov ? 18px : 0px;
+                                        drop-shadow-color: hov ? #000000cc : #00000000;
+                                        animate border-color, drop-shadow-blur, drop-shadow-color { duration: 180ms; easing: ease-out; }
+                                        Cover { width: 100%; height: 100%; source: c.cover; title: c.title; hovered: hov; }
+                                        cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
+                                        // Chips on the art: only what matters at a glance.
+                                        if c.experimental: Tag { x: 6px; y: 6px; label: "⚠"; tint: #ff9f43; solid: true; }
+                                        if c.update-available && !c.busy: Tag { x: 6px; y: c.experimental ? 28px : 6px;
+                                            label: c.new-version != "" ? "↑ \{c.new-version}" : "↑"; tint: #ffd166; solid: true; }
+                                        // Hover: primary action on a dark gradient at the bottom.
+                                        Rectangle {
+                                            visible: hov && !c.busy;
+                                            y: parent.height - 52px; height: 52px; width: parent.width;
+                                            background: @linear-gradient(180deg, #0b0c1000 0%, #0b0c10dd 55%, #0b0c10f2 100%);
                                         }
-                                        Text { text: r.title; color: white; font-size: 10px; overflow: elide; }
+                                        act-btn := Btn {
+                                            visible: hov && !c.busy;
+                                            x: 8px; y: parent.height - 36px; width: parent.width - 16px;
+                                            label: c.installed
+                                                ? (c.play-state == 1 ? "Jugando…" : (c.play-state == 2 ? "⚠ Reintentar" : "▶  Jugar"))
+                                                : (c.install-error ? "⚠ Reintentar" : "↓  Instalar");
+                                            kind: (c.play-state == 2 || c.install-error) ? "danger" : "primary";
+                                            clicked => { if (c.installed) { if (c.play-state != 1) { root.play(c.id); } } else { root.install(c.id); } }
+                                        }
+                                        // Busy: progress at the bottom, cancel at the right.
+                                        Rectangle {
+                                            visible: c.busy;
+                                            y: parent.height - 44px; height: 44px; width: parent.width;
+                                            background: @linear-gradient(180deg, #0b0c1000 0%, #0b0c10ee 60%);
+                                            Text { x: 8px; y: 6px; width: parent.width - 40px; height: 16px;
+                                                   text: c.installed
+                                                       ? (c.progress > 0 ? "Actualizando \{floor(c.progress * 100)}%" : "Actualizando…")
+                                                       : (c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…");
+                                                   color: #ffb23e; font-size: 11px; font-weight: 700; overflow: elide; }
+                                            Bar { x: 8px; y: 28px; width: parent.width - 40px; value: c.progress > 0 ? c.progress : -1; }
+                                            Rectangle { x: parent.width - 28px; y: 12px; width: 22px; height: 22px; border-radius: 11px;
+                                                background: cancel-ta.has-hover ? #ff5d7333 : #00000000;
+                                                Text { text: "✕"; color: #ff5d73; font-size: 11px; font-weight: 900; horizontal-alignment: center; vertical-alignment: center; }
+                                                cancel-ta := TouchArea { enabled: c.busy; mouse-cursor: pointer; clicked => { root.cancel-install(c.id); } } }
+                                        }
+                                        // Favorite star (top-right)
+                                        Rectangle {
+                                            x: parent.width - 28px; y: 6px; width: 22px; height: 22px;
+                                            border-radius: 11px;
+                                            background: fav-ta.has-hover ? #000000dd : #00000099;
+                                            visible: c.favorite || hov;
+                                            Text { text: c.favorite ? "★" : "☆"; color: c.favorite ? #ffd166 : white;
+                                                   font-size: 13px; horizontal-alignment: center; vertical-alignment: center; }
+                                            fav-ta := TouchArea { enabled: parent.visible; mouse-cursor: pointer; clicked => { root.toggle-favorite(c.id); } }
+                                        }
                                     }
+                                    Text { x: 0; y: cover.height + 8px; width: parent.width; height: 16px;
+                                           text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
+                                    Text { x: 0; y: cover.height + 25px; width: parent.width; height: 14px;
+                                           text: c.busy ? "" : (c.installed
+                                                     ? (c.needs-rom && !c.rom-ok ? "Falta la ROM" : (c.version != "" ? "Instalado · \{c.version}" : "Instalado"))
+                                                     : (c.is-windows ? "\{c.subtitle} · Windows" : c.subtitle));
+                                           color: c.installed ? (c.needs-rom && !c.rom-ok ? #ffd166 : #4de1c1aa) : #ffffff66;
+                                           font-size: 10px; overflow: elide; }
                                 }
                             }
                         }
                     }
-                    if root.detail.has-mods: VerticalLayout {
-                        spacing: 8px;
-                        SectionHeader { label: "Mods"; }
-                        for m in root.detail.mods: Rectangle {
-                            height: 74px;
-                            border-radius: 8px;
-                            background: #14161d;
-                            border-width: 1px;
-                            border-color: m.installed ? #4de1c144 : #00000000;
-                            HorizontalLayout {
-                                padding: 10px;
-                                spacing: 10px;
-                                Rectangle {
-                                    width: 54px; height: 54px; border-radius: 8px; background: #1c1f28; clip: true;
-                                    if m.has-icon: Image { source: m.icon; width: 100%; height: 100%; image-fit: cover; }
-                                    if !m.has-icon: Text { text: "◈"; font-size: 24px;
-                                                           horizontal-alignment: center; vertical-alignment: center; }
-                                }
-                                VerticalLayout {
-                                    horizontal-stretch: 1;
-                                    spacing: 3px;
-                                    HorizontalLayout {
-                                        spacing: 6px;
-                                        alignment: start;
-                                        Text { text: m.name; color: white; font-weight: 700; font-size: 13px; overflow: elide; }
-                                        if m.installed: Tag { label: "INSTALADO"; fg: #0b0c10; bg: #4de1c1; }
-                                    }
-                                    Text { text: "\{m.owner} · \{m.downloads} descargas"; color: #ffffff99; font-size: 11px; }
-                                    if !m.busy: Text { text: m.description; color: #ffffff88; font-size: 11px; overflow: elide; }
-                                    if m.busy: Bar { value: m.progress > 0 ? m.progress : -1; }
-                                }
-                                if m.busy: Text { text: m.phase == "extract" ? "Extrayendo…" : (m.progress > 0 ? "\{floor(m.progress * 100)}%" : "…");
-                                                  color: #ffb23e; font-size: 11px; font-weight: 700; vertical-alignment: center; }
-                                if !m.busy && m.update: Btn { label: "Actualizar"; bg: #1c1f28; fg: #ffd166; clicked => { root.install-mod(root.detail.id, m.full-name); } }
-                                if !m.busy && m.installed && !m.update: Btn { label: "Quitar"; bg: #1c1f28; fg: #ff5d73; clicked => { root.uninstall-mod(root.detail.id, m.full-name); } }
-                                if !m.busy && !m.installed: Btn { label: "Instalar"; clicked => { root.install-mod(root.detail.id, m.full-name); } }
-                            }
+                    if root.header-count == 0: Rectangle {
+                        width: 100%; height: 100%;
+                        VerticalLayout {
+                            alignment: center;
+                            spacing: 6px;
+                            Text { text: root.library-tab ? "Tu biblioteca está vacía"
+                                         : (root.search-text != "" ? "Sin resultados para «\{root.search-text}»" : "Nada por aquí");
+                                   color: #ffffffcc; font-size: 18px; font-weight: 800; horizontal-alignment: center; }
+                            Text { text: root.library-tab ? "Instala un juego desde el catálogo"
+                                         : "Prueba otra búsqueda o cambia de consola";
+                                   color: #ffffff77; font-size: 13px; horizontal-alignment: center; }
                         }
                     }
-                    } // end left content column
-                    // ── Facts panel (right) ──
-                    VerticalLayout {
-                        width: 270px;
-                        spacing: 10px;
-                        alignment: start;
-                        Rectangle {
-                            border-radius: 12px;
-                            background: #14161d;
-                            border-width: 1px;
-                            border-color: #2b2f3a;
-                            VerticalLayout {
-                                padding: 14px;
-                                spacing: 10px;
-                                Text { text: "FICHA TÉCNICA"; color: #ffffff66; font-size: 10px; font-weight: 900; letter-spacing: 1px; }
-                                for f in root.detail.facts: VerticalLayout {
-                                    spacing: 1px;
-                                    Text { text: f.label; color: #ffffff66; font-size: 10px; }
-                                    Text { text: f.value; color: f.accent; font-size: 13px; font-weight: 600; wrap: word-wrap; width: 242px; }
-                                }
-                            }
-                        }
-                        if root.detail.repo-url != "": Btn { label: root.detail.repo-label; bg: #1c1f28; fg: white; clicked => { root.open-url(root.detail.repo-url); } }
-                        if root.detail.installed: Btn { label: "◫ Abrir carpeta"; bg: #1c1f28; fg: white; clicked => { root.open-folder(root.detail.id); } }
-                        if root.detail.installed: Btn { label: "🕹 Añadir a Steam"; bg: #1c1f28; fg: white; clicked => { root.add-steam(root.detail.id); } }
-                        if root.detail-msg != "": Text { text: root.detail-msg; color: #ffd166; font-size: 11px; wrap: word-wrap; width: 270px; }
-                    }
-                    } // end body row
                 }
             }
         }
     }
 
-    // ── Settings overlay ─────────────────────────────────
     // ── Notice bar (window level, bottom) ──
     if root.notice != "": Rectangle {
-        x: (root.width - self.width) / 2; y: root.height - 56px; height: 40px;
-        width: min(root.width - 40px, nt-l.preferred-width);
-        border-radius: 9px; background: #1c1f28; border-width: 1px; border-color: #2b2f3a;
+        x: root.side-w + (root.width - root.side-w - self.width) / 2; y: root.height - 56px; height: 40px;
+        width: min(root.width - root.side-w - 40px, nt-l.preferred-width);
+        border-radius: 9px; background: #1c1f28; border-width: 1px; border-color: #343947;
         drop-shadow-blur: 18px; drop-shadow-color: #000000aa;
         nt-l := HorizontalLayout { padding-left: 14px; padding-right: 6px; spacing: 8px;
-            Text { text: root.notice; color: white; font-size: 13px; vertical-alignment: center; overflow: elide; }
-            Btn { label: "✕"; bg: #1c1f28; fg: #ffffff99; clicked => { root.notice = ""; } } }
+            Text { text: root.notice; color: white; font-size: 12px; vertical-alignment: center; overflow: elide; }
+            Btn { label: "✕"; kind: "ghost"; clicked => { root.notice = ""; } } }
     }
-    // ── Icon rail tooltip (window level, above the sidebar) ──
-    if root.rail-tip != "": Rectangle {
-        x: 74px; y: root.rail-tip-y + 8px; height: 28px;
-        width: rt-l.preferred-width;
-        border-radius: 7px; background: #1c1f28; border-width: 1px; border-color: #2b2f3a;
-        drop-shadow-blur: 14px; drop-shadow-color: #000000aa;
-        rt-l := HorizontalLayout { padding-left: 10px; padding-right: 10px;
-            Text { text: root.rail-tip; color: white; font-size: 12px; font-weight: 700; vertical-alignment: center; } }
-    }
-    } // ── end content area ───────────────────────
-    } // ── end window column (titlebar + content) ─
 
     // ── 3D box viewer (experimental) ─────────────────────
     Rectangle {
@@ -1481,7 +1379,7 @@ export component MainWindow inherits Window {
         VerticalLayout {
             padding: 20px; spacing: 12px;
             HorizontalLayout {
-                Btn { label: "← Cerrar"; bg: #1c1f28; fg: white; clicked => { root.close-viewer3d(); } }
+                Btn { label: "← Cerrar"; kind: "secondary"; clicked => { root.close-viewer3d(); } }
                 Rectangle { horizontal-stretch: 1; }
                 Text { text: "Arrastra para girar la caja"; color: #ffffff66; font-size: 12px; vertical-alignment: center; }
             }
@@ -1596,22 +1494,9 @@ export component MainWindow inherits Window {
                                         drop-shadow-color: focused ? #ffb23eaa : #00000000;
                                         animate border-color, drop-shadow-blur, drop-shadow-color { duration: 200ms; easing: ease-out; }
                                         Cover { width: 100%; height: 100%; source: game.cover; title: game.title; hovered: focused; }
-                                        if game.experimental: Rectangle {
-                                            x: 8px; y: 8px; height: 20px; width: tvex-l.preferred-width;
-                                            border-radius: 5px; background: #ff9f43;
-                                            tvex-l := HorizontalLayout { padding-left: 7px; padding-right: 7px;
-                                                Text { text: "⚠ EXPERIMENTAL"; color: #0b0c10; font-size: 9px; font-weight: 900; vertical-alignment: center; } }
-                                        }
-                                        if game.update-available: Rectangle {
-                                            x: parent.width - self.width - 8px; y: 8px; height: 20px;
-                                            width: tvup-l.preferred-width;
-                                            border-radius: 5px; background: #ffd166;
-                                            tvup-l := HorizontalLayout {
-                                                padding-left: 7px; padding-right: 7px;
-                                                Text { text: game.new-version != "" ? "↑ \{game.new-version}" : "↑";
-                                                       color: #0b0c10; font-size: 10px; font-weight: 900; vertical-alignment: center; }
-                                            }
-                                        }
+                                        if game.experimental: Tag { x: 8px; y: 8px; label: "⚠ EXPERIMENTAL"; tint: #ff9f43; solid: true; }
+                                        if game.update-available: Tag { x: parent.width - self.width - 8px; y: 8px;
+                                            label: game.new-version != "" ? "↑ \{game.new-version}" : "↑"; tint: #ffd166; solid: true; }
                                     }
                                 }
                             }
@@ -1645,21 +1530,21 @@ export component MainWindow inherits Window {
         animate opacity { duration: 140ms; easing: ease-out; }
         TouchArea { clicked => { root.confirm-visible = false; } }
         Rectangle {
-            width: 400px; height: 190px;
+            width: 400px; height: 180px;
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
-            border-radius: 14px; background: #14161d;
-            border-width: 1px; border-color: #2b2f3a;
+            border-radius: 12px; background: #14161d;
+            border-width: 1px; border-color: #343947;
             drop-shadow-blur: 40px; drop-shadow-color: #00000099;
             TouchArea { }
             VerticalLayout {
-                padding: 22px; spacing: 12px;
-                Text { text: "¿Eliminar «\{root.confirm-title}»?"; color: white; font-size: 18px; font-weight: 800; wrap: word-wrap; }
-                Text { text: "Se borrará la instalación y sus mods. No se puede deshacer."; color: #ffffffaa; font-size: 13px; wrap: word-wrap; }
+                padding: 22px; spacing: 10px;
+                Text { text: "¿Eliminar «\{root.confirm-title}»?"; color: white; font-size: 17px; font-weight: 800; wrap: word-wrap; }
+                Text { text: "Se borrará la instalación y sus mods. No se puede deshacer."; color: #ffffffaa; font-size: 12px; wrap: word-wrap; }
                 Rectangle { vertical-stretch: 1; }
                 HorizontalLayout {
                     alignment: end; spacing: 8px;
-                    Btn { label: "Cancelar"; bg: #1c1f28; fg: white; clicked => { root.confirm-visible = false; } }
+                    Btn { label: "Cancelar"; kind: "secondary"; clicked => { root.confirm-visible = false; } }
                     Btn { label: "Eliminar"; bg: #e04b5a; fg: white; clicked => { root.uninstall(root.confirm-id); root.confirm-visible = false; } }
                 }
             }
@@ -1679,28 +1564,29 @@ export component MainWindow inherits Window {
             height: ch-l.preferred-height;
             x: (parent.width - self.width) / 2;
             y: (parent.height - self.height) / 2;
-            border-radius: 14px; background: #14161d;
-            border-width: 1px; border-color: #2b2f3a;
+            border-radius: 12px; background: #14161d;
+            border-width: 1px; border-color: #343947;
             drop-shadow-blur: 40px; drop-shadow-color: #00000099;
             TouchArea { }
             ch-l := VerticalLayout {
                 padding: 22px; spacing: 10px;
-                Text { text: root.chooser-title; color: white; font-size: 18px; font-weight: 800; wrap: word-wrap; }
+                Text { text: root.chooser-title; color: white; font-size: 17px; font-weight: 800; wrap: word-wrap; }
                 Text { text: root.chooser-mode == "install" ? "Este juego tiene varios ports. ¿Cuál quieres instalar?"
                            : (root.chooser-mode == "play" ? "Tienes varias versiones instaladas. ¿Cuál quieres jugar?"
-                              : "Tienes varias versiones instaladas. ¿Cuál quieres eliminar?");
-                       color: #ffffffaa; font-size: 13px; wrap: word-wrap; }
+                              : (root.chooser-mode == "romm" ? "Resultados en tu RomM. ¿Cuál quieres traer?"
+                                 : "Tienes varias versiones instaladas. ¿Cuál quieres eliminar?"));
+                       color: #ffffffaa; font-size: 12px; wrap: word-wrap; }
                 for v in root.chooser-items: Rectangle {
                     height: 54px;
                     border-radius: 9px;
-                    background: ch-ta.has-hover ? #ffffff14 : #1c1f28;
-                    border-width: 1px; border-color: ch-ta.has-hover ? #ffb23e : #2b2f3a;
+                    background: ch-ta.has-hover ? #ffffff12 : #1c1f28;
+                    border-width: 1px; border-color: ch-ta.has-hover ? #ffb23e : #262a35;
                     HorizontalLayout {
                         padding-left: 14px; padding-right: 14px; spacing: 10px;
                         VerticalLayout {
                             alignment: center; spacing: 2px; horizontal-stretch: 1;
-                            Text { text: v.name; color: white; font-size: 14px; font-weight: 800; overflow: elide; }
-                            Text { text: (v.kind == "RECOMP" ? "⟳ Recomp" : "⚓ Port")
+                            Text { text: v.name; color: white; font-size: 13px; font-weight: 800; overflow: elide; }
+                            Text { text: (v.kind == "RECOMP" ? "Recomp" : (v.kind == "PORT" ? "Port" : v.kind))
                                          + (v.platforms != "" ? " · " + v.platforms : "")
                                          + (v.is-windows ? " · Wine/Proton" : "")
                                          + (v.meta != "" ? " · " + v.meta : "");
@@ -1711,13 +1597,13 @@ export component MainWindow inherits Window {
                     ch-ta := TouchArea { mouse-cursor: pointer; clicked => { root.chooser-visible = false; root.choose-version(v.id, root.chooser-remember); } }
                 }
                 if root.chooser-mode == "play": HorizontalLayout {
-                    spacing: 8px;
-                    CheckBox { checked <=> root.chooser-remember; }
+                    spacing: 10px;
+                    Toggle { checked <=> root.chooser-remember; }
                     Text { text: "Recordar para la próxima vez (se cambia en la ficha del juego)"; color: #ffffffaa; font-size: 12px; vertical-alignment: center; wrap: word-wrap; }
                 }
                 HorizontalLayout {
                     alignment: end;
-                    Btn { label: "Cancelar"; bg: #1c1f28; fg: white; clicked => { root.chooser-visible = false; } }
+                    Btn { label: "Cancelar"; kind: "secondary"; clicked => { root.chooser-visible = false; } }
                 }
             }
         }
@@ -1741,38 +1627,9 @@ export component MainWindow inherits Window {
                color: #ffffff88; font-size: 12px; horizontal-alignment: center; }
     }
 
-    // ── Resize handles (frameless) ───────────────────────
-    // Edges
-    Rectangle { x: 0; y: 0; width: root.width; height: 4px;
-        TouchArea { mouse-cursor: ns-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("n"); } } } }
-    Rectangle { x: 0; y: root.height - 4px; width: root.width; height: 4px;
-        TouchArea { mouse-cursor: ns-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("s"); } } } }
-    Rectangle { x: 0; y: 0; width: 4px; height: root.height;
-        TouchArea { mouse-cursor: ew-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("w"); } } } }
-    Rectangle { x: root.width - 4px; y: 0; width: 4px; height: root.height;
-        TouchArea { mouse-cursor: ew-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("e"); } } } }
-    // Corners (on top of edges)
-    Rectangle { x: 0; y: 0; width: 9px; height: 9px;
-        TouchArea { mouse-cursor: nwse-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("nw"); } } } }
-    Rectangle { x: root.width - 9px; y: 0; width: 9px; height: 9px;
-        TouchArea { mouse-cursor: nesw-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("ne"); } } } }
-    Rectangle { x: 0; y: root.height - 9px; width: 9px; height: 9px;
-        TouchArea { mouse-cursor: nesw-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("sw"); } } } }
-    Rectangle { x: root.width - 9px; y: root.height - 9px; width: 9px; height: 9px;
-        TouchArea { mouse-cursor: nwse-resize;
-            pointer-event(e) => { if (e.kind == PointerEventKind.down) { root.resize-press("se"); } } } }
-
     // ── Retro CRT effect (scanlines + vignette), purely visual ───────────
     if root.crt-visible: Rectangle {
         width: 100%; height: 100%;
-        // Scanlines: a tiny texture tiled with GPU (cheap, no per-frame recompose).
         Image {
             source: @image-url("../assets/crt-scanlines.png");
             width: 100%; height: 100%;
@@ -1781,7 +1638,6 @@ export component MainWindow inherits Window {
             image-rendering: pixelated;
             opacity: 0.7;
         }
-        // Vignette: darken the edges like a curved tube.
         Rectangle { background: @radial-gradient(circle, #00000000 48%, #000000b0 120%); }
     }
 }

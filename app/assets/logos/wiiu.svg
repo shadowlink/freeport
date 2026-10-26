@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 200" width="640" height="200">
-  <g fill="#ffffff">
+  <g fill="#1ba7e0">
     <!-- W -->
     <path d="M20 40h42l24 86 26-86h32l26 86 24-86h42l-46 130h-38l-24-80-24 80h-38z"/>
     <!-- i i with dots -->

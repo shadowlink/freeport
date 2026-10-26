@@ -4,15 +4,12 @@
 slint::include_modules!();
 
 mod box3d;
-#[cfg(windows)]
-mod win_titlebar;
 
 use freeport_core::model::{Catalog, Project};
 use freeport_core::store::{self, Paths};
 use freeport_core::mods::ModInfo;
 use freeport_core::wiki::WikiInfo;
 use freeport_core::{actions, gamepad, platform, ra, thumbs, update, wiki};
-use i_slint_backend_winit::WinitWindowAccessor;
 use slint::{Color, Image, ModelRc, SharedString, VecModel, Weak};
 use std::cell::RefCell;
 use std::collections::HashSet;
@@ -258,10 +255,11 @@ fn box_aspect(system: &str) -> f32 {
     }
 }
 
-/// Slot width multiplier for a box aspect: landscape boxes widen up to 45% so
-/// their art stays legible; portrait boxes keep the base width (and grow tall).
-fn slot_factor(aspect: f32) -> f32 {
-    ((aspect / 0.667).sqrt()).clamp(1.0, 1.45)
+/// Slot width of a box in the grid: every box in a row shares the grid's
+/// height, so the width follows the system's box shape (an N64 box is wide, a
+/// PSP case narrow), clamped so nothing gets absurdly thin or wide.
+fn slot_width(card_h: f32, aspect: f32) -> f32 {
+    (card_h * aspect).clamp(card_h * 0.56, card_h * 1.5)
 }
 
 /// Every version of the same game as `id` that the user can see (installed
@@ -592,7 +590,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 is_new: any_new,
                 versions: g.members.len() as i32,
                 aspect: box_aspect(&p.system),
-                card_w: win.get_card_w() * slot_factor(box_aspect(&p.system)),
+                card_w: slot_width(win.get_card_h(), box_aspect(&p.system)),
                 experimental: p.is_experimental(),
             },
         ));
@@ -614,8 +612,9 @@ fn rebuild(app: &App, win: &MainWindow) {
     // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
     // the art isn't tiny, so rows hold a variable number of cards. The usable
     // width comes from the UI (window minus rail, sidebar and padding).
-    let base_w = win.get_card_w();
-    let avail = (win.get_grid_width() - 16.0).max(base_w);
+    let base_h = win.get_card_h();
+    let avail = win.get_grid_width().max(base_h * 1.5);
+    win.set_narrow(win.get_grid_width() < 560.0);
     let gap = 14.0;
     let pack = |cards: Vec<CardItem>, rows: &mut Vec<GridRow>| {
         let mut row: Vec<CardItem> = Vec::new();
@@ -713,7 +712,10 @@ fn rebuild(app: &App, win: &MainWindow) {
         win.set_active_exp_hidden(0);
     }
     win.set_systems(ModelRc::new(VecModel::from(sys_rows)));
+    let half = settings_rows.len().div_ceil(2);
+    let settings_b = settings_rows.split_off(half);
     win.set_settings_systems(ModelRc::new(VecModel::from(settings_rows)));
+    win.set_settings_systems_b(ModelRc::new(VecModel::from(settings_b)));
     win.set_rows(ModelRc::new(VecModel::from(rows)));
     win.set_header_title(header.into());
     win.set_header_count(count);
@@ -1181,22 +1183,6 @@ async fn run_update_check(client: reqwest::Client, manual: bool) {
     });
 }
 
-/// Releases Slint's pointer grab after a window drag/resize hands the pointer to
-/// the compositor. Without this the TouchArea keeps the grab (it never receives a
-/// `Released`, only a `CursorLeft`→`Exit`), which freezes all further UI input.
-/// Deferred to the next loop iteration to avoid re-entrant input dispatch.
-fn release_pointer_grab(weak: &Weak<MainWindow>) {
-    let weak = weak.clone();
-    let _ = slint::invoke_from_event_loop(move || {
-        if let Some(w) = weak.upgrade() {
-            w.window().dispatch_event(slint::platform::WindowEvent::PointerReleased {
-                position: slint::LogicalPosition::new(0.0, 0.0),
-                button: slint::platform::PointerEventButton::Left,
-            });
-        }
-    });
-}
-
 /// Generate any not-yet-cached cover thumbnails in the background, then refresh.
 fn spawn_missing_thumbs(app: &Rc<App>, handle: &tokio::runtime::Handle) {
     let missing: Vec<String> = app
@@ -1439,12 +1425,12 @@ async fn refresh_library_size(paths: Paths) {
 }
 
 fn apply_card_size(win: &MainWindow, size: &str) {
-    let w = match size {
-        "s" => 126.0,
-        "l" => 196.0,
-        _ => 158.0,
+    let h = match size {
+        "s" => 150.0,
+        "l" => 236.0,
+        _ => 190.0,
     };
-    win.set_card_w(w);
+    win.set_card_h(h);
     win.set_card_size(if size == "s" || size == "l" { size.into() } else { "m".into() });
 }
 
@@ -1454,9 +1440,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let id = args.get(i + 1).cloned().unwrap_or_default();
         return cli_play(&id);
     }
-    // Force the winit backend so we can reach the underlying window (drag/resize/
-    // minimize/maximize) via WinitWindowAccessor. Decorations are turned off with
-    // the Slint `no-frame` property (the backend would otherwise re-enable them).
+    // Pin the winit backend (the one every platform ships with).
     let backend = i_slint_backend_winit::Backend::new().expect("winit backend");
     slint::platform::set_platform(Box::new(backend)).expect("set winit platform");
 
@@ -1571,69 +1555,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .unwrap_or_else(|| "Automático".to_string());
         win.set_current_runner_label(current.into());
     }
-
-    // ── Custom titlebar / frameless window controls ──────────────────────
-    win.on_win_minimize({
-        let weak = win.as_weak();
-        move || {
-            if let Some(w) = weak.upgrade() {
-                w.window().with_winit_window(|ww| ww.set_minimized(true));
-            }
-        }
-    });
-    win.on_win_maximize({
-        let weak = win.as_weak();
-        move || {
-            if let Some(w) = weak.upgrade() {
-                let now = w
-                    .window()
-                    .with_winit_window(|ww| {
-                        let next = !ww.is_maximized();
-                        ww.set_maximized(next);
-                        next
-                    })
-                    .unwrap_or(false);
-                w.set_win_maximized(now);
-            }
-        }
-    });
-    win.on_win_close(|| {
-        let _ = slint::quit_event_loop();
-    });
-    win.on_title_press({
-        let weak = win.as_weak();
-        move || {
-            if let Some(w) = weak.upgrade() {
-                w.window().with_winit_window(|ww| {
-                    let _ = ww.drag_window();
-                });
-                release_pointer_grab(&weak);
-            }
-        }
-    });
-    win.on_resize_press({
-        let weak = win.as_weak();
-        move |dir| {
-            use i_slint_backend_winit::winit::window::ResizeDirection as RD;
-            let d = match dir.as_str() {
-                "n" => RD::North,
-                "s" => RD::South,
-                "e" => RD::East,
-                "w" => RD::West,
-                "ne" => RD::NorthEast,
-                "nw" => RD::NorthWest,
-                "se" => RD::SouthEast,
-                "sw" => RD::SouthWest,
-                _ => return,
-            };
-            if let Some(w) = weak.upgrade() {
-                w.window().with_winit_window(|ww| {
-                    let _ = ww.drag_resize_window(d);
-                });
-                release_pointer_grab(&weak);
-            }
-        }
-    });
 
     win.on_toggle_windows({
         let app = app.clone();
@@ -3318,27 +3239,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
         CATALOG_TIMER.with(|t| *t.borrow_mut() = Some(timer));
-    }
-
-    // Windows-only fine polish: rounded corners, shadow and Snap Layouts.
-    // Deferred so the winit window exists before we reach for its HWND.
-    #[cfg(windows)]
-    {
-        let weak = win.as_weak();
-        slint::Timer::single_shot(std::time::Duration::from_millis(120), move || {
-            if let Some(w) = weak.upgrade() {
-                w.window().with_winit_window(|ww| {
-                    use i_slint_backend_winit::winit::raw_window_handle::{
-                        HasWindowHandle, RawWindowHandle,
-                    };
-                    if let Ok(handle) = ww.window_handle() {
-                        if let RawWindowHandle::Win32(h) = handle.as_raw() {
-                            win_titlebar::setup(h.hwnd.get());
-                        }
-                    }
-                });
-            }
-        });
     }
 
     // `--tv`: boot straight into TV (Big Picture) mode, e.g. when launched by

@@ -481,6 +481,12 @@ pub fn find_launch_binary(dir: &Path, hint: Option<&str>, windows: bool) -> AppR
             {
                 return Ok(found.clone());
             }
+            // The catalog names the game's binary and it isn't there: don't
+            // guess. Builder packages (UltraTears) ship no game exe until their
+            // setup has run, and the fallback would start some tool instead.
+            return Err(AppError::msg(format!(
+                "no está {h} en la instalación: este port aún no tiene el ejecutable del juego (revisa las notas de la ficha; si hay que ejecutar un setup, hazlo primero)"
+            )));
         }
     }
 

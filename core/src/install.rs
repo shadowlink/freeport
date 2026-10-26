@@ -364,13 +364,31 @@ const PRESERVE_EXTS: &[&str] = &[
 pub fn preserve_user_files(old: &Path, new: &Path, extras: &[PathBuf]) -> AppResult<()> {
     for rel in extras {
         let (src, dst) = (old.join(rel), new.join(rel));
-        if src.exists() && !dst.exists() {
+        if !src.exists() {
+            continue;
+        }
+        if src.is_dir() {
+            // The new tree may ship the same folder empty (a `data/` with a
+            // "put your files here" note): merge instead of skipping it.
+            merge_missing(&src, &dst)?;
+        } else if !dst.exists() {
             if let Some(parent) = dst.parent() {
                 std::fs::create_dir_all(parent)?;
             }
             let _ = std::fs::rename(&src, &dst);
         }
     }
+    preserve_level(old, new)?;
+    // Archives that wrap everything in one folder keep mods/saves one level
+    // down; carry those over too when both trees have the same shape.
+    let (old_root, new_root) = (game_root(old), game_root(new));
+    if old_root != old && new_root != new {
+        preserve_level(&old_root, &new_root)?;
+    }
+    Ok(())
+}
+
+fn preserve_level(old: &Path, new: &Path) -> AppResult<()> {
     let entries = match std::fs::read_dir(old) {
         Ok(e) => e,
         Err(_) => return Ok(()),
@@ -396,6 +414,34 @@ pub fn preserve_user_files(old: &Path, new: &Path, extras: &[PathBuf]) -> AppRes
         }
     }
     Ok(())
+}
+
+/// Directory that holds the port's own files. Usually the install dir itself;
+/// when the archive carried everything inside a single top-level folder
+/// (`Windows-MHGURecomp/`, `ArchLinux-MHGURecomp/`…) it is that folder, so
+/// catalog paths given relative to the port (`rom.import_dir`) land next to
+/// the binary instead of beside the wrapper. Hidden entries Freeport adds
+/// (`.wineprefix`) don't count.
+pub fn game_root(install_dir: &Path) -> PathBuf {
+    let Ok(rd) = std::fs::read_dir(install_dir) else {
+        return install_dir.to_path_buf();
+    };
+    let mut dirs: Vec<PathBuf> = Vec::new();
+    for e in rd.flatten() {
+        if e.file_name().to_string_lossy().starts_with('.') {
+            continue;
+        }
+        let p = e.path();
+        if p.is_dir() {
+            dirs.push(p);
+        } else {
+            return install_dir.to_path_buf();
+        }
+    }
+    match dirs.len() {
+        1 => dirs.pop().unwrap_or_else(|| install_dir.to_path_buf()),
+        _ => install_dir.to_path_buf(),
+    }
 }
 
 /// Moves everything under `old` into `new` that `new` doesn't already have.
@@ -826,6 +872,50 @@ mod tests {
 #[cfg(test)]
 mod preserve_tests {
     use super::*;
+
+    #[test]
+    fn game_root_is_lone_wrapper_dir_ignoring_hidden() {
+        let tmp = std::env::temp_dir().join(format!("fp-root-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(tmp.join("ArchLinux-MHGURecomp/data")).unwrap();
+        std::fs::write(tmp.join("ArchLinux-MHGURecomp/mhgurecomp"), b"bin").unwrap();
+        std::fs::create_dir_all(tmp.join(".wineprefix")).unwrap();
+        assert_eq!(game_root(&tmp), tmp.join("ArchLinux-MHGURecomp"));
+        // A file at the top level means the install dir itself is the root.
+        std::fs::write(tmp.join("setup.bat"), b"x").unwrap();
+        assert_eq!(game_root(&tmp), tmp);
+        std::fs::remove_file(tmp.join("setup.bat")).unwrap();
+        // Two real folders: ambiguous, keep the install dir.
+        std::fs::create_dir_all(tmp.join("other")).unwrap();
+        assert_eq!(game_root(&tmp), tmp);
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn update_merges_imported_dir_the_new_tree_ships_empty() {
+        let tmp = std::env::temp_dir().join(format!("fp-preserve2-{}", std::process::id()));
+        let (old, new) = (tmp.join("old"), tmp.join("new"));
+        let _ = std::fs::remove_dir_all(&tmp);
+        // Old: wrapper dir with imported game data and mods one level down.
+        std::fs::create_dir_all(old.join("W/data/romfs")).unwrap();
+        std::fs::write(old.join("W/data/romfs/a.arc"), b"rom").unwrap();
+        std::fs::create_dir_all(old.join("W/data/exefs")).unwrap();
+        std::fs::write(old.join("W/data/exefs/main"), b"main").unwrap();
+        std::fs::create_dir_all(old.join("W/mods/kq")).unwrap();
+        std::fs::write(old.join("W/mods/kq/x.bin"), b"m").unwrap();
+        // New: same shape, data/ ships with only a placeholder note.
+        std::fs::create_dir_all(new.join("W/data")).unwrap();
+        std::fs::write(new.join("W/data/put-files-here.txt"), b"").unwrap();
+        std::fs::write(new.join("W/mhgurecomp"), b"NEW").unwrap();
+
+        preserve_user_files(&old, &new, &[PathBuf::from("W/data")]).unwrap();
+
+        assert_eq!(std::fs::read(new.join("W/data/romfs/a.arc")).unwrap(), b"rom");
+        assert_eq!(std::fs::read(new.join("W/data/exefs/main")).unwrap(), b"main");
+        assert!(new.join("W/data/put-files-here.txt").exists());
+        assert_eq!(std::fs::read(new.join("W/mods/kq/x.bin")).unwrap(), b"m");
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
 
     #[test]
     fn update_keeps_roms_saves_and_prefix() {

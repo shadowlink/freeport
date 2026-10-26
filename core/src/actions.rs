@@ -546,7 +546,7 @@ pub fn import_ps4_pkgs(
     if infos.iter().any(|(_, i)| i.title_id != title_id) {
         return Err(AppError::msg("los PKG elegidos son de juegos distintos"));
     }
-    let install_dir = PathBuf::from(&entry.install_path);
+    let install_dir = install::game_root(Path::new(&entry.install_path));
     let dest = match project.rom.import_dir.as_deref() {
         Some(rel) => install_dir.join(rel.replace("{title_id}", &title_id)),
         None => install_dir.join(&title_id),
@@ -599,7 +599,7 @@ pub fn import_switch_dumps(
     let entry = installed
         .get_mut(&project.id)
         .ok_or_else(|| AppError::msg("instala el port antes de importar el juego"))?;
-    let install_dir = PathBuf::from(&entry.install_path);
+    let install_dir = install::game_root(Path::new(&entry.install_path));
     let dest = crate::switch::import(&tools, &install_dir, project.rom.import_dir.as_deref(), files, progress)?;
     entry.rom_path = Some(dest.display().to_string());
     let windows = entry.windows;

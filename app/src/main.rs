@@ -2787,6 +2787,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             });
         }
     });
+    if let Some(ids) = std::env::var("FREEPORT_DEBUG_INSTALL").ok().filter(|s| !s.is_empty()) {
+        // dev aid: FREEPORT_DEBUG_INSTALL=<project id>,<id>… installs (or
+        // updates) those ports at startup without clicking through the UI.
+        for id in ids.split(',').map(str::trim).filter(|s| !s.is_empty()) {
+            start_install(id.to_string());
+        }
+    }
     if let Some(spec) = std::env::var("FREEPORT_DEBUG_IMPORT_SWITCH").ok().filter(|s| !s.is_empty()) {
         // dev aid: FREEPORT_DEBUG_IMPORT_SWITCH=<project id>:<file>,<file>…
         if let Some((id, files)) = spec.split_once(':') {

@@ -207,6 +207,7 @@ pub fn import(
     tools: &Tools,
     install_dir: &Path,
     import_dir: Option<&str>,
+    expect: (Option<&str>, Option<&str>),
     files: &[PathBuf],
     progress: &mut dyn FnMut(&str),
 ) -> AppResult<PathBuf> {
@@ -225,7 +226,7 @@ pub fn import(
     {
         Ok(keys) => {
             let tools = Tools { keys, ..tools.clone() };
-            import_inner(&tools, install_dir, import_dir, &tmp, &home, files, progress)
+            import_inner(&tools, install_dir, import_dir, expect, &tmp, &home, files, progress)
         }
         Err(e) => Err(e),
     };
@@ -243,6 +244,7 @@ fn import_inner(
     tools: &Tools,
     install_dir: &Path,
     import_dir: Option<&str>,
+    (expect_build_id, expect_version): (Option<&str>, Option<&str>),
     tmp: &Path,
     home: &Path,
     files: &[PathBuf],
@@ -351,12 +353,51 @@ fn import_inner(
     if !exefs.join("main").is_file() {
         return Err(AppError::msg("la extracción terminó pero no hay exefs/main; revisa las claves (prod.keys) y el archivo"));
     }
+    if let Some(want) = expect_build_id {
+        let got = nso_build_id(&exefs.join("main"));
+        if !got.starts_with(&want.to_uppercase()) {
+            let ver = expect_version.unwrap_or("la versión exacta que pide el port");
+            let hint = if patches.is_empty() {
+                "solo se ha importado el juego base: añade a la misma importación el NSP/NSZ de la actualización"
+            } else {
+                "la actualización importada no es esa versión: usa el NSP/NSZ de la actualización correcta"
+            };
+            return Err(AppError::msg(format!(
+                "el volcado importado no es {ver} (build id de exefs/main {got}, esperado {want}…): {hint}"
+            )));
+        }
+    }
     Ok(dest)
+}
+
+/// Build id (hex, uppercase) in an NSO header; empty when unreadable.
+pub fn nso_build_id(main: &Path) -> String {
+    use std::io::Read;
+    let mut buf = [0u8; 0x60];
+    match std::fs::File::open(main).and_then(|mut f| f.read_exact(&mut buf)) {
+        Ok(()) if &buf[0..4] == b"NSO0" => buf[0x40..0x60].iter().map(|b| format!("{b:02X}")).collect(),
+        _ => String::new(),
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn nso_build_id_reads_header_and_rejects_other_files() {
+        let tmp = std::env::temp_dir().join(format!("fp-nso-{}", std::process::id()));
+        let _ = std::fs::create_dir_all(&tmp);
+        let mut h = vec![0u8; 0x60];
+        h[0..4].copy_from_slice(b"NSO0");
+        h[0x40..0x48].copy_from_slice(&[0xFB, 0x08, 0xF1, 0xD2, 0x0F, 0xD1, 0x20, 0x4F]);
+        std::fs::write(tmp.join("main"), &h).unwrap();
+        assert!(nso_build_id(&tmp.join("main")).starts_with("FB08F1D20FD1204F"));
+        std::fs::write(tmp.join("other"), b"not an nso at all, far too short").unwrap();
+        assert_eq!(nso_build_id(&tmp.join("other")), "");
+        assert_eq!(nso_build_id(&tmp.join("missing")), "");
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
 
     #[test]
     fn parses_meta_fields() {

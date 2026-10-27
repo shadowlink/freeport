@@ -247,6 +247,14 @@ pub struct RomInfo {
     /// Placeholders: `{rom_path}`, `{install_dir}`.
     #[serde(default, deserialize_with = "lenient_opt")]
     pub after_import: Option<AfterImport>,
+    /// Switch ports built for one exact game version: the first bytes (hex) of
+    /// the build id of that version's `exefs/main`, and the version's name
+    /// for the message. After an import, a `main` with another build id (the
+    /// base game alone, an older update) is refused with a clear hint.
+    #[serde(default)]
+    pub build_id: Option<String>,
+    #[serde(default)]
+    pub game_version: Option<String>,
 }
 
 /// Fields normally refreshed by the catalog repo's CI probe, letting the app

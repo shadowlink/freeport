@@ -347,8 +347,12 @@ pub fn file_sha256(path: &Path) -> AppResult<String> {
 
 /// Directories whose contents belong to the *user*, not the release: they are
 /// carried over when a game is updated (moved, not copied — same filesystem).
-const PRESERVE_DIRS: &[&str] =
-    &["game", "saves", "save", "mods", ".wineprefix", "memcards", "memorycards", "portable"];
+const PRESERVE_DIRS: &[&str] = &[
+    "game", "saves", "save", "mods", ".wineprefix", "memcards", "memorycards", "portable",
+    // Imported dumps and what a builder made from them (UltraTears, MHGU:
+    // `data/`), and saves kept beside the game (`userdata/`).
+    "data", "userdata",
+];
 /// File extensions that are user data (ROMs, disc images, saves, generated
 /// asset packs) — also carried over on update when the new tree lacks them.
 const PRESERVE_EXTS: &[&str] = &[

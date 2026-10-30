@@ -579,8 +579,19 @@ fn collect_files(dir: &Path, out: &mut Vec<PathBuf>, depth: usize) {
     };
     for entry in entries.flatten() {
         let path = entry.path();
-        if path.is_dir() {
-            collect_files(&path, out, depth + 1);
+        // Never follow symlinked folders: a Wine prefix's `dosdevices/z:`
+        // points at `/`, so the walk would scan the whole disk and the
+        // "largest .exe" could be any installer lying around in $HOME.
+        let Ok(meta) = std::fs::symlink_metadata(&path) else { continue };
+        if meta.file_type().is_symlink() {
+            continue;
+        }
+        if meta.is_dir() {
+            // Hidden folders hold our own state (`.wineprefix`), not the game.
+            let hidden = entry.file_name().to_string_lossy().starts_with('.');
+            if !hidden {
+                collect_files(&path, out, depth + 1);
+            }
         } else {
             out.push(path);
         }
@@ -634,6 +645,35 @@ mod tests {
             let auto = find_launch_binary(&dest, None, false).unwrap();
             assert_eq!(auto.file_name().unwrap(), "TheGame");
         }
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    /// The launch-binary search must stay inside the port's own files: not the
+    /// Wine prefix (whose `dosdevices/z:` links to `/`) and no symlinked dirs,
+    /// or a bigger .exe anywhere on the disk would be "the game".
+    #[cfg(unix)]
+    #[test]
+    fn find_binary_ignores_wineprefix_and_symlinked_dirs() {
+        let root = scratch("find_bin_prefix");
+        let dest = root.join("out");
+        std::fs::create_dir_all(dest.join("Game")).unwrap();
+        std::fs::write(dest.join("Game/Game.exe"), vec![0u8; 1000]).unwrap();
+        // Elsewhere on "the disk": a much bigger installer.
+        let elsewhere = root.join("elsewhere");
+        std::fs::create_dir_all(&elsewhere).unwrap();
+        std::fs::write(elsewhere.join("setup_big_installer.exe"), vec![0u8; 50_000]).unwrap();
+        // Wine prefix with its usual drive link, plus a stray symlink.
+        std::fs::create_dir_all(dest.join(".wineprefix/dosdevices")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, dest.join(".wineprefix/dosdevices/z:")).unwrap();
+        std::os::unix::fs::symlink(&elsewhere, dest.join("link")).unwrap();
+        // A real (non-hidden, non-symlinked) subfolder is still searched.
+        std::fs::create_dir_all(dest.join("tools")).unwrap();
+        std::fs::write(dest.join("tools/helper.exe"), vec![0u8; 10]).unwrap();
+
+        let bin = find_launch_binary(&dest, None, true).unwrap();
+        assert!(bin.ends_with("Game/Game.exe"), "picked {}", bin.display());
+        assert!(find_launch_binary(&dest, Some("helper.exe"), true).is_ok());
+        assert!(find_launch_binary(&dest, Some("setup_big_installer.exe"), true).is_err());
         let _ = std::fs::remove_dir_all(&root);
     }
 

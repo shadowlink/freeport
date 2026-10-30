@@ -131,6 +131,7 @@ mod tests {
             ra_supported: false,
             ra_beta: false,
             launch_env: HashMap::new(),
+            launch_args: Vec::new(),
             direct: None,
             asset_rules: platforms.iter().map(|t| ((*t).to_string(), ".*".to_string())).collect(),
             rom: RomInfo::default(),

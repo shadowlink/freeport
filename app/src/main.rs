@@ -1025,13 +1025,18 @@ fn build_detail(app: &App, win: &MainWindow) {
         play_state: match app.launching.borrow().get(&p.id) { Some(false) => 1, Some(true) => 2, None => 0 },
         install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
-        repo_url: if p.repo.host == "github" {
-            format!("https://github.com/{}", p.repo.slug())
-        } else {
-            p.direct.as_ref().and_then(|d| d.page.clone()).unwrap_or_default()
+        repo_url: match p.repo.host.as_str() {
+            "github" => format!("https://github.com/{}", p.repo.slug()),
+            "gitlab" => format!("https://gitlab.com/{}", p.repo.slug()),
+            _ => p.direct.as_ref().and_then(|d| d.page.clone()).unwrap_or_default(),
         }
         .into(),
-        repo_label: if p.repo.host == "github" { "↗ Ver en GitHub" } else { "↗ Web oficial" }.into(),
+        repo_label: match p.repo.host.as_str() {
+            "github" => "↗ Ver en GitHub",
+            "gitlab" => "↗ Ver en GitLab",
+            _ => "↗ Web oficial",
+        }
+        .into(),
         last_updated: {
             let cl = app.changelog_cache.borrow();
             let (tag, date) = cl.get(&p.id).map(|(t, d, _)| (t.clone(), d.clone())).unwrap_or_else(|| {

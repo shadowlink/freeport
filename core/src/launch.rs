@@ -66,7 +66,7 @@ fn log_to(dir: &Path) -> (Stdio, Stdio) {
 
 /// Spawns the game binary detached, with its working directory set to the
 /// install folder (most ports look for assets/ROM relative to the executable).
-pub fn launch_binary(binary: &Path, envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
+pub fn launch_binary(binary: &Path, args: &[String], envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
     if !binary.exists() {
         return Err(AppError::msg(format!(
             "el ejecutable no existe: {}",
@@ -92,7 +92,7 @@ pub fn launch_binary(binary: &Path, envs: &std::collections::HashMap<String, Str
 
     let (out, err) = log_to(cwd);
     let mut cmd = Command::new(binary);
-    cmd.current_dir(cwd).stdout(out).stderr(err);
+    cmd.args(args).current_dir(cwd).stdout(out).stderr(err);
     sanitize_env(&mut cmd);
     for (k, v) in envs {
         cmd.env(k, v);
@@ -110,7 +110,7 @@ pub fn launch_binary(binary: &Path, envs: &std::collections::HashMap<String, Str
 /// - "proton:<path>"   → raw Proton at <path>
 ///
 /// `prefix` is a per-game Wine/Proton prefix so saves persist between runs.
-pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path, envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
+pub fn launch_windows_with(exe: &Path, args: &[String], runner_id: &str, prefix: &Path, envs: &std::collections::HashMap<String, String>) -> AppResult<Child> {
     if !exe.exists() {
         return Err(AppError::msg(format!(
             "el ejecutable no existe: {}",
@@ -124,11 +124,11 @@ pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path, envs: &st
 
     let mut cmd = if runner_id == "wine" {
         let mut c = Command::new("wine");
-        c.arg(exe).env("WINEPREFIX", prefix);
+        c.arg(exe).args(args).env("WINEPREFIX", prefix);
         c
     } else if let Some(proton_path) = runner_id.strip_prefix("umu:") {
         let mut c = Command::new("umu-run");
-        c.arg(exe).env("GAMEID", "0").env("WINEPREFIX", prefix);
+        c.arg(exe).args(args).env("GAMEID", "0").env("WINEPREFIX", prefix);
         if !proton_path.is_empty() {
             c.env("PROTONPATH", proton_path);
         }
@@ -138,6 +138,7 @@ pub fn launch_windows_with(exe: &Path, runner_id: &str, prefix: &Path, envs: &st
         let mut c = Command::new(format!("{proton_path}/proton"));
         c.args(["run"])
             .arg(exe)
+            .args(args)
             .env("STEAM_COMPAT_DATA_PATH", prefix)
             .env("STEAM_COMPAT_CLIENT_INSTALL_PATH", steam_root);
         c

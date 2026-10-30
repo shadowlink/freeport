@@ -206,6 +206,11 @@ async fn resolve_release(
         });
     }
     let slug = project.repo.slug();
+    if project.repo.host == "gitlab" {
+        let releases = github::fetch_releases_gitlab(client, &slug).await?;
+        return github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
+            .ok_or_else(|| AppError::msg("no se encontró una release adecuada"));
+    }
     if let Some(cached) = project.cached.as_ref() {
         if let Some(tag) = cached.latest_tag.as_deref() {
             if let Ok(mut rel) = github::fetch_release_by_tag_noapi(client, &slug, tag).await {
@@ -788,15 +793,25 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
         .iter()
         .filter_map(|(k, v)| expand_vars(v, install_dir, entry.rom_path.as_deref()).map(|v| (k.clone(), v)))
         .collect();
+    // Catalog arguments, e.g. `--game-dir {rom_path}`; all or nothing, so a
+    // port never gets a flag without its value.
+    let args: Vec<String> = {
+        let expanded: Option<Vec<String>> = project
+            .launch_args
+            .iter()
+            .map(|a| expand_vars(a, install_dir, entry.rom_path.as_deref()))
+            .collect();
+        expanded.unwrap_or_default()
+    };
     let mut child = if entry.windows {
         let cfg = store::load_config(paths)?;
         let runner = resolve_runner(&cfg, &project.id).ok_or_else(|| {
             AppError::msg("no hay ningún runner de Windows. Instala Wine o umu-launcher (Proton).")
         })?;
         let prefix = install_dir.join(".wineprefix");
-        launch::launch_windows_with(&bin, &runner, &prefix, &envs)?
+        launch::launch_windows_with(&bin, &args, &runner, &prefix, &envs)?
     } else {
-        launch::launch_binary(&bin, &envs)?
+        launch::launch_binary(&bin, &args, &envs)?
     };
     let pid = child.id();
 

@@ -86,6 +86,11 @@ pub struct Project {
     /// for ports whose UI freezes on native Wayland).
     #[serde(default)]
     pub launch_env: HashMap<String, String>,
+    /// Extra command-line arguments for the game binary. `{rom_path}` and
+    /// `{install_dir}` expand like in `launch_env`; when `{rom_path}` is used
+    /// and no dump has been imported yet, the arguments are left out.
+    #[serde(default)]
+    pub launch_args: Vec<String>,
     /// Direct-download source for projects not released on GitHub (e.g.
     /// self-hosted sites like openpete.com). When present it takes the place
     /// of GitHub Releases entirely.

@@ -76,6 +76,51 @@ pub async fn fetch_releases(
     Ok(releases)
 }
 
+/// Lists releases of a gitlab.com project. GitLab's release assets are
+/// "links" (name + URL); `direct_asset_url` is stable across re-uploads, so
+/// it is preferred over the raw upload URL.
+pub async fn fetch_releases_gitlab(client: &reqwest::Client, slug: &str) -> AppResult<Vec<Release>> {
+    let id = slug.replace('/', "%2F");
+    let url = format!("https://gitlab.com/api/v4/projects/{id}/releases?per_page=50");
+    let resp = client.get(&url).send().await?;
+    if !resp.status().is_success() {
+        return Err(AppError::msg(format!("GitLab respondió {} para {slug}", resp.status())));
+    }
+    let raw: Vec<serde_json::Value> = resp.json().await?;
+    Ok(raw.iter().map(gitlab_release).collect())
+}
+
+fn gitlab_release(v: &serde_json::Value) -> Release {
+    let s = |k: &str| v.get(k).and_then(|x| x.as_str()).map(|x| x.to_string());
+    let assets = v
+        .pointer("/assets/links")
+        .and_then(|l| l.as_array())
+        .map(|links| {
+            links
+                .iter()
+                .filter_map(|l| {
+                    let name = l.get("name")?.as_str()?.to_string();
+                    let url = l
+                        .get("direct_asset_url")
+                        .or_else(|| l.get("url"))?
+                        .as_str()?
+                        .to_string();
+                    Some(Asset { name, browser_download_url: url, size: 0 })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    Release {
+        tag_name: s("tag_name").unwrap_or_default(),
+        name: s("name"),
+        published_at: s("released_at"),
+        body: s("description"),
+        prerelease: v.get("upcoming_release").and_then(|x| x.as_bool()).unwrap_or(false),
+        draft: false,
+        assets,
+    }
+}
+
 /// Picks the release matching a project's channel:
 /// - "stable": newest non-draft, non-prerelease
 /// - "prerelease": newest non-draft (prereleases allowed)
@@ -277,6 +322,25 @@ pub fn pick_asset(release: &Release, regex_str: &str) -> AppResult<Asset> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn gitlab_release_maps_links_to_assets() {
+        let v: serde_json::Value = serde_json::json!({
+            "tag_name": "v0.1.1", "released_at": "2026-10-30T05:56:31.847Z", "upcoming_release": false,
+            "description": "notes",
+            "assets": {"links": [
+                {"name": "recasted-linux-x86_64.tar.gz", "url": "https://gitlab.com/-/project/1/uploads/x/recasted-linux-x86_64.tar.gz",
+                 "direct_asset_url": "https://gitlab.com/A/R/-/releases/v0.1.1/downloads/recasted-linux-x86_64.tar.gz"},
+                {"name": "recasted-windows-x86_64.zip", "url": "https://gitlab.com/-/project/1/uploads/y/recasted-windows-x86_64.zip"}
+            ]}
+        });
+        let r = gitlab_release(&v);
+        assert_eq!(r.tag_name, "v0.1.1");
+        assert_eq!(r.assets.len(), 2);
+        assert!(r.assets[0].browser_download_url.contains("/-/releases/v0.1.1/downloads/"));
+        assert!(!r.prerelease);
+        assert!(pick_asset(&r, "(?i)linux-x86_64\\.tar\\.gz$").is_ok());
+    }
 
     fn rel(tag: &str, prerelease: bool, draft: bool, assets: &[&str]) -> Release {
         Release {

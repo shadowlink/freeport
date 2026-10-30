@@ -250,6 +250,20 @@ pub async fn install_project(
         .ok_or_else(|| {
             AppError::msg(format!("{} no publica binario para {triple}", project.name))
         })?;
+    // Keep a native install native: a release that only ships Windows is not
+    // an upgrade for it (Savage Wind 0.3.1 dropped the AppImage; moving to the
+    // .exe meant Proton plus recompiling the game under Wine).
+    if is_windows_install {
+        if let Some(prev) = store::load_installed(paths)?.get(&project.id) {
+            if !prev.windows {
+                return Err(AppError::msg(format!(
+                    "la última versión de {} solo trae build de Windows; se conserva la instalación nativa ({})",
+                    project.name,
+                    prev.installed_tag.clone().unwrap_or_default()
+                )));
+            }
+        }
+    }
     let rule = project.asset_rules.get(&install_triple).unwrap();
 
     let release = resolve_release(client, project, token, rule).await?;

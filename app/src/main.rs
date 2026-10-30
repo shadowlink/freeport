@@ -202,6 +202,13 @@ struct App {
 /// date (robust: a tag mismatch alone would flag downgrades and stale catalogs).
 fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<freeport_core::model::Cached>) -> bool {
     let Some(c) = cached else { return false };
+    // A native install never "updates" to a Windows-only release: that would
+    // swap a working binary for one that needs Wine/Proton (and, for ports
+    // that compile the game on first run, redo that work under Wine). The
+    // update shows up again when the project ships a native build.
+    if !entry.windows && !c.platforms.is_empty() && !c.platforms.iter().any(|p| *p == platform::current_triple()) {
+        return false;
+    }
     match (&entry.published_at, &c.published_at) {
         // Both dates present → newer catalog date means a real update.
         (Some(inst), Some(latest)) if !inst.is_empty() && !latest.is_empty() => latest.as_str() > inst.as_str(),

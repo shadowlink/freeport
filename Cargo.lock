@@ -1808,7 +1808,7 @@ dependencies = [
 
 [[package]]
 name = "freeport"
-version = "0.2.78"
+version = "0.2.79"
 dependencies = [
  "freeport-core",
  "glow",

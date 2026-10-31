@@ -2509,14 +2509,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    let start_play: Rc<dyn Fn(String)> = Rc::new({
+    // Returns whether the game process was started; on failure the reason is
+    // shown in the notice bar (a silent "failed" flash told the user nothing
+    // when the preferred version of a game had no built exe yet).
+    let start_play: Rc<dyn Fn(String) -> bool> = Rc::new({
         let app = app.clone();
-        move |id: String| {
-            let Some(project) = app.find(&id) else { return };
+        let weak = win.as_weak();
+        move |id: String| -> bool {
+            let Some(project) = app.find(&id) else { return false };
             app.launching.borrow_mut().insert(id.clone(), false); // "Jugando…"
             ui_refresh();
-            if actions::launch_project(&app.paths, &project).is_err() {
+            let mut ok = true;
+            if let Err(e) = actions::launch_project(&app.paths, &project) {
+                ok = false;
                 app.launching.borrow_mut().insert(id.clone(), true); // failed
+                if let Some(w) = weak.upgrade() {
+                    w.set_notice(format!("No se pudo lanzar {}: {e}", project.name).into());
+                }
                 ui_refresh();
             }
             // Clear the transient state after a few seconds.
@@ -2529,6 +2538,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 });
                 ui_refresh();
             });
+            ok
         }
     });
 
@@ -2544,9 +2554,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let inst: Vec<&Project> = members.iter().filter(|m| installed.contains_key(&m.id)).collect();
             if inst.len() > 1 {
                 let key = members[0].game_key().to_string();
+                // A remembered version that can't start (e.g. a builder whose
+                // setup hasn't run) falls through to the chooser so the user
+                // can pick the one that works; the notice says why.
                 if let Some(pref) = cfg.preferred_version.get(&key) {
-                    if inst.iter().any(|m| &m.id == pref) {
-                        start_play(pref.clone());
+                    if inst.iter().any(|m| &m.id == pref) && start_play(pref.clone()) {
                         return;
                     }
                 }

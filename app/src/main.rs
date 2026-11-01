@@ -176,11 +176,9 @@ struct App {
     mod_icons: RefCell<std::collections::HashMap<String, Image>>,
     screens_cache: RefCell<std::collections::HashMap<String, Vec<String>>>,
     cover_cache: RefCell<std::collections::HashMap<String, Image>>,
-    hero_cache: RefCell<std::collections::HashMap<String, Image>>,
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
     // id -> (tag, published_at ISO, changelog body)
     changelog_cache: RefCell<std::collections::HashMap<String, (String, String, String)>>,
-    tv_shelves: RefCell<Vec<(String, Vec<String>)>>,
     pending_update: RefCell<Option<update::Update>>,
     /// Transient per-game launch state shown inline on the Play button:
     /// present+false = "Jugando…", present+true = launch failed.
@@ -242,6 +240,11 @@ fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<free
         },
     }
 }
+
+/// Whether Freeport's window is the active one. The controller is read
+/// globally (gilrs), so without this a game launched from Freeport would also
+/// steer Freeport — and start other games — while the player uses the pad.
+static WINDOW_FOCUSED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 thread_local! {
     static SCROLLTEST_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
@@ -338,6 +341,7 @@ fn open_chooser(app: &App, win: &MainWindow, mode: &str, title: &str, rows: Vec<
     win.set_chooser_title(title.into());
     win.set_chooser_items(ModelRc::new(VecModel::from(rows)));
     win.set_chooser_remember(false);
+    win.set_chooser_focus(0);
     win.set_chooser_visible(true);
 }
 
@@ -715,12 +719,17 @@ fn rebuild(app: &App, win: &MainWindow) {
                 has_logo: logo.is_some(),
                 count: n,
                 size: if sum > 0 { fmt_bytes(sum).into() } else { "…".into() },
+                frac: 0.0,
             });
         }
         // Biggest consoles first.
         let mut order: Vec<usize> = (0..disk_rows.len()).collect();
         order.sort_by(|a, b| disk_bytes[*b].cmp(&disk_bytes[*a]));
-        let disk_rows: Vec<DiskRow> = order.into_iter().map(|i| disk_rows[i].clone()).collect();
+        let max = disk_bytes.iter().copied().max().unwrap_or(0).max(1);
+        let disk_rows: Vec<DiskRow> = order
+            .into_iter()
+            .map(|i| DiskRow { frac: disk_bytes[i] as f32 / max as f32, ..disk_rows[i].clone() })
+            .collect();
         win.set_disk_rows(ModelRc::new(VecModel::from(disk_rows)));
         win.set_disk_total(if total > 0 { fmt_bytes(total).into() } else { "".into() });
     }
@@ -878,9 +887,9 @@ fn build_detail(app: &App, win: &MainWindow) {
         fact("Sistema", s.name.clone(), sys_color);
     }
     fact(
-        "Tipo",
-        if p.kind == "recompilation" { "Recompilación estática" } else { "Port nativo" }.into(),
-        if p.kind == "recompilation" { parse_color("#ffb23e") } else { parse_color("#3fa7e0") },
+        "Cómo está hecho",
+        if p.kind == "recompilation" { "Traducido del juego original" } else { "Reconstruido para PC" }.into(),
+        if p.kind == "recompilation" { parse_color("#2fd3ef") } else { parse_color("#3fa7e0") },
     );
     if let Some(y) = p.year {
         fact("Año", format!("{y}"), white);
@@ -888,11 +897,11 @@ fn build_detail(app: &App, win: &MainWindow) {
     fact("Desarrollador", p.developer.clone().unwrap_or_default(), white);
     fact("Género", p.genre.clone().unwrap_or_default(), white);
     fact(
-        "Nivel",
+        "Estado",
         match p.tier() {
-            "curado" => "Curado — probado y muy usado",
-            "experimental" => "Experimental — nuevo o poco probado",
-            _ => "Comunidad — funciona, con recorrido",
+            "curado" => "Muy probado",
+            "experimental" => "Versión de pruebas",
+            _ => "Funciona bien",
         }
         .into(),
         match p.tier() {
@@ -912,7 +921,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         );
     }
     if is_win {
-        fact("Se ejecuta con", "Wine / Proton".into(), parse_color("#3fa7e0"));
+        fact("Funciona con", "Compatibilidad de Windows (Proton)".into(), parse_color("#3fa7e0"));
     }
 
     let related: Vec<CardItem> = catalog
@@ -1110,6 +1119,61 @@ fn build_detail(app: &App, win: &MainWindow) {
         }
         None => String::new(),
     };
+    // Plain-language status line and the "add your game" action.
+    let busy_now = app.busy.borrow().contains(&p.id);
+    let rom_ok = entry.and_then(|e| e.rom_path.as_ref()).is_some();
+    let add_kind = if entry.is_none() {
+        ""
+    } else if p.rom.mode == "copy" {
+        "rom"
+    } else if p.system == "ps4" {
+        "pkg"
+    } else if p.system == "switch" && p.rom.required {
+        "switch"
+    } else {
+        ""
+    };
+    let add_label = match (add_kind, rom_ok) {
+        ("", _) => "",
+        ("rom", false) => "Elegir tu ROM",
+        ("rom", true) => "Cambiar la ROM",
+        (_, false) => "Añadir tu copia del juego",
+        (_, true) => "Volver a añadir el juego",
+    };
+    let (status, status_color) = if busy_now {
+        (String::new(), white)
+    } else if entry.is_none() {
+        (
+            if p.is_experimental() { "Disponible para descargar · versión de pruebas".to_string() } else { "Disponible para descargar".to_string() },
+            white,
+        )
+    } else if !add_kind.is_empty() && !rom_ok {
+        ("Falta añadir tu copia del juego".to_string(), parse_color("#ffd166"))
+    } else if update {
+        ("Hay una versión nueva".to_string(), parse_color("#ffd166"))
+    } else if app.install_error.borrow().contains(&p.id) {
+        ("La última descarga falló".to_string(), parse_color("#ff6b7d"))
+    } else {
+        ("Listo para jugar".to_string(), parse_color("#4de1c1"))
+    };
+    // Sections of the page, only the ones with something to show.
+    let mut tabs: Vec<TabItem> = vec![TabItem { key: "info".into(), label: "Información".into() }];
+    if !p.rom.notes.is_empty() {
+        tabs.push(TabItem { key: "setup".into(), label: "Cómo se instala".into() });
+    }
+    if app.changelog_cache.borrow().get(&p.id).map(|(_, _, b)| !b.is_empty()).unwrap_or(false) {
+        tabs.push(TabItem { key: "news".into(), label: "Novedades".into() });
+    }
+    if !screens.is_empty() {
+        tabs.push(TabItem { key: "screens".into(), label: "Capturas".into() });
+    }
+    if !ra_summary.is_empty() {
+        tabs.push(TabItem { key: "ra".into(), label: "Logros".into() });
+    }
+    if !mod_rows.is_empty() {
+        tabs.push(TabItem { key: "mods".into(), label: "Mods".into() });
+    }
+    tabs.push(TabItem { key: "more".into(), label: "Opciones".into() });
     let data = DetailData {
         id: p.id.clone().into(),
         title: title.into(),
@@ -1178,6 +1242,14 @@ fn build_detail(app: &App, win: &MainWindow) {
         new_version: if update { latest_tag.into() } else { "".into() },
         facts: ModelRc::new(VecModel::from(facts)),
         ra_summary: ra_summary.into(),
+        tabs: ModelRc::new(VecModel::from(tabs)),
+        sys_logo: app.logos.get(&p.system).cloned().unwrap_or_default(),
+        has_sys_logo: app.logos.contains_key(&p.system),
+        sys_color,
+        status: status.into(),
+        status_color,
+        add_game_kind: add_kind.into(),
+        add_game_label: add_label.into(),
         badge_rows: ModelRc::new(VecModel::from(badge_rows)),
         related: ModelRc::new(VecModel::from(related)),
         versions: ModelRc::new(VecModel::from(versions)),
@@ -1433,188 +1505,6 @@ fn spawn_missing_thumbs(app: &Rc<App>, handle: &tokio::runtime::Handle) {
     });
 }
 
-// ── TV / Big Picture ──────────────────────────────────────────────────
-
-fn tv_hero(app: &App, win: &MainWindow) {
-    let shelves = app.tv_shelves.borrow();
-    let s = win.get_tv_shelf().max(0) as usize;
-    let c = win.get_tv_col().max(0) as usize;
-    if let Some((_, ids)) = shelves.get(s) {
-        if let Some(id) = ids.get(c) {
-            if let Some(p) = app.find(id) {
-                let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
-                // Prefer the full-res hero art (prefetched); fall back to the thumb.
-                let art = p.box_art.as_ref().or(p.cover_url.as_ref());
-                let img = art
-                    .and_then(|u| app.hero_cache.borrow().get(u).cloned())
-                    .unwrap_or_else(|| app.cover(&p));
-                win.set_tv_hero_cover(img);
-                win.set_tv_hero_title(title.into());
-                win.set_tv_hero_subtitle(p.name.clone().into());
-                return;
-            }
-        }
-    }
-    win.set_tv_hero_title("".into());
-    win.set_tv_hero_subtitle("".into());
-}
-
-fn build_tv(app: &App, win: &MainWindow) {
-    let installed = store::load_installed(&app.paths).unwrap_or_default();
-    let catalog = app.catalog.borrow();
-    let mut bounds: Vec<(String, Vec<String>)> = Vec::new();
-    let mut shelves: Vec<TvShelf> = Vec::new();
-    for s in &catalog.systems {
-        // TV / Big Picture is a couch experience: show only installed games.
-        let games: Vec<&Project> = catalog
-            .projects
-            .iter()
-            .filter(|p| p.system == s.id && installed.contains_key(&p.id))
-            .collect();
-        if games.is_empty() {
-            continue;
-        }
-        let sys_color = parse_color(&s.color);
-        let cards: Vec<CardItem> = games
-            .iter()
-            .map(|p| {
-                let entry = installed.get(&p.id);
-                let update = entry.map(|e| has_update(e, &p.cached)).unwrap_or(false);
-                let latest = p.cached.as_ref().and_then(|c| c.latest_tag.clone()).unwrap_or_default();
-                CardItem {
-                    id: p.id.clone().into(),
-                    title: (if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() }).into(),
-                    subtitle: p.name.clone().into(),
-                    cover: app.cover(p),
-                    installed: entry.is_some(),
-                    is_windows: false,
-                    update_available: update,
-                    needs_rom: false,
-                    rom_ok: false,
-                    busy: false,
-                    progress: 0.0,
-                    kind: "".into(),
-                    sys_color,
-                    favorite: false,
-                    play_state: 0,
-                    install_error: false,
-                    version: "".into(),
-                    new_version: if update { latest.into() } else { "".into() },
-                    meta: "".into(),
-                    is_new: false,
-                    versions: 1,
-                    aspect: box_aspect(&p.system),
-                card_w: 0.0,
-                experimental: p.is_experimental(),
-                fit_cover: app.fit_cover(p),
-                size: app.size_label(&p.id),
-                }
-            })
-            .collect();
-        bounds.push((s.name.clone(), games.iter().map(|p| p.id.clone()).collect()));
-        shelves.push(TvShelf {
-            name: s.name.clone().into(),
-            count: cards.len() as i32,
-            card_w: (237.0 * box_aspect(&s.id)).clamp(120.0, 340.0),
-            games: ModelRc::new(VecModel::from(cards)),
-        });
-    }
-    let n = shelves.len() as i32;
-    *app.tv_shelves.borrow_mut() = bounds;
-    win.set_tv_shelves(ModelRc::new(VecModel::from(shelves)));
-    win.set_tv_shelf_count(n);
-    win.set_tv_shelf(0);
-    win.set_tv_col(0);
-    tv_hero(app, win);
-}
-
-fn exit_tv(win: &MainWindow) {
-    win.set_tv_visible(false);
-    win.window().set_fullscreen(false);
-}
-
-fn tv_input(app: &App, win: &MainWindow, button: &str) {
-    let shelves = app.tv_shelves.borrow();
-    if shelves.is_empty() {
-        return;
-    }
-    let count = shelves.len() as i32;
-    let len_of = |i: i32| shelves.get(i.max(0) as usize).map(|(_, ids)| ids.len() as i32).unwrap_or(0);
-    let mut s = win.get_tv_shelf();
-    let mut c = win.get_tv_col();
-    match button {
-        "down" => {
-            if s + 1 < count {
-                s += 1;
-                c = 0; // start each new row at its first item
-            }
-        }
-        "up" => {
-            if s > 0 {
-                s -= 1;
-                c = 0;
-            }
-        }
-        "right" => {
-            if c + 1 < len_of(s) {
-                c += 1;
-            }
-        }
-        "left" => {
-            if c > 0 {
-                c -= 1;
-            }
-        }
-        "rb" => {
-            if s + 1 < count {
-                s += 1;
-                c = 0;
-            }
-        }
-        "lb" => {
-            if s > 0 {
-                s -= 1;
-                c = 0;
-            }
-        }
-        "a" => {
-            if let Some((_, ids)) = shelves.get(s as usize) {
-                if let Some(id) = ids.get(c as usize) {
-                    if let Some(p) = app.find(id) {
-                        // TV only lists installed games, so A always launches.
-                        let _ = actions::launch_project(&app.paths, &p);
-                    }
-                }
-            }
-            return;
-        }
-        "y" => {
-            // Update the focused game if it has one pending.
-            if let Some(id) = shelves.get(s as usize).and_then(|(_, ids)| ids.get(c as usize)).cloned() {
-                drop(shelves);
-                let installed = store::load_installed(&app.paths).unwrap_or_default();
-                if let Some(p) = app.find(&id) {
-                    let has = installed.get(&id).map(|e| has_update(e, &p.cached)).unwrap_or(false);
-                    if has && !app.busy.borrow().contains(&id) {
-                        win.invoke_install(id.into());
-                    }
-                }
-            }
-            return;
-        }
-        "b" | "start" | "back" => {
-            drop(shelves);
-            exit_tv(win);
-            return;
-        }
-        _ => {}
-    }
-    win.set_tv_shelf(s);
-    win.set_tv_col(c);
-    drop(shelves);
-    tv_hero(app, win);
-}
-
 /// Headless `freeport --play <id>`: launch a game and stay alive while it runs
 /// (lets Steam non-Steam shortcuts track the session).
 fn cli_play(id: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -1724,10 +1614,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         mod_icons: RefCell::new(std::collections::HashMap::new()),
         screens_cache: RefCell::new(std::collections::HashMap::new()),
         cover_cache: RefCell::new(std::collections::HashMap::new()),
-        hero_cache: RefCell::new(std::collections::HashMap::new()),
         size_cache: RefCell::new(std::collections::HashMap::new()),
         changelog_cache: RefCell::new(std::collections::HashMap::new()),
-        tv_shelves: RefCell::new(Vec::new()),
         pending_update: RefCell::new(None),
         launching: RefCell::new(std::collections::HashMap::new()),
         exp_systems: RefCell::new(HashSet::new()),
@@ -1752,24 +1640,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     UI.with(|u| *u.borrow_mut() = Some((app.clone(), win.as_weak())));
 
     // Controller input → route to TV navigation when Big Picture is open.
-    gamepad::start(|b| {
+    // FREEPORT_NO_GAMEPAD: headless/test instances never read the controller.
+    if std::env::var_os("FREEPORT_NO_GAMEPAD").is_none() { gamepad::start(|b| {
+        if !WINDOW_FOCUSED.load(std::sync::atomic::Ordering::Relaxed) {
+            return; // another window (a game) has the player's attention
+        }
         let b = b.to_string();
         let _ = slint::invoke_from_event_loop(move || {
             UI.with(|u| {
                 if let Some((app, weak)) = &*u.borrow() {
                     if let Some(w) = weak.upgrade() {
-                        if w.get_tv_visible() {
-                            tv_input(app, &w, &b);
-                        } else if !w.get_classic_view() && !w.get_settings_visible() && !w.get_detail_visible() {
+                        // Whatever is on top gets the button: dialogs, then the
+                        // game page / settings, then the home carousel.
+                        if w.get_confirm_visible() || w.get_chooser_visible() {
+                            w.invoke_dialog_key(b.clone().into());
+                        } else if w.get_settings_visible() {
+                            w.invoke_settings_key(b.clone().into());
+                        } else if w.get_detail_visible() {
+                            w.invoke_detail_key(b.clone().into());
+                        } else if !w.get_classic_view() {
                             home_key(app, &w, &b);
-                        } else if b == "b" && w.get_detail_visible() {
-                            w.invoke_close_detail();
                         }
                     }
                 }
             });
         });
-    });
+    }); }
 
 
     // Populate settings UI.
@@ -2127,63 +2023,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
-    win.on_open_tv({
-        let app = app.clone();
-        let handle = handle.clone();
-        let weak = win.as_weak();
-        move || {
-            if let Some(w) = weak.upgrade() {
-                build_tv(&app, &w);
-                w.set_tv_visible(true);
-                w.window().set_fullscreen(true);
-            }
-            // Prefetch full-resolution hero art for installed games (the grid
-            // thumbnails are only 320px and look pixelated blown up in the hero).
-            let installed = store::load_installed(&app.paths).unwrap_or_default();
-            let urls: Vec<String> = app
-                .catalog
-                .borrow()
-                .projects
-                .iter()
-                .filter(|p| installed.contains_key(&p.id))
-                .filter_map(|p| p.box_art.clone().or_else(|| p.cover_url.clone()))
-                .filter(|u| !app.hero_cache.borrow().contains_key(u))
-                .collect();
-            if urls.is_empty() {
-                return;
-            }
-            let client = app.client.clone();
-            let paths = app.paths.clone();
-            handle.spawn(async move {
-                let mut fetched: Vec<(String, String)> = Vec::new();
-                for u in urls {
-                    if let Ok(p) = thumbs::get_full(&client, &paths, &u).await {
-                        fetched.push((u, p.display().to_string()));
-                    }
-                }
-                if fetched.is_empty() {
-                    return;
-                }
-                let _ = slint::invoke_from_event_loop(move || {
-                    UI.with(|uu| {
-                        if let Some((app, weak)) = &*uu.borrow() {
-                            for (url, path) in &fetched {
-                                if let Ok(img) = Image::load_from_path(Path::new(path)) {
-                                    app.hero_cache.borrow_mut().insert(url.clone(), img);
-                                }
-                            }
-                            if let Some(w) = weak.upgrade() {
-                                if w.get_tv_visible() {
-                                    tv_hero(app, &w);
-                                }
-                            }
-                        }
-                    });
-                });
-            });
-        }
-    });
-
     win.on_home_key({
         let app = app.clone();
         let weak = win.as_weak();
@@ -2225,6 +2064,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             w.set_home_game(i);
         }
     });
+    win.on_toggle_fullscreen({
+        let weak = win.as_weak();
+        move |v| {
+            if let Some(w) = weak.upgrade() {
+                w.set_fullscreen(v);
+                w.window().set_fullscreen(v);
+            }
+        }
+    });
     win.on_set_classic_view({
         let app = app.clone();
         move |v| {
@@ -2235,16 +2083,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             ui_refresh();
         }
     });
-    win.on_tv_input({
-        let app = app.clone();
-        let weak = win.as_weak();
-        move |b| {
-            if let Some(w) = weak.upgrade() {
-                tv_input(&app, &w, b.as_str());
-            }
-        }
-    });
-
     win.on_refresh(ui_refresh);
 
     win.on_toggle_favorite({
@@ -2279,6 +2117,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         move |id| {
             let id = id.to_string();
             let Some(project) = app.find(&id) else { return };
+            let same = app.detail.borrow().as_ref().map(|d| d.id == id).unwrap_or(false);
+            if !same {
+                if let Some(w) = weak.upgrade() {
+                    w.set_detail_tab(0);
+                }
+            }
             *app.detail.borrow_mut() = Some(DetailState { id: id.clone(), wiki: None, msg: String::new() });
             ui_refresh();
             if let Some(w) = weak.upgrade() {
@@ -2622,6 +2466,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         use i_slint_backend_winit::{EventResult, WinitWindowAccessor};
         let weak = win.as_weak();
         win.window().on_winit_window_event(move |_, ev| {
+            if let WindowEvent::Focused(f) = ev {
+                WINDOW_FOCUSED.store(*f, std::sync::atomic::Ordering::Relaxed);
+            }
             if let WindowEvent::MouseInput { state: ElementState::Pressed, button, .. } = ev {
                 if let Some(w) = weak.upgrade() {
                     match button {
@@ -3511,11 +3358,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         CATALOG_TIMER.with(|t| *t.borrow_mut() = Some(timer));
     }
 
-    // `--tv`: boot straight into TV (Big Picture) mode, e.g. when launched by
-    // Sunshine for streaming to a couch/TV client.
+    // `--tv`: boot straight into the console view, full screen (Sunshine
+    // launches it like this for streaming to the TV).
     if std::env::args().any(|a| a == "--tv") {
-        build_tv(&app, &win);
-        win.set_tv_visible(true);
+        win.set_classic_view(false);
+        win.set_fullscreen(true);
         win.window().set_fullscreen(true);
     }
 

@@ -128,6 +128,7 @@ pub fn is_archive(name: &str) -> bool {
         || n.ends_with(".tgz")
         || n.ends_with(".tar.xz")
         || n.ends_with(".txz")
+        || n.ends_with(".tar.zst")
         || n.ends_with(".deb")
         || n.ends_with(".7z")
         || n.ends_with(".rar")
@@ -246,6 +247,8 @@ fn sniff_kind(archive: &Path) -> Option<&'static str> {
         Some("tar.gz")
     } else if h.starts_with(&[0xfd, 0x37, 0x7a, 0x58, 0x5a, 0x00]) {
         Some("tar.xz")
+    } else if h.starts_with(&[0x28, 0xb5, 0x2f, 0xfd]) {
+        Some("tar.zst")
     } else if h.starts_with(b"7z\xbc\xaf\x27\x1c") {
         Some("7z")
     } else if h.starts_with(b"Rar!\x1a\x07") {
@@ -272,6 +275,8 @@ fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
         "tar.gz"
     } else if name.ends_with(".tar.xz") || name.ends_with(".txz") {
         "tar.xz"
+    } else if name.ends_with(".tar.zst") {
+        "tar.zst"
     } else if name.ends_with(".tar") {
         "tar"
     } else if name.ends_with(".deb") {
@@ -306,6 +311,14 @@ fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
             Ok(())
         }
         "tar.xz" => extract_tar_xz(archive, dest_dir),
+        "tar.zst" => {
+            // zstd-compressed tarballs (some Linux ports, e.g. Bustin' Out).
+            let file = std::fs::File::open(archive)?;
+            let dec = zstd::stream::read::Decoder::new(std::io::BufReader::new(file))
+                .map_err(|e| AppError::msg(format!("error al abrir zstd: {e}")))?;
+            tar::Archive::new(dec).unpack(dest_dir)?;
+            Ok(())
+        }
         "deb" => extract_deb(archive, dest_dir),
         "7z" => {
             sevenz_rust::decompress_file(archive, dest_dir)
@@ -314,7 +327,7 @@ fn extract_one(archive: &Path, dest_dir: &Path) -> AppResult<()> {
         }
         "rar" => extract_rar(archive, dest_dir),
         _ => Err(AppError::msg(format!(
-            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar, .tar.gz, .tar.xz, .deb, .7z, .rar)"
+            "formato de archivo no soportado todavía: {name} (soportados: .zip, .tar, .tar.gz, .tar.xz, .tar.zst, .deb, .7z, .rar)"
         ))),
     }
 }
@@ -812,6 +825,29 @@ mod tests {
         }
         let dest = root.join("out");
         extract_sync(&xz_path, &dest).unwrap();
+        assert!(find_launch_binary(&dest, Some("Game"), false).is_ok());
+        let _ = std::fs::remove_dir_all(&root);
+    }
+
+    #[test]
+    fn tar_zst_extract() {
+        let root = scratch("zst");
+        let mut tar_bytes = Vec::new();
+        {
+            let mut b = tar::Builder::new(&mut tar_bytes);
+            let data = vec![7u8; 2048];
+            let mut h = tar::Header::new_gnu();
+            h.set_size(data.len() as u64);
+            h.set_mode(0o755);
+            b.append_data(&mut h, "game/Game", &data[..]).unwrap();
+            b.finish().unwrap();
+        }
+        let zst_path = root.join("payload.tar.zst");
+        std::fs::write(&zst_path, zstd::stream::encode_all(&tar_bytes[..], 3).unwrap()).unwrap();
+        assert!(is_archive("Foo-linux-x86_64.tar.zst"));
+        assert_eq!(sniff_kind(&zst_path), Some("tar.zst"));
+        let dest = root.join("out");
+        extract_sync(&zst_path, &dest).unwrap();
         assert!(find_launch_binary(&dest, Some("Game"), false).is_ok());
         let _ = std::fs::remove_dir_all(&root);
     }

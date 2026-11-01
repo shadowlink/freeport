@@ -548,7 +548,29 @@ pub fn run_after_import(
     let envs: HashMap<String, String> =
         step.env.iter().filter_map(|(k, v)| expand_vars(v, install_dir, Some(&rom)).map(|v| (k.clone(), v))).collect();
     progress("Preparando el juego para el port (puede tardar bastantes minutos)");
-    run_port_tool(paths, project, install_dir, &bin, &args, &envs, windows, "el paso posterior del port")
+    match (step.expect_output.as_deref(), windows) {
+        (Some(want), false) => {
+            let out = std::process::Command::new(&bin)
+                .args(&args)
+                .envs(&envs)
+                .current_dir(install_dir)
+                .output()
+                .map_err(|e| AppError::msg(format!("no se pudo ejecutar el paso posterior del port: {e}")))?;
+            let text = format!("{}{}", String::from_utf8_lossy(&out.stdout), String::from_utf8_lossy(&out.stderr));
+            if !text.contains(want) {
+                let tail: String = text.lines().rev().filter(|l| !l.trim().is_empty()).take(3).collect::<Vec<_>>().join(" | ");
+                return Err(AppError::msg(format!("el port no pudo preparar el juego: {tail}")));
+            }
+        }
+        _ => run_port_tool(paths, project, install_dir, &bin, &args, &envs, windows, "el paso posterior del port")?,
+    }
+    if let Some(after) = step.rom_path_after.as_deref() {
+        save_rom_path(paths, &project.id, &install_dir.join(after))?;
+    }
+    if step.remove_source && rom_path.starts_with(install_dir) && rom_path != install_dir {
+        let _ = std::fs::remove_dir_all(rom_path);
+    }
+    Ok(())
 }
 
 /// Runs one of the port's own programs (a setup, a builder) to completion:

@@ -202,6 +202,17 @@ pub struct AfterImport {
     /// Windows program runs under the game's Wine/Proton runner.
     #[serde(default)]
     pub exe: Option<String>,
+    /// Text the step must print (stdout or stderr) to count as done — for
+    /// tools that exit 0 either way (LAS Recomp's `… -> READY`).
+    #[serde(default)]
+    pub expect_output: Option<String>,
+    /// After a successful step the imported dump is no longer needed (the port
+    /// made its own copy): delete it…
+    #[serde(default)]
+    pub remove_source: bool,
+    /// …and record this folder (relative to the install folder) as the game path.
+    #[serde(default)]
+    pub rom_path_after: Option<String>,
 }
 
 /// A port whose download is an installer that wants the user's NSP/XCI

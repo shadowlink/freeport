@@ -3,7 +3,6 @@
 
 slint::include_modules!();
 
-mod box3d;
 
 use freeport_core::model::{Catalog, Project};
 use freeport_core::store::{self, Paths};
@@ -94,6 +93,15 @@ const LOGOS: &[(&str, &[u8])] = &[
     ("xbox", include_bytes!("../assets/logos/xbox.svg")),
 ];
 
+/// One entry of the view history: which screen, which console, which game page.
+#[derive(Clone, PartialEq, Debug)]
+struct NavState {
+    settings: bool,
+    library: bool,
+    system: String,
+    detail: Option<String>,
+}
+
 struct DetailState {
     id: String,
     wiki: Option<WikiInfo>,
@@ -182,11 +190,13 @@ struct App {
     exp_all: std::cell::Cell<bool>,
     /// What the open version chooser will do with the picked id.
     chooser_mode: RefCell<String>,
-    /// Experimental 3D box viewer state (shared with the GL rendering notifier).
-    viewer3d: box3d::Shared,
-    viewer3d_timer: RefCell<Option<slint::Timer>>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
+    /// View history for the mouse's back/forward buttons.
+    nav_hist: RefCell<Vec<NavState>>,
+    nav_pos: std::cell::Cell<usize>,
+    /// Set while a history entry is being replayed (so it isn't pushed again).
+    nav_applying: std::cell::Cell<bool>,
     /// Catalog ids → first-seen epoch (drives NUEVO badge + newcomers strip).
     seen: RefCell<std::collections::HashMap<String, i64>>,
     /// RetroAchievements progress per project id + badge art by URL.
@@ -316,27 +326,6 @@ fn open_chooser(app: &App, win: &MainWindow, mode: &str, title: &str, rows: Vec<
     win.set_chooser_items(ModelRc::new(VecModel::from(rows)));
     win.set_chooser_remember(false);
     win.set_chooser_visible(true);
-}
-
-/// Box depth relative to its height, per system (cardboard N64/GB boxes are
-/// thick; jewel and DVD cases thin).
-fn box_depth(system: &str) -> f32 {
-    match system {
-        "n64" | "gb" | "gba" | "pc" => 0.16,
-        "nds" | "3ds" => 0.11,
-        "psp" => 0.09,
-        "psx" => 0.085,
-        _ => 0.08,
-    }
-}
-
-/// Plastic cases catch highlights; cardboard boxes don't.
-fn box_glossy(system: &str) -> bool {
-    !matches!(system, "n64" | "gb" | "gba" | "pc")
-}
-
-fn color_rgb(c: Color) -> [f32; 3] {
-    [c.red() as f32 / 255.0, c.green() as f32 / 255.0, c.blue() as f32 / 255.0]
 }
 
 /// Human label for an asset triple ("linux-x86_64" → "Linux").
@@ -520,7 +509,7 @@ fn rebuild(app: &App, win: &MainWindow) {
         freeport_core::groups::group_visible(&catalog.projects, &app.triple, |p| passes(p).is_some());
 
     // (favorite, name_lc, year, last_played_epoch, card) for sorting.
-    let mut sortable: Vec<(bool, String, i64, i64, CardItem)> = Vec::new();
+    let mut sortable: Vec<(bool, String, i64, i64, CardItem, String)> = Vec::new();
     for g in &card_groups {
         // The card speaks for the whole group but acts on ONE project: the
         // installed version played most recently, else the group's primary.
@@ -599,7 +588,10 @@ fn rebuild(app: &App, win: &MainWindow) {
                 aspect: box_aspect(&p.system),
                 card_w: slot_width(win.get_card_h(), box_aspect(&p.system)),
                 experimental: p.is_experimental(),
+                fit_cover: app.fit_cover(p),
+                size: app.size_label(&p.id),
             },
+            p.system.clone(),
         ));
     }
     // Favorites first, then alphabetical — always.
@@ -613,7 +605,7 @@ fn rebuild(app: &App, win: &MainWindow) {
     recent_pool.sort_by_key(|a| std::cmp::Reverse(a.0));
     let recent: Vec<CardItem> = recent_pool.into_iter().take(4).map(|t| t.1).collect();
 
-    let cards: Vec<CardItem> = sortable.into_iter().map(|t| t.4).collect();
+    let cards: Vec<(CardItem, String)> = sortable.into_iter().map(|t| (t.4, t.5)).collect();
 
     let count = cards.len() as i32;
     // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
@@ -630,28 +622,93 @@ fn rebuild(app: &App, win: &MainWindow) {
             let w = c.card_w;
             let need = if row.is_empty() { w } else { used + gap + w };
             if !row.is_empty() && need > avail {
-                rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(std::mem::take(&mut row))) });
+                rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(std::mem::take(&mut row))), logo: Image::default(), has_logo: false });
                 used = 0.0;
             }
             used = if row.is_empty() { w } else { used + gap + w };
             row.push(c);
         }
         if !row.is_empty() {
-            rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(row)) });
+            rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(row)), logo: Image::default(), has_logo: false });
         }
     };
-    // Stable ports first; experimental ones together in their own section below,
-    // so the unstable stuff is easy to find and easy to ignore.
-    let (experimental, stable): (Vec<CardItem>, Vec<CardItem>) = cards.into_iter().partition(|c| c.experimental);
     let mut rows: Vec<GridRow> = Vec::new();
-    pack(stable, &mut rows);
-    if !experimental.is_empty() {
-        let n = experimental.len();
-        rows.push(GridRow {
-            header: format!("⚠ Experimentales · {n}").into(),
-            cards: ModelRc::new(VecModel::from(Vec::<CardItem>::new())),
-        });
-        pack(experimental, &mut rows);
+    if active.is_empty() {
+        // "Todas" (catalog or library): one shelf per console, in the
+        // catalog's order, each headed by the console's logo. Inside a shelf
+        // the stable ports come first and the experimental ones after.
+        for s in &catalog.systems {
+            let (experimental, stable): (Vec<CardItem>, Vec<CardItem>) = cards
+                .iter()
+                .filter(|(_, sys)| *sys == s.id)
+                .map(|(c, _)| c.clone())
+                .partition(|c| c.experimental);
+            let n = stable.len() + experimental.len();
+            if n == 0 {
+                continue;
+            }
+            let logo = app.logos.get(&s.id).cloned();
+            rows.push(GridRow {
+                header: format!("{} · {n}", s.name).into(),
+                cards: ModelRc::new(VecModel::from(Vec::<CardItem>::new())),
+                logo: logo.clone().unwrap_or_default(),
+                has_logo: logo.is_some(),
+            });
+            pack(stable, &mut rows);
+            pack(experimental, &mut rows);
+        }
+    } else {
+        // One console: stable ports first; experimental ones together in their
+        // own section below, so the unstable stuff is easy to find and easy to ignore.
+        let (experimental, stable): (Vec<CardItem>, Vec<CardItem>) =
+            cards.into_iter().map(|(c, _)| c).partition(|c| c.experimental);
+        pack(stable, &mut rows);
+        if !experimental.is_empty() {
+            let n = experimental.len();
+            rows.push(GridRow {
+                header: format!("⚠ Experimentales · {n}").into(),
+                cards: ModelRc::new(VecModel::from(Vec::<CardItem>::new())),
+                logo: Image::default(),
+                has_logo: false,
+            });
+            pack(experimental, &mut rows);
+        }
+    }
+
+    // Settings → disk usage per console (sizes come from `refresh_library_size`).
+    {
+        let sizes = app.size_cache.borrow();
+        let mut disk_rows: Vec<DiskRow> = Vec::new();
+        let mut disk_bytes: Vec<u64> = Vec::new();
+        let mut total = 0u64;
+        for s in &catalog.systems {
+            let mut sum = 0u64;
+            let mut n = 0;
+            for p in catalog.projects.iter().filter(|p| p.system == s.id && installed.contains_key(&p.id)) {
+                n += 1;
+                sum += sizes.get(&p.id).copied().unwrap_or(0);
+            }
+            if n == 0 {
+                continue;
+            }
+            total += sum;
+            let logo = app.logos.get(&s.id).cloned();
+            disk_bytes.push(sum);
+            disk_rows.push(DiskRow {
+                id: s.id.clone().into(),
+                name: s.name.clone().into(),
+                logo: logo.clone().unwrap_or_default(),
+                has_logo: logo.is_some(),
+                count: n,
+                size: if sum > 0 { fmt_bytes(sum).into() } else { "…".into() },
+            });
+        }
+        // Biggest consoles first.
+        let mut order: Vec<usize> = (0..disk_rows.len()).collect();
+        order.sort_by(|a, b| disk_bytes[*b].cmp(&disk_bytes[*a]));
+        let disk_rows: Vec<DiskRow> = order.into_iter().map(|i| disk_rows[i].clone()).collect();
+        win.set_disk_rows(ModelRc::new(VecModel::from(disk_rows)));
+        win.set_disk_total(if total > 0 { fmt_bytes(total).into() } else { "".into() });
     }
 
     let header = if !active.is_empty() {
@@ -711,6 +768,8 @@ fn rebuild(app: &App, win: &MainWindow) {
                     aspect: box_aspect(&p.system),
         card_w: 0.0,
         experimental: p.is_experimental(),
+                fit_cover: app.fit_cover(p),
+                size: app.size_label(&p.id),
         });
     }
 
@@ -732,6 +791,27 @@ fn rebuild(app: &App, win: &MainWindow) {
 }
 
 impl App {
+    /// Whether the cached art should be cropped (`cover`) rather than
+    /// letterboxed: SteamGridDB grids are 2:3 while a Switch or PS4 box is
+    /// not, so `contain` left black bands above and below.
+    fn fit_cover(&self, p: &Project) -> bool {
+        let img = self.cover(p);
+        let sz = img.size();
+        if sz.width == 0 || sz.height == 0 {
+            return false;
+        }
+        let ia = sz.width as f32 / sz.height as f32;
+        (ia - box_aspect(&p.system)).abs() > 0.05
+    }
+
+    /// "12.3 GB" for an installed game whose size is known, else "".
+    fn size_label(&self, id: &str) -> SharedString {
+        match self.size_cache.borrow().get(id) {
+            Some(b) if *b > 0 => fmt_bytes(*b).into(),
+            _ => "".into(),
+        }
+    }
+
     fn cover(&self, p: &Project) -> Image {
         let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()) else { return Image::default() };
         if let Some(img) = self.cover_cache.borrow().get(url) {
@@ -856,6 +936,8 @@ fn build_detail(app: &App, win: &MainWindow) {
                     aspect: box_aspect(&r.system),
         card_w: 0.0,
         experimental: r.is_experimental(),
+        fit_cover: app.fit_cover(r),
+        size: app.size_label(&r.id),
         })
         .collect();
 
@@ -1032,6 +1114,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         play_state: match app.launching.borrow().get(&p.id) { Some(false) => 1, Some(true) => 2, None => 0 },
         install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
+        fit_cover: app.fit_cover(&p),
         repo_url: match p.repo.host.as_str() {
             "github" => format!("https://github.com/{}", p.repo.slug()),
             "gitlab" => format!("https://gitlab.com/{}", p.repo.slug()),
@@ -1291,6 +1374,8 @@ fn build_tv(app: &App, win: &MainWindow) {
                     aspect: box_aspect(&p.system),
                 card_w: 0.0,
                 experimental: p.is_experimental(),
+                fit_cover: app.fit_cover(p),
+                size: app.size_label(&p.id),
                 }
             })
             .collect();
@@ -1419,20 +1504,23 @@ fn cli_play(id: &str) -> Result<(), Box<dyn std::error::Error>> {
 
 /// Recomputes the total on-disk size of the library and updates the sidebar.
 async fn refresh_library_size(paths: Paths) {
-    let total = tokio::task::spawn_blocking(move || {
+    let sizes: std::collections::HashMap<String, u64> = tokio::task::spawn_blocking(move || {
         let installed = store::load_installed(&paths).unwrap_or_default();
-        installed.values().map(|e| dir_size(Path::new(&e.install_path))).sum::<u64>()
+        installed.iter().map(|(id, e)| (id.clone(), dir_size(Path::new(&e.install_path)))).collect()
     })
     .await
-    .unwrap_or(0);
+    .unwrap_or_default();
+    let total: u64 = sizes.values().sum();
     let _ = slint::invoke_from_event_loop(move || {
         UI.with(|u| {
-            if let Some((_, weak)) = &*u.borrow() {
+            if let Some((app, weak)) = &*u.borrow() {
+                *app.size_cache.borrow_mut() = sizes;
                 if let Some(w) = weak.upgrade() {
                     w.set_library_size(if total > 0 { fmt_bytes(total).into() } else { "".into() });
                 }
             }
         });
+        ui_refresh();
     });
 }
 
@@ -1513,9 +1601,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         exp_systems: RefCell::new(HashSet::new()),
         exp_all: std::cell::Cell::new(false),
         chooser_mode: RefCell::new(String::new()),
-        viewer3d: Default::default(),
-        viewer3d_timer: RefCell::new(None),
         install_error: RefCell::new(HashSet::new()),
+        nav_hist: RefCell::new(Vec::new()),
+        nav_pos: std::cell::Cell::new(0),
+        nav_applying: std::cell::Cell::new(false),
         seen: RefCell::new(std::collections::HashMap::new()),
         ra_cache: RefCell::new(std::collections::HashMap::new()),
         ra_badges: RefCell::new(std::collections::HashMap::new()),
@@ -1994,11 +2083,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     win.on_open_game({
         let app = app.clone();
         let handle = handle.clone();
+        let weak = win.as_weak();
         move |id| {
             let id = id.to_string();
             let Some(project) = app.find(&id) else { return };
             *app.detail.borrow_mut() = Some(DetailState { id: id.clone(), wiki: None, msg: String::new() });
             ui_refresh();
+            if let Some(w) = weak.upgrade() {
+                w.invoke_nav_push();
+            }
             // Fetch the latest release changelog + date (once, cached).
             if !app.changelog_cache.borrow().contains_key(&id) {
                 let client = app.client.clone();
@@ -2239,11 +2332,116 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     win.on_close_detail({
         let app = app.clone();
+        let weak = win.as_weak();
         move || {
             *app.detail.borrow_mut() = None;
             ui_refresh();
+            if let Some(w) = weak.upgrade() {
+                w.invoke_nav_push();
+            }
         }
     });
+
+    // ── View history: mouse back/forward (and the sidebar's own navigation) ──
+    let nav_current = |app: &App, w: &MainWindow| NavState {
+        settings: w.get_settings_visible(),
+        library: w.get_library_tab(),
+        system: w.get_active_system().to_string(),
+        detail: app.detail.borrow().as_ref().map(|d| d.id.clone()),
+    };
+    win.on_nav_push({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            if app.nav_applying.get() {
+                return;
+            }
+            let Some(w) = weak.upgrade() else { return };
+            let st = nav_current(&app, &w);
+            let mut hist = app.nav_hist.borrow_mut();
+            let pos = app.nav_pos.get();
+            if !hist.is_empty() && hist.get(pos) == Some(&st) {
+                return;
+            }
+            hist.truncate(pos + 1);
+            hist.push(st);
+            if hist.len() > 100 {
+                hist.remove(0);
+            }
+            app.nav_pos.set(hist.len() - 1);
+        }
+    });
+    let nav_apply: Rc<dyn Fn(&App, &MainWindow, NavState)> = Rc::new(|app: &App, w: &MainWindow, st: NavState| {
+        app.nav_applying.set(true);
+        w.set_settings_visible(st.settings);
+        w.set_library_tab(st.library);
+        w.set_active_system(st.system.clone().into());
+        match st.detail {
+            Some(id) => w.invoke_open_game(id.into()),
+            None => *app.detail.borrow_mut() = None,
+        }
+        ui_refresh();
+        app.nav_applying.set(false);
+    });
+    win.on_nav_back({
+        let app = app.clone();
+        let weak = win.as_weak();
+        let nav_apply = nav_apply.clone();
+        move || {
+            let Some(w) = weak.upgrade() else { return };
+            let pos = app.nav_pos.get();
+            if pos == 0 {
+                return;
+            }
+            let st = app.nav_hist.borrow()[pos - 1].clone();
+            app.nav_pos.set(pos - 1);
+            nav_apply(&app, &w, st);
+        }
+    });
+    win.on_nav_forward({
+        let app = app.clone();
+        let weak = win.as_weak();
+        let nav_apply = nav_apply.clone();
+        move || {
+            let Some(w) = weak.upgrade() else { return };
+            let pos = app.nav_pos.get();
+            let next = {
+                let hist = app.nav_hist.borrow();
+                if pos + 1 >= hist.len() {
+                    return;
+                }
+                hist[pos + 1].clone()
+            };
+            app.nav_pos.set(pos + 1);
+            nav_apply(&app, &w, next);
+        }
+    });
+    // The side buttons of a mouse arrive as raw winit events (Slint's
+    // TouchAreas never see them): route them to the history.
+    {
+        use i_slint_backend_winit::winit::event::{ElementState, MouseButton, WindowEvent};
+        use i_slint_backend_winit::{EventResult, WinitWindowAccessor};
+        let weak = win.as_weak();
+        win.window().on_winit_window_event(move |_, ev| {
+            if let WindowEvent::MouseInput { state: ElementState::Pressed, button, .. } = ev {
+                if let Some(w) = weak.upgrade() {
+                    match button {
+                        MouseButton::Back => {
+                            w.invoke_nav_back();
+                            return EventResult::PreventDefault;
+                        }
+                        MouseButton::Forward => {
+                            w.invoke_nav_forward();
+                            return EventResult::PreventDefault;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            EventResult::Propagate
+        });
+    }
+    win.invoke_nav_push(); // the starting view is the first history entry
 
     // Installing is shared by the card/ficha button and the version chooser.
     let start_install: Rc<dyn Fn(String)> = Rc::new({
@@ -2864,168 +3062,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
         }
     }
-    // ── Experimental 3D box viewer: GL overlay via the rendering notifier ──
-    {
-        let renderer: Rc<RefCell<Option<box3d::BoxRenderer>>> = Rc::new(RefCell::new(None));
-        let viewer = app.viewer3d.clone();
-        let weak = win.as_weak();
-        let r = win.window().set_rendering_notifier(move |state, api| match state {
-            slint::RenderingState::RenderingSetup => {
-                if let slint::GraphicsAPI::NativeOpenGL { get_proc_address } = api {
-                    let gl = Rc::new(unsafe { glow::Context::from_loader_function_cstr(|s| get_proc_address(s)) });
-                    match box3d::BoxRenderer::new(gl) {
-                        Ok(b) => *renderer.borrow_mut() = Some(b),
-                        Err(e) => eprintln!("[freeport] 3D: {e}"),
-                    }
-                }
-            }
-            slint::RenderingState::AfterRendering => {
-                let Some(w) = weak.upgrade() else { return };
-                let scale = w.window().scale_factor();
-                let size = w.window().size();
-                let mut st = viewer.borrow_mut();
-                if !st.visible {
-                    return;
-                }
-                st.region = (
-                    w.get_v3_x() * scale,
-                    w.get_v3_y() * scale,
-                    w.get_v3_w() * scale,
-                    w.get_v3_h() * scale,
-                );
-                if let Some(b) = renderer.borrow_mut().as_mut() {
-                    b.render(&mut st, size.width as f32, size.height as f32);
-                }
-            }
-            slint::RenderingState::RenderingTeardown => {
-                *renderer.borrow_mut() = None;
-            }
-            _ => {}
-        });
-        if let Err(e) = r {
-            eprintln!("[freeport] 3D no disponible: {e:?}");
-        }
-    }
-    win.on_open_viewer3d({
-        let app = app.clone();
-        let handle = handle.clone();
-        let weak = win.as_weak();
-        move |id| {
-            let Some(p) = app.find(&id) else { return };
-            let Some(w) = weak.upgrade() else { return };
-            let accent = app
-                .catalog
-                .borrow()
-                .systems
-                .iter()
-                .find(|s| s.id == p.system)
-                .map(|s| color_rgb(parse_color(&s.color)))
-                .unwrap_or([1.0, 0.7, 0.24]);
-            {
-                let mut st = app.viewer3d.borrow_mut();
-                st.visible = true;
-                st.aspect = box_aspect(&p.system);
-                st.depth = box_depth(&p.system);
-                st.glossy = box_glossy(&p.system);
-                st.accent = accent;
-                st.yaw = 0.35;
-                st.pitch = -0.12;
-                st.vel_yaw = 0.0;
-                st.vel_pitch = 0.0;
-                st.dragging = false;
-                st.t = 0.0;
-                // Thumbnail first (instant), full-size cover when it arrives.
-                if let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()) {
-                    let thumb = thumbs::path_for(&app.paths, url);
-                    st.pending_cover = thumbs::load_rgba(&thumb, 1024);
-                }
-            }
-            let installed = store::load_installed(&app.paths).unwrap_or_default();
-            w.set_viewer3d_id(p.id.clone().into());
-            w.set_viewer3d_title(p.original_game.clone().into());
-            w.set_viewer3d_installed(installed.contains_key(&p.id));
-            w.set_viewer3d_visible(true);
-            w.window().request_redraw();
-            if let Some(url) = p.box_art.clone().or(p.cover_url.clone()) {
-                let client = app.client.clone();
-                let paths = app.paths.clone();
-                handle.spawn(async move {
-                    if let Ok(path) = thumbs::get_full(&client, &paths, &url).await {
-                        if let Some(px) = thumbs::load_rgba(&path, 1024) {
-                            let _ = slint::invoke_from_event_loop(move || {
-                                UI.with(|u| {
-                                    if let Some((app, weak)) = &*u.borrow() {
-                                        app.viewer3d.borrow_mut().pending_cover = Some(px);
-                                        if let Some(w) = weak.upgrade() {
-                                            w.window().request_redraw();
-                                        }
-                                    }
-                                });
-                            });
-                        }
-                    }
-                });
-            }
-            // Animation: inertia, idle spin, float.
-            let weak2 = weak.clone();
-            let viewer = app.viewer3d.clone();
-            let timer = slint::Timer::default();
-            timer.start(slint::TimerMode::Repeated, std::time::Duration::from_millis(16), move || {
-                let mut st = viewer.borrow_mut();
-                if !st.visible {
-                    return;
-                }
-                st.t += 0.016;
-                if !st.dragging {
-                    st.yaw += st.vel_yaw;
-                    st.pitch += st.vel_pitch;
-                    st.vel_yaw *= 0.94;
-                    st.vel_pitch *= 0.90;
-                    if st.vel_yaw.abs() < 0.0008 {
-                        st.vel_yaw = 0.0;
-                        st.yaw += 0.0035; // slow showcase spin
-                    }
-                    st.pitch += (-0.12 - st.pitch) * 0.04;
-                }
-                if let Some(w) = weak2.upgrade() {
-                    w.window().request_redraw();
-                }
-            });
-            *app.viewer3d_timer.borrow_mut() = Some(timer);
-        }
-    });
-    win.on_close_viewer3d({
-        let app = app.clone();
-        let weak = win.as_weak();
-        move || {
-            app.viewer3d.borrow_mut().visible = false;
-            *app.viewer3d_timer.borrow_mut() = None;
-            if let Some(w) = weak.upgrade() {
-                w.set_viewer3d_visible(false);
-            }
-        }
-    });
-    win.on_viewer3d_drag({
-        let app = app.clone();
-        move |dx, dy| {
-            let mut st = app.viewer3d.borrow_mut();
-            st.dragging = true;
-            st.yaw += dx * 0.012;
-            st.pitch = (st.pitch + dy * 0.008).clamp(-0.9, 0.9);
-            st.vel_yaw = dx * 0.012;
-            st.vel_pitch = dy * 0.004;
-        }
-    });
-    win.on_viewer3d_release({
-        let app = app.clone();
-        move || {
-            app.viewer3d.borrow_mut().dragging = false;
-        }
-    });
-    if let Some(id) = std::env::var("FREEPORT_DEBUG_3D").ok().filter(|s| !s.is_empty()) {
-        win.invoke_open_viewer3d(id.into()); // dev aid: open the 3D viewer for a game
-    }
-
     if std::env::var_os("FREEPORT_DEBUG_SCROLLTEST").is_some() {
         // dev aid: synthetic wheel scrolling over the grid, to measure frame
         // rate with SLINT_DEBUG_PERFORMANCE=refresh_lazy,console.

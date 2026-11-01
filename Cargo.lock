@@ -1811,7 +1811,6 @@ name = "freeport"
 version = "0.2.81"
 dependencies = [
  "freeport-core",
- "glow",
  "i-slint-backend-winit",
  "open",
  "reqwest",

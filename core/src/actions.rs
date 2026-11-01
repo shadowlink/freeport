@@ -522,8 +522,13 @@ pub fn run_after_import(
             install::find_launch_binary(install_dir, hint.as_deref(), false)?
         }
     };
-    let rom = rom_path.display().to_string();
-    let args: Vec<String> = step.args.iter().map(|a| expand_vars(a, install_dir, Some(&rom)).unwrap_or_else(|| a.clone())).collect();
+    // Under Wine the program sees the files through drive Z:.
+    let (inst_v, rom) = if windows {
+        (wine_path(install_dir), wine_path(rom_path).display().to_string())
+    } else {
+        (install_dir.to_path_buf(), rom_path.display().to_string())
+    };
+    let args: Vec<String> = step.args.iter().map(|a| expand_vars(a, &inst_v, Some(&rom)).unwrap_or_else(|| a.clone())).collect();
     let envs: HashMap<String, String> =
         step.env.iter().filter_map(|(k, v)| expand_vars(v, install_dir, Some(&rom)).map(|v| (k.clone(), v))).collect();
     progress("Preparando el juego para el port (puede tardar bastantes minutos)");
@@ -570,15 +575,25 @@ fn run_port_tool(
     Ok(())
 }
 
+/// A Linux path as a Windows program running under Wine/Proton sees it:
+/// drive Z: is the Unix root (`/home/x` → `Z:\home\x`).
+fn wine_path(p: &Path) -> PathBuf {
+    PathBuf::from(format!("Z:{}", p.display().to_string().replace('/', "\\")))
+}
+
 /// The reason a TotK/XCX-style installer gave for failing, from its newest
 /// log (`<dest>/.setup-temp/logs/install-*.log`, lines `error: … [code]`),
 /// with the common cases explained in Spanish.
-fn installer_error(dest: &Path) -> Option<String> {
-    let logs = dest.join(".setup-temp").join("logs");
-    let newest = std::fs::read_dir(&logs)
-        .ok()?
-        .flatten()
-        .map(|e| e.path())
+fn installer_error(dest: &Path, install_dir: &Path) -> Option<String> {
+    // Linux build: <dest>/.setup-temp/logs; Windows build: <setup>/temp/<id>/logs.
+    let mut dirs = vec![dest.join(".setup-temp").join("logs")];
+    if let Ok(rd) = std::fs::read_dir(install_dir.join("temp")) {
+        dirs.extend(rd.flatten().map(|e| e.path().join("logs")));
+    }
+    let newest = dirs
+        .iter()
+        .filter_map(|d| std::fs::read_dir(d).ok())
+        .flat_map(|rd| rd.flatten().map(|e| e.path()))
         .filter(|p| p.file_name().and_then(|n| n.to_str()).map(|n| n.starts_with("install-")).unwrap_or(false))
         .max_by_key(|p| std::fs::metadata(p).and_then(|m| m.modified()).ok())?;
     let text = std::fs::read_to_string(newest).ok()?;
@@ -592,6 +607,7 @@ fn installer_error(dest: &Path) -> Option<String> {
             let want = msg.rsplit("takes ").next().unwrap_or("").trim_end_matches('.').to_string();
             format!("la actualización que elegiste no es la que exige este port ({want}). Consigue el NSP de esa actualización y vuelve a importar el juego base junto con ella")
         }
+        "check.input_missing" => "el instalador no encuentra el archivo del juego (comprueba que sigue en su sitio)".to_string(),
         c if c.starts_with("check.keys") => "tu prod.keys es demasiado antiguo para esta actualización: vuelve a volcarlo de una consola con firmware más reciente".to_string(),
         c if c.starts_with("check.space") => "no hay espacio libre suficiente en el disco de la carpeta del port".to_string(),
         _ => String::new(),
@@ -608,6 +624,11 @@ mod installer_error_tests {
     use super::*;
 
     #[test]
+    fn wine_path_uses_drive_z() {
+        assert_eq!(wine_path(Path::new("/home/u/Descargas/a b [x].nsp")).display().to_string(), "Z:\\home\\u\\Descargas\\a b [x].nsp");
+    }
+
+    #[test]
     fn explains_wrong_update_version() {
         let dest = std::env::temp_dir().join(format!("fp-insterr-{}", std::process::id()));
         let logs = dest.join(".setup-temp/logs");
@@ -617,7 +638,7 @@ mod installer_error_tests {
             "[ 0.5] Checking the game versions\n[ 0.7] error: The update is version unknown; this release takes 2.0.0. [check.update_wrong_version]\n[ 0.7] {\"type\": \"end\"}\n",
         )
         .unwrap();
-        let m = installer_error(&dest).unwrap();
+        let m = installer_error(&dest, &dest).unwrap();
         assert!(m.contains("(2.0.0)"), "{m}");
         let _ = std::fs::remove_dir_all(&dest);
     }
@@ -743,7 +764,15 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
     let update = sorted.get(1).map(|p| p.as_path());
     let dlc: Vec<PathBuf> = sorted.iter().skip(2).cloned().collect();
     let lang = std::env::var("LANG").ok().and_then(|l| l.get(..2).map(|s| s.to_lowercase())).unwrap_or_else(|| "en".into());
-    let args = setup_args(&cmd.args, base, update, &dlc, &keys, &dest, &install_dir, &lang);
+    // A Windows installer under Proton can't open `/home/...`: hand it the
+    // same files through Wine's Z: drive.
+    let args = if windows {
+        let w = |p: &Path| wine_path(p);
+        let dlc_w: Vec<PathBuf> = dlc.iter().map(|d| w(d)).collect();
+        setup_args(&cmd.args, &w(base), update.map(w).as_deref(), &dlc_w, &w(&keys), &w(&dest), &w(&install_dir), &lang)
+    } else {
+        setup_args(&cmd.args, base, update, &dlc, &keys, &dest, &install_dir, &lang)
+    };
     let envs: HashMap<String, String> =
         cmd.env.iter().filter_map(|(k, v)| expand_vars(v, &install_dir, None).map(|v| (k.clone(), v))).collect();
     std::fs::create_dir_all(&dest)?;
@@ -777,7 +806,7 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
         // TotK/XCX-style installers log their own reason (wrong update
         // version, keys too old…) under <dest>/.setup-temp/logs: show that
         // instead of a bare exit code.
-        return Err(match installer_error(&dest) {
+        return Err(match installer_error(&dest, &install_dir) {
             Some(why) => AppError::msg(why),
             None => e,
         });

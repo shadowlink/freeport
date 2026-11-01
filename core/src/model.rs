@@ -383,6 +383,9 @@ pub struct Config {
     /// Retro CRT screen effect (scanlines + vignette).
     #[serde(default)]
     pub crt: bool,
+    /// Old layout (sidebar + cover grid) instead of the console carousel.
+    #[serde(default)]
+    pub classic_view: bool,
     /// RetroAchievements account (managed centrally; handed to the RA mod).
     /// RomM server (the user's own ROM library): base URL and HTTP Basic
     /// credentials, kept like the RetroAchievements ones.

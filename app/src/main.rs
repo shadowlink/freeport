@@ -96,6 +96,7 @@ const LOGOS: &[(&str, &[u8])] = &[
 /// One entry of the view history: which screen, which console, which game page.
 #[derive(Clone, PartialEq, Debug)]
 struct NavState {
+    home_level: i32,
     settings: bool,
     library: bool,
     system: String,
@@ -192,6 +193,12 @@ struct App {
     chooser_mode: RefCell<String>,
     /// Games whose last install attempt failed (shows "Reintentar" inline).
     install_error: RefCell<HashSet<String>>,
+    /// Home carousel: the console and game in focus (by id, so a list that
+    /// changes under a filter keeps the same selection), and the ids shown.
+    home_sys_id: RefCell<String>,
+    home_game_id: RefCell<String>,
+    home_sys_ids: RefCell<Vec<String>>,
+    home_game_ids: RefCell<Vec<String>>,
     /// View history for the mouse's back/forward buttons.
     nav_hist: RefCell<Vec<NavState>>,
     nav_pos: std::cell::Cell<usize>,
@@ -612,6 +619,7 @@ fn rebuild(app: &App, win: &MainWindow) {
     let recent: Vec<CardItem> = recent_pool.into_iter().take(4).map(|t| t.1).collect();
 
     let cards: Vec<(CardItem, String)> = sortable.into_iter().map(|t| (t.4, t.5)).collect();
+    build_home(app, win, &catalog, &cards);
 
     let count = cards.len() as i32;
     // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
@@ -1181,6 +1189,124 @@ fn build_detail(app: &App, win: &MainWindow) {
     win.set_detail_visible(true);
 }
 
+/// Home carousel data: consoles that have something to show under the
+/// current filters (library / search / experimental), and the games of the
+/// console in focus (installed first, then the catalog order).
+fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem, String)]) {
+    let mut systems: Vec<HomeSystem> = Vec::new();
+    let mut ids: Vec<String> = Vec::new();
+    for s in &catalog.systems {
+        let n = cards.iter().filter(|(_, sys)| *sys == s.id).count();
+        if n == 0 {
+            continue;
+        }
+        let inst = cards.iter().filter(|(c, sys)| *sys == s.id && c.installed).count();
+        let logo = app.logos.get(&s.id).cloned();
+        systems.push(HomeSystem {
+            id: s.id.clone().into(),
+            name: s.name.clone().into(),
+            logo: logo.clone().unwrap_or_default(),
+            has_logo: logo.is_some(),
+            count: n as i32,
+            installed: inst as i32,
+        });
+        ids.push(s.id.clone());
+    }
+    let mut sel_id = app.home_sys_id.borrow().clone();
+    let sel = ids.iter().position(|i| *i == sel_id).unwrap_or(0);
+    if let Some(id) = ids.get(sel) {
+        sel_id = id.clone();
+        *app.home_sys_id.borrow_mut() = sel_id.clone();
+    }
+    let color = catalog
+        .systems
+        .iter()
+        .find(|s| s.id == sel_id)
+        .map(|s| parse_color(&s.color))
+        .unwrap_or(Color::from_rgb_u8(0x3a, 0x3d, 0x46));
+    let mut games: Vec<CardItem> = cards.iter().filter(|(_, sys)| *sys == sel_id).map(|(c, _)| c.clone()).collect();
+    games.sort_by_key(|c| !c.installed); // stable: keeps favourites/alphabetical inside each half
+    let game_ids: Vec<String> = games.iter().map(|c| c.id.to_string()).collect();
+    let gsel = game_ids.iter().position(|i| *i == *app.home_game_id.borrow()).unwrap_or(0);
+    if let Some(id) = game_ids.get(gsel) {
+        *app.home_game_id.borrow_mut() = id.clone();
+    }
+    if games.is_empty() && win.get_home_level() == 1 {
+        win.set_home_level(0);
+    }
+    *app.home_sys_ids.borrow_mut() = ids;
+    *app.home_game_ids.borrow_mut() = game_ids;
+    win.set_home_systems(ModelRc::new(VecModel::from(systems)));
+    win.set_home_sys(sel as i32);
+    win.set_home_games(ModelRc::new(VecModel::from(games)));
+    win.set_home_game(gsel as i32);
+    win.set_home_color(color);
+}
+
+/// One input on the home carousel (keyboard, mouse buttons on it, gamepad).
+fn home_key(app: &App, w: &MainWindow, k: &str) {
+    let level = w.get_home_level();
+    if level == 0 {
+        let ids = app.home_sys_ids.borrow().clone();
+        if ids.is_empty() {
+            return;
+        }
+        let cur = w.get_home_sys().max(0) as usize;
+        let next = match k {
+            "left" | "lb" => cur.saturating_sub(1),
+            "right" | "rb" => (cur + 1).min(ids.len() - 1),
+            "a" | "down" | "start" => {
+                w.set_home_level(1);
+                w.invoke_nav_push();
+                return;
+            }
+            _ => return,
+        };
+        if next != cur {
+            *app.home_sys_id.borrow_mut() = ids[next].clone();
+            app.home_game_id.borrow_mut().clear();
+            w.set_home_sys(next as i32);
+            ui_refresh();
+        }
+        return;
+    }
+    let ids = app.home_game_ids.borrow().clone();
+    let cur = w.get_home_game().max(0) as usize;
+    match k {
+        "left" | "right" | "lb" | "rb" => {
+            if ids.is_empty() {
+                return;
+            }
+            let step = if k == "lb" || k == "rb" { 5 } else { 1 };
+            let next = if k.starts_with('l') { cur.saturating_sub(step) } else { (cur + step).min(ids.len() - 1) };
+            *app.home_game_id.borrow_mut() = ids[next].clone();
+            w.set_home_game(next as i32);
+        }
+        "b" | "up" | "back" => {
+            w.set_home_level(0);
+            w.invoke_nav_push();
+        }
+        "a" | "start" => {
+            let Some(id) = ids.get(cur) else { return };
+            let installed = store::load_installed(&app.paths).unwrap_or_default();
+            if app.busy.borrow().contains(id) {
+                return;
+            }
+            if installed.contains_key(id) {
+                w.invoke_play(id.clone().into());
+            } else {
+                w.invoke_install(id.clone().into());
+            }
+        }
+        "x" | "y" => {
+            if let Some(id) = ids.get(cur) {
+                w.invoke_open_game(id.clone().into());
+            }
+        }
+        _ => {}
+    }
+}
+
 /// Rebuild the UI from the current app state (runs on the UI thread).
 /// Downloads a chosen RomM entry for `pid` with progress in the ficha, then
 /// hands it to the port (copy / import / register).
@@ -1608,6 +1734,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         exp_all: std::cell::Cell::new(false),
         chooser_mode: RefCell::new(String::new()),
         install_error: RefCell::new(HashSet::new()),
+        home_sys_id: RefCell::new(String::new()),
+        home_game_id: RefCell::new(String::new()),
+        home_sys_ids: RefCell::new(Vec::new()),
+        home_game_ids: RefCell::new(Vec::new()),
         nav_hist: RefCell::new(Vec::new()),
         nav_pos: std::cell::Cell::new(0),
         nav_applying: std::cell::Cell::new(false),
@@ -1630,6 +1760,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(w) = weak.upgrade() {
                         if w.get_tv_visible() {
                             tv_input(app, &w, &b);
+                        } else if !w.get_classic_view() && !w.get_settings_visible() && !w.get_detail_visible() {
+                            home_key(app, &w, &b);
+                        } else if b == "b" && w.get_detail_visible() {
+                            w.invoke_close_detail();
                         }
                     }
                 }
@@ -1645,6 +1779,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_platform_label(app.triple.clone().into());
         win.set_show_windows(cfg.show_windows);
         win.set_crt_visible(cfg.crt);
+        win.set_classic_view(cfg.classic_view);
         if let (Some(u), Some(_)) = (cfg.ra_user.as_ref(), cfg.ra_token.as_ref()) {
             win.set_ra_logged_in(true);
             win.set_ra_status(format!("Conectado como {u}").into());
@@ -2049,6 +2184,57 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    win.on_home_key({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |k| {
+            if let Some(w) = weak.upgrade() {
+                home_key(&app, &w, k.as_str());
+            }
+        }
+    });
+    win.on_home_pick_system({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |i| {
+            let Some(w) = weak.upgrade() else { return };
+            if i == w.get_home_sys() {
+                home_key(&app, &w, "a");
+                return;
+            }
+            if let Some(id) = app.home_sys_ids.borrow().get(i as usize) {
+                *app.home_sys_id.borrow_mut() = id.clone();
+            }
+            app.home_game_id.borrow_mut().clear();
+            w.set_home_sys(i);
+            ui_refresh();
+        }
+    });
+    win.on_home_pick_game({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |i| {
+            let Some(w) = weak.upgrade() else { return };
+            if i == w.get_home_game() {
+                home_key(&app, &w, "a");
+                return;
+            }
+            if let Some(id) = app.home_game_ids.borrow().get(i as usize) {
+                *app.home_game_id.borrow_mut() = id.clone();
+            }
+            w.set_home_game(i);
+        }
+    });
+    win.on_set_classic_view({
+        let app = app.clone();
+        move |v| {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.classic_view = v;
+                let _ = store::save_config(&app.paths, &c);
+            }
+            ui_refresh();
+        }
+    });
     win.on_tv_input({
         let app = app.clone();
         let weak = win.as_weak();
@@ -2350,6 +2536,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // ── View history: mouse back/forward (and the sidebar's own navigation) ──
     let nav_current = |app: &App, w: &MainWindow| NavState {
+        home_level: w.get_home_level(),
         settings: w.get_settings_visible(),
         library: w.get_library_tab(),
         system: w.get_active_system().to_string(),
@@ -2379,6 +2566,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
     let nav_apply: Rc<dyn Fn(&App, &MainWindow, NavState)> = Rc::new(|app: &App, w: &MainWindow, st: NavState| {
         app.nav_applying.set(true);
+        w.set_home_level(st.home_level);
         w.set_settings_visible(st.settings);
         w.set_library_tab(st.library);
         w.set_active_system(st.system.clone().into());
@@ -2395,6 +2583,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let nav_apply = nav_apply.clone();
         move || {
             let Some(w) = weak.upgrade() else { return };
+            // On the home carousel, «back» first leaves the console's games.
+            if !w.get_classic_view() && !w.get_settings_visible() && !w.get_detail_visible() && w.get_home_level() == 1 {
+                w.set_home_level(0);
+                return;
+            }
             let pos = app.nav_pos.get();
             if pos == 0 {
                 return;

@@ -219,6 +219,12 @@ fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<free
     if !entry.windows && !c.platforms.is_empty() && !c.platforms.iter().any(|p| *p == platform::current_triple()) {
         return false;
     }
+    // The other way round: a Windows build installed through Wine/Proton when
+    // the project now ships a native one (TotK Recomp added Linux in 0.2.1)
+    // is offered as an update, which reinstalls the native build.
+    if entry.windows && !cfg!(windows) && c.platforms.iter().any(|p| *p == platform::current_triple()) {
+        return true;
+    }
     match (&entry.published_at, &c.published_at) {
         // Both dates present → newer catalog date means a real update.
         (Some(inst), Some(latest)) if !inst.is_empty() && !latest.is_empty() => latest.as_str() > inst.as_str(),

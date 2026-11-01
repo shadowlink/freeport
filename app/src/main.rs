@@ -247,6 +247,7 @@ fn has_update(entry: &freeport_core::model::InstalledEntry, cached: &Option<free
 static WINDOW_FOCUSED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
 
 thread_local! {
+    static CLOCK_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
     static SCROLLTEST_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
     static RUNTIME: RefCell<Option<tokio::runtime::Handle>> = const { RefCell::new(None) };
     static UI: RefCell<Option<(Rc<App>, Weak<MainWindow>)>> = const { RefCell::new(None) };
@@ -1277,6 +1278,7 @@ fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem
         systems.push(HomeSystem {
             id: s.id.clone().into(),
             name: s.name.clone().into(),
+            color: parse_color(&s.color),
             logo: logo.clone().unwrap_or_default(),
             has_logo: logo.is_some(),
             count: n as i32,
@@ -1310,6 +1312,9 @@ fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem
     *app.home_game_ids.borrow_mut() = game_ids;
     win.set_home_systems(ModelRc::new(VecModel::from(systems)));
     win.set_home_sys(sel as i32);
+    // A peek at the console's games for the console screen: installed first.
+    let preview: Vec<CardItem> = games.iter().take(7).cloned().collect();
+    win.set_home_preview(ModelRc::new(VecModel::from(preview)));
     win.set_home_games(ModelRc::new(VecModel::from(games)));
     win.set_home_game(gsel as i32);
     win.set_home_color(color);
@@ -1584,6 +1589,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )),
             None,
         );
+        // Nunito (OFL, rounded): the UI's typeface. DejaVu above stays as the
+        // fallback for symbols Nunito lacks (▶ ✓ ✕ ⚙…).
+        for bytes in [
+            &include_bytes!("../assets/fonts/Nunito-Regular.ttf")[..],
+            &include_bytes!("../assets/fonts/Nunito-SemiBold.ttf")[..],
+            &include_bytes!("../assets/fonts/Nunito-Bold.ttf")[..],
+            &include_bytes!("../assets/fonts/Nunito-ExtraBold.ttf")[..],
+            &include_bytes!("../assets/fonts/Nunito-Black.ttf")[..],
+        ] {
+            c.register_fonts(fontique::Blob::new(std::sync::Arc::new(bytes.to_vec())), None);
+        }
     }
 
     update::cleanup();
@@ -1684,14 +1700,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         for r in &app.runners {
             labels.push(r.label.clone().into());
         }
-        win.set_runner_labels(ModelRc::new(VecModel::from(labels)));
+        win.set_runner_labels(ModelRc::new(VecModel::from(labels.clone())));
         let current = cfg
             .wine_runner
             .as_ref()
             .and_then(|id| app.runners.iter().find(|r| &r.id == id))
             .map(|r| r.label.clone())
             .unwrap_or_else(|| "Automático".to_string());
+        let idx = labels.iter().position(|l| l.as_str() == current).unwrap_or(0);
         win.set_current_runner_label(current.into());
+        win.set_runner_index(idx as i32);
     }
 
     win.on_toggle_windows({
@@ -3356,6 +3374,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             },
         );
         CATALOG_TIMER.with(|t| *t.borrow_mut() = Some(timer));
+    }
+
+    // Clock in the home's top bar (local time, refreshed every 15 s).
+    {
+        fn now_hm() -> String {
+            chrono::Local::now().format("%H:%M").to_string()
+        }
+        win.set_clock(now_hm().into());
+        let weak = win.as_weak();
+        let timer = slint::Timer::default();
+        timer.start(slint::TimerMode::Repeated, std::time::Duration::from_secs(15), move || {
+            if let Some(w) = weak.upgrade() {
+                w.set_clock(now_hm().into());
+            }
+        });
+        CLOCK_TIMER.with(|t| *t.borrow_mut() = Some(timer));
     }
 
     // `--tv`: boot straight into the console view, full screen (Sunshine

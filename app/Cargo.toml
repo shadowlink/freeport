@@ -1,6 +1,6 @@
 [package]
 name = "freeport"
-version = "0.2.89"
+version = "0.2.90"
 edition = "2021"
 license = "MIT"
 
@@ -21,3 +21,4 @@ tokio = { version = "1", features = ["rt-multi-thread"] }
 reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls", "stream"] }
 rfd = "0.15"
 open = "5"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }

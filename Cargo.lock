@@ -1808,8 +1808,9 @@ dependencies = [
 
 [[package]]
 name = "freeport"
-version = "0.2.89"
+version = "0.2.90"
 dependencies = [
+ "chrono",
  "freeport-core",
  "i-slint-backend-winit",
  "open",

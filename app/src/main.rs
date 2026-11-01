@@ -2956,11 +2956,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return;
             }
             let Some(weak_win) = UI.with(|u| u.borrow().as_ref().map(|(_, w)| w.clone())) else { return };
-            if let Err(msg) = freeport_core::switch::detect() {
-                if let Some(w) = weak_win.upgrade() {
-                    w.set_notice(format!("Para importar volcados de Switch {msg}. Freeport no incluye claves ni herramientas de Nintendo.").into());
+            // Installer-style ports open the packages themselves (their own
+            // hactool + the user's keys): nstool is only needed to extract.
+            if project.rom.setup_cmd.is_none() {
+                if let Err(msg) = freeport_core::switch::detect() {
+                    if let Some(w) = weak_win.upgrade() {
+                        w.set_notice(format!("Para importar volcados de Switch {msg}. Freeport no incluye claves ni herramientas de Nintendo.").into());
+                    }
+                    return;
                 }
-                return;
             }
             let Some(files) = rfd::FileDialog::new()
                 .set_title(format!("Volcado de {} (juego base y actualizaciones)", project.original_game))

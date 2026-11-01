@@ -34,6 +34,11 @@ pub fn screenshot_urls(cover_url: &str) -> Vec<String> {
     ]
 }
 
+/// Where `get_full` keeps the full-size copy of `url` (may not exist yet).
+pub fn full_path_for(paths: &Paths, url: &str) -> PathBuf {
+    paths.data_dir.join("screens_cache").join(format!("{}.png", hash_hex(url)))
+}
+
 /// Downloads a full-size image (e.g. a screenshot) to `screens_cache`, returning
 /// its local path. Used for the detail-page gallery (opened in the OS viewer).
 pub async fn get_full(client: &reqwest::Client, paths: &Paths, url: &str) -> Result<PathBuf, String> {

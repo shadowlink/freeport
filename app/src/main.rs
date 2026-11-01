@@ -176,6 +176,10 @@ struct App {
     mod_icons: RefCell<std::collections::HashMap<String, Image>>,
     screens_cache: RefCell<std::collections::HashMap<String, Vec<String>>>,
     cover_cache: RefCell<std::collections::HashMap<String, Image>>,
+    /// Full-resolution covers for the few boxes shown big (home carousel of
+    /// one console, game page); the grid keeps the small thumbnails.
+    cover_hd: RefCell<std::collections::HashMap<String, Image>>,
+    hd_pending: RefCell<HashSet<String>>,
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
     // id -> (tag, published_at ISO, changelog body)
     changelog_cache: RefCell<std::collections::HashMap<String, (String, String, String)>>,
@@ -836,6 +840,34 @@ impl App {
         }
     }
 
+    /// The cover at its original resolution when it's on disk; otherwise the
+    /// thumbnail now and a background download that refreshes the UI.
+    fn cover_hd(&self, p: &Project) -> Image {
+        let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()).cloned() else { return Image::default() };
+        if let Some(img) = self.cover_hd.borrow().get(&url) {
+            return img.clone();
+        }
+        let path = thumbs::full_path_for(&self.paths, &url);
+        if path.exists() {
+            if let Ok(img) = Image::load_from_path(&path) {
+                self.cover_hd.borrow_mut().insert(url, img.clone());
+                return img;
+            }
+        }
+        if self.hd_pending.borrow_mut().insert(url.clone()) {
+            let client = self.client.clone();
+            let paths = self.paths.clone();
+            if let Some(h) = RUNTIME.with(|r| r.borrow().clone()) {
+                h.spawn(async move {
+                    if thumbs::get_full(&client, &paths, &url).await.is_ok() {
+                        let _ = slint::invoke_from_event_loop(ui_refresh);
+                    }
+                });
+            }
+        }
+        self.cover(p)
+    }
+
     fn cover(&self, p: &Project) -> Image {
         let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()) else { return Image::default() };
         if let Some(img) = self.cover_cache.borrow().get(url) {
@@ -1179,7 +1211,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         id: p.id.clone().into(),
         title: title.into(),
         subtitle: p.name.clone().into(),
-        cover: app.cover(&p),
+        cover: app.cover_hd(&p),
         installed: entry.is_some(),
         is_windows: is_win,
         update_available: update,
@@ -1298,7 +1330,17 @@ fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem
         .find(|s| s.id == sel_id)
         .map(|s| parse_color(&s.color))
         .unwrap_or(Color::from_rgb_u8(0x3a, 0x3d, 0x46));
-    let mut games: Vec<CardItem> = cards.iter().filter(|(_, sys)| *sys == sel_id).map(|(c, _)| c.clone()).collect();
+    let mut games: Vec<CardItem> = cards
+        .iter()
+        .filter(|(_, sys)| *sys == sel_id)
+        .map(|(c, _)| {
+            let mut c = c.clone();
+            if let Some(p) = app.find(c.id.as_str()) {
+                c.cover = app.cover_hd(&p);
+            }
+            c
+        })
+        .collect();
     games.sort_by_key(|c| !c.installed); // stable: keeps favourites/alphabetical inside each half
     let game_ids: Vec<String> = games.iter().map(|c| c.id.to_string()).collect();
     let gsel = game_ids.iter().position(|i| *i == *app.home_game_id.borrow()).unwrap_or(0);
@@ -1630,6 +1672,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         mod_icons: RefCell::new(std::collections::HashMap::new()),
         screens_cache: RefCell::new(std::collections::HashMap::new()),
         cover_cache: RefCell::new(std::collections::HashMap::new()),
+        cover_hd: RefCell::new(std::collections::HashMap::new()),
+        hd_pending: RefCell::new(HashSet::new()),
         size_cache: RefCell::new(std::collections::HashMap::new()),
         changelog_cache: RefCell::new(std::collections::HashMap::new()),
         pending_update: RefCell::new(None),

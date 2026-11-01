@@ -365,6 +365,8 @@ const PRESERVE_DIRS: &[&str] = &[
     // Imported dumps and what a builder made from them (UltraTears, MHGU:
     // `data/`), and saves kept beside the game (`userdata/`).
     "data", "userdata",
+    // LAS Recomp family: the game files live in `extracted/` beside the exe.
+    "extracted",
 ];
 /// File extensions that are user data (ROMs, disc images, saves, generated
 /// asset packs) — also carried over on update when the new tree lacks them.

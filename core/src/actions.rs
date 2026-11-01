@@ -412,6 +412,18 @@ async fn stage_install(
     Ok(())
 }
 
+/// Records `path` as the project's game/ROM path. Reloads installed.json
+/// first: imports and installers run for many minutes, and saving the copy
+/// read at their start would undo whatever changed meanwhile (another
+/// install, an update, the same app open twice).
+fn save_rom_path(paths: &Paths, id: &str, path: &Path) -> AppResult<()> {
+    let mut installed = store::load_installed(paths)?;
+    if let Some(e) = installed.get_mut(id) {
+        e.rom_path = Some(path.display().to_string());
+    }
+    store::save_installed(paths, &installed)
+}
+
 /// Copies the user's ROM next to the launch binary so the port finds it.
 pub fn set_rom(paths: &Paths, project: &Project, rom_source: &str) -> AppResult<()> {
     let mut installed = store::load_installed(paths)?;
@@ -440,8 +452,7 @@ pub fn set_rom(paths: &Paths, project: &Project, rom_source: &str) -> AppResult<
         .ok_or_else(|| AppError::msg("nombre de ROM inválido"))?;
     let target = target_dir.join(target_name);
     std::fs::copy(source, &target)?;
-    entry.rom_path = Some(target.display().to_string());
-    store::save_installed(paths, &installed)?;
+    save_rom_path(paths, &project.id, &target)?;
     let _ = register_rom_path(project, &target);
     Ok(())
 }
@@ -514,6 +525,11 @@ pub fn run_after_import(
     let Some(step) = project.rom.after_import.as_ref() else { return Ok(()) };
     if windows && step.exe.is_none() {
         return Ok(()); // (a Wine run of the port's own binary is not attempted)
+    }
+    // A Windows-only helper (python.exe of the Windows package) has nothing to
+    // run on a native install: that build sets the game up by itself.
+    if !windows && step.exe.as_deref().map(|e| e.to_lowercase().ends_with(".exe")).unwrap_or(false) {
+        return Ok(());
     }
     let bin = match step.exe.as_deref() {
         Some(rel) => install_dir.join(rel),
@@ -811,8 +827,7 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
             None => e,
         });
     }
-    entry.rom_path = Some(dest.display().to_string());
-    store::save_installed(paths, &installed)?;
+    save_rom_path(paths, &project.id, &dest)?;
     Ok(dest)
 }
 
@@ -876,8 +891,7 @@ pub fn import_ps4_pkgs(
         };
         crate::pkg::extract(path, &target, &mut |d, t| progress(d, t, &label))?;
     }
-    entry.rom_path = Some(dest.display().to_string());
-    store::save_installed(paths, &installed)?;
+    save_rom_path(paths, &project.id, &dest)?;
     if let Err(e) = register_rom_path(project, &dest) {
         eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
     }
@@ -904,9 +918,8 @@ pub fn import_switch_dumps(
     let install_dir = install::game_root(Path::new(&entry.install_path));
     let expect = (project.rom.build_id.as_deref(), project.rom.game_version.as_deref());
     let dest = crate::switch::import(&tools, &install_dir, project.rom.import_dir.as_deref(), expect, files, progress)?;
-    entry.rom_path = Some(dest.display().to_string());
     let windows = entry.windows;
-    store::save_installed(paths, &installed)?;
+    save_rom_path(paths, &project.id, &dest)?;
     if let Err(e) = register_rom_path(project, &dest) {
         eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
     }

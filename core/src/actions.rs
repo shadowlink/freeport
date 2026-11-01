@@ -570,6 +570,59 @@ fn run_port_tool(
     Ok(())
 }
 
+/// The reason a TotK/XCX-style installer gave for failing, from its newest
+/// log (`<dest>/.setup-temp/logs/install-*.log`, lines `error: … [code]`),
+/// with the common cases explained in Spanish.
+fn installer_error(dest: &Path) -> Option<String> {
+    let logs = dest.join(".setup-temp").join("logs");
+    let newest = std::fs::read_dir(&logs)
+        .ok()?
+        .flatten()
+        .map(|e| e.path())
+        .filter(|p| p.file_name().and_then(|n| n.to_str()).map(|n| n.starts_with("install-")).unwrap_or(false))
+        .max_by_key(|p| std::fs::metadata(p).and_then(|m| m.modified()).ok())?;
+    let text = std::fs::read_to_string(newest).ok()?;
+    let line = text.lines().rev().find_map(|l| l.split_once("error: ").map(|(_, r)| r.trim().to_string()))?;
+    let (msg, code) = match line.rfind(" [") {
+        Some(i) => (line[..i].to_string(), line[i + 2..].trim_end_matches(']').to_string()),
+        None => (line.clone(), String::new()),
+    };
+    let hint = match code.as_str() {
+        "check.update_wrong_version" => {
+            let want = msg.rsplit("takes ").next().unwrap_or("").trim_end_matches('.').to_string();
+            format!("la actualización que elegiste no es la que exige este port ({want}). Consigue el NSP de esa actualización y vuelve a importar el juego base junto con ella")
+        }
+        c if c.starts_with("check.keys") => "tu prod.keys es demasiado antiguo para esta actualización: vuelve a volcarlo de una consola con firmware más reciente".to_string(),
+        c if c.starts_with("check.space") => "no hay espacio libre suficiente en el disco de la carpeta del port".to_string(),
+        _ => String::new(),
+    };
+    Some(if hint.is_empty() {
+        format!("el instalador del port se detuvo: {msg}")
+    } else {
+        format!("el instalador del port se detuvo: {hint} (mensaje original: {msg})")
+    })
+}
+
+#[cfg(test)]
+mod installer_error_tests {
+    use super::*;
+
+    #[test]
+    fn explains_wrong_update_version() {
+        let dest = std::env::temp_dir().join(format!("fp-insterr-{}", std::process::id()));
+        let logs = dest.join(".setup-temp/logs");
+        std::fs::create_dir_all(&logs).unwrap();
+        std::fs::write(
+            logs.join("install-20261101-155155.log"),
+            "[ 0.5] Checking the game versions\n[ 0.7] error: The update is version unknown; this release takes 2.0.0. [check.update_wrong_version]\n[ 0.7] {\"type\": \"end\"}\n",
+        )
+        .unwrap();
+        let m = installer_error(&dest).unwrap();
+        assert!(m.contains("(2.0.0)"), "{m}");
+        let _ = std::fs::remove_dir_all(&dest);
+    }
+}
+
 /// Expands a `SetupCmd` argument template for the chosen packages.
 /// `{update}` and `{dlc}` vanish together with the flag before them when
 /// there is nothing to put there; `{dlc}` repeats its flag per package.
@@ -720,7 +773,15 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
     progress("Instalando el juego con el instalador del port (extrae, traduce y compila: 30 minutos o más)");
     let result = run_port_tool(paths, project, &cwd, &bin, &args, &envs, windows, "el instalador del port");
     let _ = std::fs::remove_dir_all(&tmp);
-    result?;
+    if let Err(e) = result {
+        // TotK/XCX-style installers log their own reason (wrong update
+        // version, keys too old…) under <dest>/.setup-temp/logs: show that
+        // instead of a bare exit code.
+        return Err(match installer_error(&dest) {
+            Some(why) => AppError::msg(why),
+            None => e,
+        });
+    }
     entry.rom_path = Some(dest.display().to_string());
     store::save_installed(paths, &installed)?;
     Ok(dest)

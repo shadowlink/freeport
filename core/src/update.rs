@@ -148,7 +148,25 @@ pub async fn apply(client: &reqwest::Client, upd: &Update) -> Result<(), String>
         .env_remove("ARGV0")
         .spawn()
         .map_err(|e| format!("no se pudo relanzar {}: {e}", exe.display()))?;
-    std::process::exit(0);
+    hard_exit(0);
+}
+
+/// Ends the process WITHOUT running C `atexit` handlers or static
+/// destructors. The NVIDIA EGL driver segfaults in its teardown
+/// (libnvidia-eglcore) when the process exits from a non-main thread or after
+/// the window is gone, which turned every self-update and many plain closes
+/// into a core dump (and KDE's crash dialog). Nothing of ours needs those
+/// handlers: files are written and closed before this point.
+pub fn hard_exit(code: i32) -> ! {
+    use std::io::Write;
+    let _ = std::io::stdout().flush();
+    let _ = std::io::stderr().flush();
+    #[cfg(unix)]
+    unsafe {
+        libc::_exit(code)
+    }
+    #[cfg(not(unix))]
+    std::process::exit(code)
 }
 
 /// Removes a leftover ".old" executable left by a previous Windows self-update.

@@ -1808,7 +1808,7 @@ dependencies = [
 
 [[package]]
 name = "freeport"
-version = "0.2.83"
+version = "0.2.84"
 dependencies = [
  "freeport-core",
  "i-slint-backend-winit",
@@ -1837,6 +1837,7 @@ dependencies = [
  "gilrs",
  "hmac",
  "image",
+ "libc",
  "lzma-rs",
  "md-5",
  "regex",

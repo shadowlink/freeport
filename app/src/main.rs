@@ -3336,5 +3336,5 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // grace period, then exit unconditionally — installs are crash-safe
     // (.part files + reinstall wipes the app dir).
     rt.shutdown_timeout(std::time::Duration::from_secs(2));
-    std::process::exit(0);
+    update::hard_exit(0);
 }

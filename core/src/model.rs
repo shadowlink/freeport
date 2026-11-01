@@ -197,6 +197,32 @@ pub struct AfterImport {
     pub args: Vec<String>,
     #[serde(default)]
     pub env: HashMap<String, String>,
+    /// Program to run instead of the port's launch binary, relative to the
+    /// install folder (e.g. a bundled `recompiler/python/python.exe`). A
+    /// Windows program runs under the game's Wine/Proton runner.
+    #[serde(default)]
+    pub exe: Option<String>,
+}
+
+/// A port whose download is an installer that wants the user's NSP/XCI
+/// packages directly (TotK Recomp, XCX Recomp…): instead of extracting the
+/// dumps, Freeport runs this command. Placeholders in `args`: `{base}`
+/// (largest package), `{update}` (second; the argument and its flag are
+/// dropped when there is none), `{dlc}` (flag repeated per extra package),
+/// `{keys}` (the user's prod.keys), `{dest}` (`<install>/<dest>`),
+/// `{install_dir}`, `{lang}` (two-letter UI language).
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct SetupCmd {
+    #[serde(default)]
+    pub exe: String,
+    #[serde(default)]
+    pub args: Vec<String>,
+    #[serde(default)]
+    pub env: HashMap<String, String>,
+    /// Folder (relative to the install folder) the installer writes the game
+    /// to; becomes the ROM path. Default `game`.
+    #[serde(default)]
+    pub dest: Option<String>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -252,6 +278,10 @@ pub struct RomInfo {
     /// Placeholders: `{rom_path}`, `{install_dir}`.
     #[serde(default, deserialize_with = "lenient_opt")]
     pub after_import: Option<AfterImport>,
+    /// Installer-style ports: per OS (`windows` / `linux`) the command that
+    /// turns the user's packages into the playable folder (see `SetupCmd`).
+    #[serde(default, deserialize_with = "lenient_opt")]
+    pub setup_cmd: Option<HashMap<String, SetupCmd>>,
     /// Switch ports built for one exact game version: the first bytes (hex) of
     /// the build id of that version's `exefs/main`, and the version's name
     /// for the message. After an import, a `main` with another build id (the

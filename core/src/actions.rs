@@ -6,7 +6,8 @@ use crate::error::{AppError, AppResult};
 use crate::model::{Config, InstalledEntry, Project};
 use crate::store::{self, Paths};
 use crate::{github, install, launch, platform, ra_mod};
-use std::path::Path;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 fn now_epoch() -> String {
@@ -503,6 +504,7 @@ fn expand_vars(s: &str, install_dir: &Path, rom_path: Option<&str>) -> Option<St
 /// the data image Savage Wind reads instead of the plain files. Blocking;
 /// the port's binary is the one Freeport launches.
 pub fn run_after_import(
+    paths: &Paths,
     project: &Project,
     install_dir: &Path,
     rom_path: &Path,
@@ -510,30 +512,151 @@ pub fn run_after_import(
     progress: &mut dyn FnMut(&str),
 ) -> AppResult<()> {
     let Some(step) = project.rom.after_import.as_ref() else { return Ok(()) };
-    if windows {
-        return Ok(()); // (a Wine run of the port's setup is not attempted)
+    if windows && step.exe.is_none() {
+        return Ok(()); // (a Wine run of the port's own binary is not attempted)
     }
-    let hint_os = std::env::consts::OS;
-    let hint = project.launch.get(hint_os).and_then(|v| v.clone());
-    let bin = install::find_launch_binary(install_dir, hint.as_deref(), false)?;
-    let rom = rom_path.display().to_string();
-    progress("Preparando los datos del juego para el port (puede tardar varios minutos)");
-    let mut cmd = std::process::Command::new(&bin);
-    for a in &step.args {
-        cmd.arg(expand_vars(a, install_dir, Some(&rom)).unwrap_or_else(|| a.clone()));
-    }
-    for (k, v) in &step.env {
-        if let Some(v) = expand_vars(v, install_dir, Some(&rom)) {
-            cmd.env(k, v);
+    let bin = match step.exe.as_deref() {
+        Some(rel) => install_dir.join(rel),
+        None => {
+            let hint = project.launch.get(std::env::consts::OS).and_then(|v| v.clone());
+            install::find_launch_binary(install_dir, hint.as_deref(), false)?
         }
+    };
+    let rom = rom_path.display().to_string();
+    let args: Vec<String> = step.args.iter().map(|a| expand_vars(a, install_dir, Some(&rom)).unwrap_or_else(|| a.clone())).collect();
+    let envs: HashMap<String, String> =
+        step.env.iter().filter_map(|(k, v)| expand_vars(v, install_dir, Some(&rom)).map(|v| (k.clone(), v))).collect();
+    progress("Preparando el juego para el port (puede tardar bastantes minutos)");
+    run_port_tool(paths, project, install_dir, &bin, &args, &envs, windows, "el paso posterior del port")
+}
+
+/// Runs one of the port's own programs (a setup, a builder) to completion:
+/// natively, or under the game's Wine/Proton runner when the install is a
+/// Windows one. Output goes next to the program, like a launch.
+#[allow(clippy::too_many_arguments)]
+fn run_port_tool(
+    paths: &Paths,
+    project: &Project,
+    install_dir: &Path,
+    bin: &Path,
+    args: &[String],
+    envs: &HashMap<String, String>,
+    windows: bool,
+    what: &str,
+) -> AppResult<()> {
+    if !bin.exists() {
+        return Err(AppError::msg(format!("{what}: no existe {}", bin.display())));
     }
-    cmd.current_dir(install_dir);
-    let out = cmd.output().map_err(|e| AppError::msg(format!("no se pudo ejecutar el paso posterior del port: {e}")))?;
-    if !out.status.success() {
-        let tail: String = String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" | ");
-        return Err(AppError::msg(format!("el paso posterior del port falló: {tail}")));
+    let status = if windows {
+        let cfg = store::load_config(paths)?;
+        let runner = resolve_runner(&cfg, &project.id)
+            .ok_or_else(|| AppError::msg("no hay ningún runner de Windows. Instala Wine o umu-launcher (Proton)."))?;
+        let prefix = install_dir.join(".wineprefix");
+        let mut child = launch::launch_windows_with(bin, args, &runner, &prefix, envs)?;
+        child.wait()?
+    } else {
+        let mut cmd = std::process::Command::new(bin);
+        cmd.args(args).envs(envs).current_dir(install_dir);
+        let out = cmd.output().map_err(|e| AppError::msg(format!("no se pudo ejecutar {what}: {e}")))?;
+        if !out.status.success() {
+            let tail: String = String::from_utf8_lossy(&out.stderr).lines().rev().take(3).collect::<Vec<_>>().join(" | ");
+            return Err(AppError::msg(format!("{what} falló: {tail}")));
+        }
+        out.status
+    };
+    if !status.success() {
+        return Err(AppError::msg(format!("{what} falló (código {})", status.code().unwrap_or(-1))));
     }
     Ok(())
+}
+
+/// Expands a `SetupCmd` argument template for the chosen packages.
+/// `{update}` and `{dlc}` vanish together with the flag before them when
+/// there is nothing to put there; `{dlc}` repeats its flag per package.
+#[allow(clippy::too_many_arguments)]
+pub fn setup_args(
+    template: &[String],
+    base: &Path,
+    update: Option<&Path>,
+    dlc: &[PathBuf],
+    keys: &Path,
+    dest: &Path,
+    install_dir: &Path,
+    lang: &str,
+) -> Vec<String> {
+    let mut out: Vec<String> = Vec::new();
+    for a in template {
+        match a.as_str() {
+            "{update}" => match update {
+                Some(u) => out.push(u.display().to_string()),
+                None => {
+                    if out.last().map(|f| f.starts_with('-')).unwrap_or(false) {
+                        out.pop();
+                    }
+                }
+            },
+            "{dlc}" => {
+                let flag = out.last().filter(|f| f.starts_with('-')).cloned();
+                if flag.is_some() {
+                    out.pop();
+                }
+                for d in dlc {
+                    if let Some(f) = &flag {
+                        out.push(f.clone());
+                    }
+                    out.push(d.display().to_string());
+                }
+            }
+            _ => out.push(
+                a.replace("{base}", &base.display().to_string())
+                    .replace("{keys}", &keys.display().to_string())
+                    .replace("{dest}", &dest.display().to_string())
+                    .replace("{install_dir}", &install_dir.display().to_string())
+                    .replace("{lang}", lang),
+            ),
+        }
+    }
+    out
+}
+
+/// Installer-style Switch ports: hands the user's packages (largest = base
+/// game, next = update, rest = DLC) and their prod.keys to the port's own
+/// installer, which builds the playable folder under the install dir.
+fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: &mut dyn FnMut(&str)) -> AppResult<PathBuf> {
+    let mut installed = store::load_installed(paths)?;
+    let entry = installed
+        .get_mut(&project.id)
+        .ok_or_else(|| AppError::msg("instala el port antes de importar el juego"))?;
+    let windows = entry.windows;
+    let os = if windows { "windows" } else { "linux" };
+    let cmd = project
+        .rom
+        .setup_cmd
+        .as_ref()
+        .and_then(|m| m.get(os))
+        .ok_or_else(|| AppError::msg(format!("este port no tiene instalación automática para {os}: ejecuta su setup a mano desde la carpeta del port (ver las notas de la ficha)")))?;
+    let install_dir = install::game_root(Path::new(&entry.install_path));
+    let dest = install_dir.join(cmd.dest.as_deref().unwrap_or("game"));
+    let keys = crate::switch::key_candidates()
+        .into_iter()
+        .find(|p| p.is_file())
+        .ok_or_else(|| AppError::msg("hace falta tu prod.keys (p. ej. ~/.switch/prod.keys o las claves de Eden/Ryujinx) para que el instalador del port abra los paquetes"))?;
+    let mut sorted: Vec<PathBuf> = files.to_vec();
+    sorted.sort_by_key(|f| std::cmp::Reverse(std::fs::metadata(f).map(|m| m.len()).unwrap_or(0)));
+    let base = sorted.first().ok_or_else(|| AppError::msg("elige al menos el paquete del juego base"))?;
+    let update = sorted.get(1).map(|p| p.as_path());
+    let dlc: Vec<PathBuf> = sorted.iter().skip(2).cloned().collect();
+    let lang = std::env::var("LANG").ok().and_then(|l| l.get(..2).map(|s| s.to_lowercase())).unwrap_or_else(|| "en".into());
+    let args = setup_args(&cmd.args, base, update, &dlc, &keys, &dest, &install_dir, &lang);
+    let envs: HashMap<String, String> =
+        cmd.env.iter().filter_map(|(k, v)| expand_vars(v, &install_dir, None).map(|v| (k.clone(), v))).collect();
+    std::fs::create_dir_all(&dest)?;
+    progress("Instalando el juego con el instalador del port (extrae, traduce y compila: 30 minutos o más)");
+    let bin = install_dir.join(&cmd.exe);
+    run_port_tool(paths, project, &install_dir, &bin, &args, &envs, windows, "el instalador del port")?;
+    entry.rom_path = Some(dest.display().to_string());
+    store::save_installed(paths, &installed)?;
+    Ok(dest)
 }
 
 /// Imports PS4 fake PKGs (the base game plus any patches, in any order) into
@@ -613,6 +736,9 @@ pub fn import_switch_dumps(
     files: &[PathBuf],
     progress: &mut dyn FnMut(&str),
 ) -> AppResult<PathBuf> {
+    if project.rom.setup_cmd.is_some() {
+        return run_setup_cmd(paths, project, files, progress);
+    }
     let tools = crate::switch::detect().map_err(AppError::msg)?;
     let mut installed = store::load_installed(paths)?;
     let entry = installed
@@ -627,7 +753,7 @@ pub fn import_switch_dumps(
     if let Err(e) = register_rom_path(project, &dest) {
         eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
     }
-    run_after_import(project, &install_dir, &dest, windows, progress)?;
+    run_after_import(paths, project, &install_dir, &dest, windows, progress)?;
     Ok(dest)
 }
 
@@ -879,8 +1005,6 @@ pub fn uninstall_project(paths: &Paths, id: &str) -> AppResult<()> {
 // ── Mods ────────────────────────────────────────────────────────────────
 
 use crate::mods::{self, ModInfo};
-use std::collections::HashMap;
-use std::path::PathBuf;
 
 /// Install directory of an installed project, if any.
 pub fn installed_dir(paths: &Paths, id: &str) -> Option<PathBuf> {
@@ -996,6 +1120,25 @@ pub fn uninstall_mod(paths: &Paths, project: &Project, full_name: &str) -> AppRe
         m.remove(full_name);
     }
     store::save_mod_state(paths, &mstate)
+}
+
+#[cfg(test)]
+mod setup_args_tests {
+    use super::*;
+
+    #[test]
+    fn drops_missing_update_with_its_flag_and_repeats_dlc_flag() {
+        let t: Vec<String> =
+            ["-m", "installer", "--base", "{base}", "--update", "{update}", "--dlc", "{dlc}", "--keys", "{keys}", "--lang", "{lang}", "--dest", "{dest}"]
+                .iter()
+                .map(|s| s.to_string())
+                .collect();
+        let a = setup_args(&t, Path::new("/d/base.nsp"), None, &[], Path::new("/k/prod.keys"), Path::new("/i/game"), Path::new("/i"), "es");
+        assert_eq!(a, vec!["-m", "installer", "--base", "/d/base.nsp", "--keys", "/k/prod.keys", "--lang", "es", "--dest", "/i/game"]);
+        let dlc = vec![PathBuf::from("/d/a.nsp"), PathBuf::from("/d/b.nsp")];
+        let a = setup_args(&t, Path::new("/d/base.nsp"), Some(Path::new("/d/upd.nsp")), &dlc, Path::new("/k"), Path::new("/i/game"), Path::new("/i"), "en");
+        assert_eq!(&a[2..10], &["--base", "/d/base.nsp", "--update", "/d/upd.nsp", "--dlc", "/d/a.nsp", "--dlc", "/d/b.nsp"]);
+    }
 }
 
 #[cfg(test)]

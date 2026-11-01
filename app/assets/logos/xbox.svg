@@ -23,11 +23,11 @@
        inkscape:collect="always"
        id="linearGradient1326">
       <stop
-         style="stop-color:#d1d2d4;stop-opacity:1"
+         style="stop-color:#ececec;stop-opacity:1"
          offset="0"
          id="stop1322" />
       <stop
-         style="stop-color:#9ea1a3;stop-opacity:1"
+         style="stop-color:#ececec;stop-opacity:1"
          offset="1"
          id="stop1324" />
     </linearGradient>
@@ -39,7 +39,7 @@
          offset="0"
          id="stop1314" />
       <stop
-         style="stop-color:#a7a8ab;stop-opacity:1"
+         style="stop-color:#ececec;stop-opacity:1"
          offset="1"
          id="stop1316" />
     </linearGradient>
@@ -187,7 +187,7 @@
        clipPathUnits="userSpaceOnUse"
        id="clipPath1522">
       <path
-         style="fill:none;stroke:#000000;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         style="fill:none;stroke:#ececec;stroke-width:0.26458332px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
          d="M 150.40514,134.13806 73.098501,68.555512 60.925626,36.435705 179.39432,24.774357 199.00659,100.57312 158.4569,138.20746 Z"
          id="path1524"
          inkscape:connector-curvature="0" />
@@ -272,7 +272,7 @@
            cy="96.200211"
            cx="107.44279"
            id="path1386"
-           style="opacity:1;fill:#bdbfc1;fill-opacity:1;stroke:none;stroke-width:1.07281065;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter1516)"
+           style="opacity:1;fill:#ececec;fill-opacity:1;stroke:none;stroke-width:1.07281065;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;filter:url(#filter1516)"
            transform="matrix(0.71308018,0,0,0.71308018,30.827466,27.601745)"
            clip-path="url(#clipPath1522)" />
         <path

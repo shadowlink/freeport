@@ -223,6 +223,15 @@ pub struct SetupCmd {
     /// to; becomes the ROM path. Default `game`.
     #[serde(default)]
     pub dest: Option<String>,
+    /// Linux: `exe` lives INSIDE the port's AppImage (e.g. its bundled
+    /// `python/bin/python3`); Freeport unpacks the AppImage once
+    /// (`--appimage-extract`, into `squashfs-root`) and runs it from there.
+    #[serde(default)]
+    pub appimage: bool,
+    /// The installer can't read compressed dumps: `.nsz`/`.xcz` are
+    /// decompressed with the user's `nsz` tool first (temporary copy).
+    #[serde(default)]
+    pub needs_nsp: bool,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

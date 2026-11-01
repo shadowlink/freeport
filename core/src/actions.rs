@@ -641,7 +641,50 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
         .into_iter()
         .find(|p| p.is_file())
         .ok_or_else(|| AppError::msg("hace falta tu prod.keys (p. ej. ~/.switch/prod.keys o las claves de Eden/Ryujinx) para que el instalador del port abra los paquetes"))?;
-    let mut sorted: Vec<PathBuf> = files.to_vec();
+    // Compressed dumps: the port's installer reads NSP/XCI only, so .nsz/.xcz
+    // are decompressed with the user's own `nsz` into a temp folder next to
+    // the install (big, so never in /tmp); removed when the installer is done.
+    let tmp = install_dir.join(".switch-import");
+    let mut files: Vec<PathBuf> = files.to_vec();
+    if cmd.needs_nsp && files.iter().any(|f| matches!(f.extension().and_then(|e| e.to_str()).map(|e| e.to_lowercase()).as_deref(), Some("nsz") | Some("xcz"))) {
+        let tools = crate::switch::detect().map_err(AppError::msg)?;
+        let nsz = tools.nsz.as_ref().ok_or_else(|| {
+            AppError::msg("el instalador de este port solo lee NSP/XCI y tu volcado está comprimido (.nsz/.xcz): hace falta la herramienta nsz (pip install nsz) para descomprimirlo")
+        })?;
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(&tmp)?;
+        for f in files.iter_mut() {
+            let ext = f.extension().and_then(|e| e.to_str()).unwrap_or("").to_lowercase();
+            if ext != "nsz" && ext != "xcz" {
+                continue;
+            }
+            let name = f.file_name().and_then(|n| n.to_str()).unwrap_or("archivo").to_string();
+            progress(&format!("Descomprimiendo {name} (puede tardar varios minutos)"));
+            let out = std::process::Command::new(nsz)
+                .arg("-D")
+                .arg("--keys")
+                .arg(&tools.keys)
+                .arg("-o")
+                .arg(&tmp)
+                .arg(&*f)
+                .output()
+                .map_err(|e| AppError::msg(format!("no se pudo ejecutar nsz: {e}")))?;
+            if !out.status.success() {
+                let tail: String = String::from_utf8_lossy(&out.stderr).lines().rev().take(2).collect::<Vec<_>>().join(" | ");
+                return Err(AppError::msg(format!("nsz falló con {name}: {tail}")));
+            }
+            let stem = f.file_stem().and_then(|s| s.to_str()).unwrap_or("").to_string();
+            let want = if ext == "nsz" { "nsp" } else { "xci" };
+            let produced = std::fs::read_dir(&tmp)?
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.extension().and_then(|e| e.to_str()) == Some(want))
+                .max_by_key(|p| if p.file_stem().and_then(|s| s.to_str()) == Some(stem.as_str()) { 1 } else { 0 })
+                .ok_or_else(|| AppError::msg(format!("nsz no produjo ningún {want} para {name}")))?;
+            *f = produced;
+        }
+    }
+    let mut sorted: Vec<PathBuf> = files.clone();
     sorted.sort_by_key(|f| std::cmp::Reverse(std::fs::metadata(f).map(|m| m.len()).unwrap_or(0)));
     let base = sorted.first().ok_or_else(|| AppError::msg("elige al menos el paquete del juego base"))?;
     let update = sorted.get(1).map(|p| p.as_path());
@@ -651,9 +694,33 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
     let envs: HashMap<String, String> =
         cmd.env.iter().filter_map(|(k, v)| expand_vars(v, &install_dir, None).map(|v| (k.clone(), v))).collect();
     std::fs::create_dir_all(&dest)?;
+    // Linux ports packed as an AppImage setup: the CLI lives inside it, so
+    // unpack once (the runtime's own --appimage-extract) and run from there.
+    let bin = if cmd.appimage && !windows {
+        let root = install_dir.join("squashfs-root");
+        if !root.join(&cmd.exe).exists() {
+            let app = install::find_launch_binary(&install_dir, None, false)?;
+            progress("Desempaquetando el instalador del port");
+            let out = std::process::Command::new(&app)
+                .arg("--appimage-extract")
+                .current_dir(&install_dir)
+                .output()
+                .map_err(|e| AppError::msg(format!("no se pudo desempaquetar el AppImage: {e}")))?;
+            if !out.status.success() || !root.join(&cmd.exe).exists() {
+                return Err(AppError::msg("no se pudo desempaquetar el AppImage del instalador (--appimage-extract)"));
+            }
+        }
+        root.join(&cmd.exe)
+    } else {
+        install_dir.join(&cmd.exe)
+    };
+    // The installer runs from its own package folder (its python finds the
+    // `installer` package relative to it).
+    let cwd = if cmd.appimage && !windows { install_dir.join("squashfs-root") } else { install_dir.clone() };
     progress("Instalando el juego con el instalador del port (extrae, traduce y compila: 30 minutos o más)");
-    let bin = install_dir.join(&cmd.exe);
-    run_port_tool(paths, project, &install_dir, &bin, &args, &envs, windows, "el instalador del port")?;
+    let result = run_port_tool(paths, project, &cwd, &bin, &args, &envs, windows, "el instalador del port");
+    let _ = std::fs::remove_dir_all(&tmp);
+    result?;
     entry.rom_path = Some(dest.display().to_string());
     store::save_installed(paths, &installed)?;
     Ok(dest)

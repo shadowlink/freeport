@@ -1657,7 +1657,6 @@ export component MainWindow inherits Window {
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.mid - self.height / 2 + (1 - parent.t) * 30px * home.k;
                 visible: Math.abs(self.d) <= 5.5;
-                z: sel ? 10 : -Math.abs(self.d);
                 opacity: (sel ? 1.0 : max(0.4, 1 - Math.abs(self.d) * 0.3)) * parent.t;
                 animate width, height { duration: 260ms; easing: ease-out; }
                 // pulsing focus ring
@@ -1704,7 +1703,7 @@ export component MainWindow inherits Window {
         // ── Level 1: games of the console ──
         // Entering: the boxes fan out from the centre (where the console card
         // was) while fading in; the info under them rises into place.
-        if root.home-level == 1: Rectangle {
+        if root.home-level == 1: lv1 := Rectangle {
             x: 0; y: 72px * home.kb; width: parent.width; height: parent.height - 72px * home.kb - 56px * home.kb;
             property <float> t: 0;
             init => { self.t = 1; }
@@ -1746,7 +1745,6 @@ export component MainWindow inherits Window {
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.base - self.height + (1 - parent.t) * 40px * home.k;
                 visible: self.a <= 8.5;
-                z: sel ? 10 : -self.a;
                 opacity: (sel ? 1.0 : max(0.45, 1 - self.a * 0.25)) * parent.t;
                 animate width, height { duration: 240ms; easing: ease-out; }
                 if sel: Rectangle { x: -8px * home.k; y: -8px * home.k; width: parent.width + 16px * home.k; height: parent.height + 16px * home.k;
@@ -1765,6 +1763,14 @@ export component MainWindow inherits Window {
                     Image { x: parent.width * 0.2; y: parent.width * 0.2; width: parent.width * 0.6; height: parent.width * 0.6; colorize: #15161a;
                             source: c.update-available ? @image-url("../assets/icons/arrow-up.svg") : @image-url("../assets/icons/check.svg"); } }
                 TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-game(i); home.focus(); } }
+            }
+            // While the boxes fan out, the selected one is drawn again on top
+            // (the neighbours slide out from under it).
+            if lv1.t < 0.995 && root.home-games.length > 0: Rectangle {
+                x: root.width / 2 - lv1.big-w / 2; y: lv1.base - lv1.big-h + (1 - lv1.t) * 40px * home.k;
+                width: lv1.big-w; height: lv1.big-h; opacity: lv1.t;
+                border-radius: 15px * home.k; clip: true; background: #2a2c33;
+                Cover { width: 100%; height: 100%; source: home.g.cover; title: home.g.title; fit-cover: home.g.fit-cover; }
             }
             // Selected game: name, one plain status line, big buttons.
             VerticalLayout {

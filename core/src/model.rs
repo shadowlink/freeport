@@ -104,6 +104,12 @@ pub struct Project {
     /// os ("linux"|"windows"|"macos") -> optional binary name hint.
     #[serde(default)]
     pub launch: HashMap<String, Option<String>>,
+    /// os -> program the port's own installer leaves OUTSIDE the install
+    /// folder (`~` and `$XDG_DATA_HOME` expand), e.g. Strahlender's
+    /// `~/.local/bin/strahlender-xnu`. Used when it exists; until then Jugar
+    /// starts the binary in the install folder (the installer).
+    #[serde(default)]
+    pub launch_external: HashMap<String, String>,
     #[serde(default)]
     pub cached: Option<Cached>,
 }

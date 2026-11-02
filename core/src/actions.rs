@@ -412,6 +412,23 @@ async fn stage_install(
     Ok(())
 }
 
+/// The game a port's installer built outside Freeport's folder, if it's there.
+fn external_launch(project: &Project, windows: bool) -> Option<std::path::PathBuf> {
+    if windows {
+        return None;
+    }
+    let raw = project.launch_external.get(std::env::consts::OS)?;
+    let home = dirs::home_dir()?;
+    let data = std::env::var("XDG_DATA_HOME").ok().filter(|s| !s.is_empty()).map(std::path::PathBuf::from)
+        .unwrap_or_else(|| home.join(".local/share"));
+    let expanded = raw.replace("$XDG_DATA_HOME", &data.display().to_string());
+    let path = match expanded.strip_prefix("~/") {
+        Some(rest) => home.join(rest),
+        None => std::path::PathBuf::from(expanded),
+    };
+    path.is_file().then_some(path)
+}
+
 /// Records `path` as the project's game/ROM path. Reloads installed.json
 /// first: imports and installers run for many minutes, and saving the copy
 /// read at their start would undo whatever changed meanwhile (another
@@ -1099,7 +1116,10 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
     let install_dir = Path::new(&entry.install_path);
     let hint_os = if entry.windows { "windows" } else { std::env::consts::OS };
     let hint = project.launch.get(hint_os).and_then(|v| v.clone());
-    let bin = install::find_launch_binary(install_dir, hint.as_deref(), entry.windows)?;
+    let bin = match external_launch(project, entry.windows) {
+        Some(p) => p,
+        None => install::find_launch_binary(install_dir, hint.as_deref(), entry.windows)?,
+    };
 
     // Hand RetroAchievements credentials to the in-game RA mod via env (the mod,
     // when present, reads these; harmless otherwise). The child inherits our env.

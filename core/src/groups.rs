@@ -136,6 +136,7 @@ mod tests {
             asset_rules: platforms.iter().map(|t| ((*t).to_string(), ".*".to_string())).collect(),
             rom: RomInfo::default(),
             launch: Default::default(),
+            launch_external: Default::default(),
             cached: Some(Cached {
                 platforms: platforms.iter().map(|s| s.to_string()).collect(),
                 latest_tag: Some("v1".into()),

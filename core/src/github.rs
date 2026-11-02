@@ -87,12 +87,54 @@ pub async fn fetch_releases_gitlab(client: &reqwest::Client, slug: &str) -> AppR
         return Err(AppError::msg(format!("GitLab respondió {} para {slug}", resp.status())));
     }
     let raw: Vec<serde_json::Value> = resp.json().await?;
-    Ok(raw.iter().map(gitlab_release).collect())
+    // Some projects attach no asset links and only link files uploaded into
+    // the release notes (`[x](/uploads/<hash>/<file>)`). Those download only
+    // through the project-id form of the URL, so look the id up when needed.
+    let needs_id = raw.iter().any(|r| {
+        r.pointer("/assets/links").and_then(|l| l.as_array()).map(|l| l.is_empty()).unwrap_or(true)
+            && r.get("description").and_then(|d| d.as_str()).map(|d| d.contains("](/uploads/")).unwrap_or(false)
+    });
+    let project_id = if needs_id {
+        match client.get(format!("https://gitlab.com/api/v4/projects/{id}")).send().await {
+            Ok(r) if r.status().is_success() => r
+                .json::<serde_json::Value>()
+                .await
+                .ok()
+                .and_then(|p| p.get("id").and_then(|x| x.as_u64())),
+            _ => None,
+        }
+    } else {
+        None
+    };
+    Ok(raw.iter().map(|r| gitlab_release_with(r, project_id)).collect())
 }
 
+#[cfg(test)]
 fn gitlab_release(v: &serde_json::Value) -> Release {
+    gitlab_release_with(v, None)
+}
+
+/// Files uploaded into a release's notes: `[label](/uploads/<hash>/<file>)`.
+fn description_uploads(desc: &str, project_id: u64) -> Vec<Asset> {
+    let re = regex::Regex::new(r"\]\((/uploads/[0-9a-f]{16,64}/([^)\s]+))\)").expect("valid regex");
+    let mut out: Vec<Asset> = Vec::new();
+    for c in re.captures_iter(desc) {
+        let file = urlencoding::decode(&c[2]).map(|x| x.into_owned()).unwrap_or_else(|_| c[2].to_string());
+        if out.iter().any(|a| a.name == file) {
+            continue;
+        }
+        out.push(Asset {
+            name: file,
+            browser_download_url: format!("https://gitlab.com/-/project/{project_id}{}", &c[1]),
+            size: 0,
+        });
+    }
+    out
+}
+
+fn gitlab_release_with(v: &serde_json::Value, project_id: Option<u64>) -> Release {
     let s = |k: &str| v.get(k).and_then(|x| x.as_str()).map(|x| x.to_string());
-    let assets = v
+    let assets: Vec<Asset> = v
         .pointer("/assets/links")
         .and_then(|l| l.as_array())
         .map(|links| {
@@ -110,6 +152,10 @@ fn gitlab_release(v: &serde_json::Value) -> Release {
                 .collect()
         })
         .unwrap_or_default();
+    let assets = match (assets.is_empty(), project_id, s("description")) {
+        (true, Some(id), Some(d)) => description_uploads(&d, id),
+        _ => assets,
+    };
     Release {
         tag_name: s("tag_name").unwrap_or_default(),
         name: s("name"),
@@ -340,6 +386,25 @@ mod tests {
         assert!(r.assets[0].browser_download_url.contains("/-/releases/v0.1.1/downloads/"));
         assert!(!r.prerelease);
         assert!(pick_asset(&r, "(?i)linux-x86_64\\.tar\\.gz$").is_ok());
+    }
+
+    #[test]
+    fn gitlab_release_falls_back_to_uploads_in_notes() {
+        let v: serde_json::Value = serde_json::json!({
+            "tag_name": "v0.1.2", "released_at": "2026-11-02T11:55:44Z", "upcoming_release": false,
+            "description": "**Windows:**\n\n[Power Moon Recomp-0.1.2-windows.zip](/uploads/2db11db0d4fb7d016dddde8ac45c85df/Power_Moon_Recomp-0.1.2-windows.zip)\n\n[A](/uploads/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/Power%20Moon-linux.AppImage)",
+            "assets": {"links": []}
+        });
+        assert!(gitlab_release(&v).assets.is_empty());
+        let r = gitlab_release_with(&v, Some(88379810));
+        assert_eq!(r.assets.len(), 2);
+        assert_eq!(r.assets[0].name, "Power_Moon_Recomp-0.1.2-windows.zip");
+        assert_eq!(
+            r.assets[0].browser_download_url,
+            "https://gitlab.com/-/project/88379810/uploads/2db11db0d4fb7d016dddde8ac45c85df/Power_Moon_Recomp-0.1.2-windows.zip"
+        );
+        assert_eq!(r.assets[1].name, "Power Moon-linux.AppImage");
+        assert!(pick_asset(&r, "(?i)^Power.Moon.Recomp-.*-windows\\.zip$").is_ok());
     }
 
     fn rel(tag: &str, prerelease: bool, draft: bool, assets: &[&str]) -> Release {

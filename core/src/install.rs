@@ -403,6 +403,11 @@ pub fn preserve_user_files(old: &Path, new: &Path, extras: &[PathBuf]) -> AppRes
     let (old_root, new_root) = (game_root(old), game_root(new));
     if old_root != old && new_root != new {
         preserve_level(&old_root, &new_root)?;
+    } else if old_root != old {
+        // The old release was wrapped in a folder and the new one is not
+        // (a zip replaced by a bare AppImage): its saves and dumps still
+        // belong to the user, so lift them to the new top level.
+        preserve_level(&old_root, new)?;
     }
     Ok(())
 }
@@ -1002,6 +1007,27 @@ mod preserve_tests {
         assert_eq!(std::fs::read(new.join("W/data/exefs/main")).unwrap(), b"main");
         assert!(new.join("W/data/put-files-here.txt").exists());
         assert_eq!(std::fs::read(new.join("W/mods/kq/x.bin")).unwrap(), b"m");
+        let _ = std::fs::remove_dir_all(&tmp);
+    }
+
+    #[test]
+    fn update_from_wrapped_zip_to_bare_appimage_keeps_saves_and_dump() {
+        let tmp = std::env::temp_dir().join(format!("fp-preserve3-{}", std::process::id()));
+        let (old, new) = (tmp.join("old"), tmp.join("new"));
+        let _ = std::fs::remove_dir_all(&tmp);
+        std::fs::create_dir_all(old.join("W/userdata")).unwrap();
+        std::fs::write(old.join("W/userdata/save.bin"), b"s").unwrap();
+        std::fs::create_dir_all(old.join("W/game/exefs")).unwrap();
+        std::fs::write(old.join("W/game/exefs/main"), b"m").unwrap();
+        std::fs::write(old.join("W/setup.bat"), b"old").unwrap();
+        std::fs::create_dir_all(&new).unwrap();
+        std::fs::write(new.join("Port.AppImage"), b"NEW").unwrap();
+
+        preserve_user_files(&old, &new, &[]).unwrap();
+
+        assert_eq!(std::fs::read(new.join("userdata/save.bin")).unwrap(), b"s");
+        assert_eq!(std::fs::read(new.join("game/exefs/main")).unwrap(), b"m");
+        assert!(!new.join("setup.bat").exists());
         let _ = std::fs::remove_dir_all(&tmp);
     }
 

@@ -34,9 +34,45 @@ pub fn screenshot_urls(cover_url: &str) -> Vec<String> {
     ]
 }
 
-/// Where `get_full` keeps the full-size copy of `url` (may not exist yet).
-pub fn full_path_for(paths: &Paths, url: &str) -> PathBuf {
-    paths.data_dir.join("screens_cache").join(format!("{}.png", hash_hex(url)))
+/// Where `get_hd` keeps the large cover of `url` (may not exist yet).
+pub fn hd_path_for(paths: &Paths, url: &str) -> PathBuf {
+    paths.cover_cache_dir().join("hd").join(format!("{}.jpg", hash_hex(url)))
+}
+
+/// Large cover for the boxes shown big: the original, downscaled ONCE to fit
+/// 720×1080 and stored as JPEG. (Decoding the originals each time — some are
+/// several thousand pixels tall — took gigabytes of RAM and GPU memory.)
+pub async fn get_hd(client: &reqwest::Client, paths: &Paths, url: &str) -> Result<PathBuf, String> {
+    let file = hd_path_for(paths, url);
+    if file.exists() {
+        return Ok(file);
+    }
+    let _ = std::fs::create_dir_all(file.parent().unwrap_or(&file));
+    let orig = client
+        .get(url)
+        .header("User-Agent", "freeport")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?
+        .error_for_status()
+        .map_err(|e| e.to_string())?
+        .bytes()
+        .await
+        .map_err(|e| e.to_string())?;
+    let jpeg = tokio::task::spawn_blocking(move || -> Result<Vec<u8>, String> {
+        let img = image::load_from_memory(&orig).map_err(|e| e.to_string())?;
+        let img = if img.width() > 720 || img.height() > 1080 { img.thumbnail(720, 1080) } else { img };
+        let rgb = image::DynamicImage::ImageRgb8(img.to_rgb8());
+        let mut out = Vec::new();
+        image::codecs::jpeg::JpegEncoder::new_with_quality(&mut out, 90)
+            .encode_image(&rgb)
+            .map_err(|e| e.to_string())?;
+        Ok(out)
+    })
+    .await
+    .map_err(|e| e.to_string())??;
+    std::fs::write(&file, &jpeg).map_err(|e| e.to_string())?;
+    Ok(file)
 }
 
 /// Downloads a full-size image (e.g. a screenshot) to `screens_cache`, returning

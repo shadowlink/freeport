@@ -252,6 +252,7 @@ static WINDOW_FOCUSED: std::sync::atomic::AtomicBool = std::sync::atomic::Atomic
 
 thread_local! {
     static CLOCK_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
+    static REFRESH_SOON: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
     static SCROLLTEST_TIMER: RefCell<Option<slint::Timer>> = const { RefCell::new(None) };
     static RUNTIME: RefCell<Option<tokio::runtime::Handle>> = const { RefCell::new(None) };
     static UI: RefCell<Option<(Rc<App>, Weak<MainWindow>)>> = const { RefCell::new(None) };
@@ -847,10 +848,16 @@ impl App {
         if let Some(img) = self.cover_hd.borrow().get(&url) {
             return img.clone();
         }
-        let path = thumbs::full_path_for(&self.paths, &url);
+        let path = thumbs::hd_path_for(&self.paths, &url);
         if path.exists() {
             if let Ok(img) = Image::load_from_path(&path) {
-                self.cover_hd.borrow_mut().insert(url, img.clone());
+                let mut cache = self.cover_hd.borrow_mut();
+                // Bounded: a console's games plus a few pages, never the
+                // whole catalogue in memory.
+                if cache.len() >= 90 {
+                    cache.clear();
+                }
+                cache.insert(url, img.clone());
                 return img;
             }
         }
@@ -859,8 +866,8 @@ impl App {
             let paths = self.paths.clone();
             if let Some(h) = RUNTIME.with(|r| r.borrow().clone()) {
                 h.spawn(async move {
-                    if thumbs::get_full(&client, &paths, &url).await.is_ok() {
-                        let _ = slint::invoke_from_event_loop(ui_refresh);
+                    if thumbs::get_hd(&client, &paths, &url).await.is_ok() {
+                        let _ = slint::invoke_from_event_loop(schedule_refresh);
                     }
                 });
             }
@@ -1424,6 +1431,20 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
         }
         _ => {}
     }
+}
+
+/// One rebuild for a burst of background events (cover downloads arrive in
+/// dozens): coalesced into a single refresh a moment later.
+fn schedule_refresh() {
+    REFRESH_SOON.with(|t| {
+        let mut t = t.borrow_mut();
+        if t.as_ref().map(|x| x.running()).unwrap_or(false) {
+            return;
+        }
+        let timer = slint::Timer::default();
+        timer.start(slint::TimerMode::SingleShot, std::time::Duration::from_millis(400), ui_refresh);
+        *t = Some(timer);
+    });
 }
 
 /// Rebuild the UI from the current app state (runs on the UI thread).

@@ -739,7 +739,7 @@ export component MainWindow inherits Window {
     // ── Inicio: carrusel de consolas y de juegos (vista sencilla) ─────────
     if !root.classic-view: home := FocusScope {
         x: 0; y: 0; width: root.width; height: root.height;
-        property <float> pulse: 0.55 + 0.45 * Math.abs(Math.sin(animation-tick() / 1s * 160deg));
+        property <float> pulse: 1.0;   // static: a constant animation repainted the whole window 60×/s
         property <color> cyan: #2fd3ef;
         property <CardItem> g: root.home-games[root.home-game];
         // Scale with the window: 1.0 at 1280×800, bigger when maximised.
@@ -1104,7 +1104,7 @@ export component MainWindow inherits Window {
                 if root.settings-visible || (!root.classic-view && root.sv > 0.002): settings-root := FocusScope {
                     vertical-stretch: 1;
                     property <[string]> cats: ["Juegos de Windows", "Pantalla", "Versiones de pruebas", "Cuentas", "Almacenamiento", "Actualizaciones"];
-                    property <float> pulse: 0.55 + 0.45 * Math.abs(Math.sin(animation-tick() / 1s * 160deg));
+                    property <float> pulse: 1.0;   // static: a constant animation repainted the whole window 60×/s
                     property <length> body-w: max(260px, sscroll.visible-width - 40px);
                     init => { self.focus(); }
                     key-pressed(e) => {
@@ -1274,7 +1274,7 @@ export component MainWindow inherits Window {
                     property <length> body-w: max(240px, dscroll.visible-width - 80px);
                     property <string> tab: root.detail.tabs.length > 0
                         ? root.detail.tabs[min(root.detail-tab, root.detail.tabs.length - 1)].key : "";
-                    property <float> pulse: 0.55 + 0.45 * Math.abs(Math.sin(animation-tick() / 1s * 160deg));
+                    property <float> pulse: 1.0;   // static: a constant animation repainted the whole window 60×/s
                     init => { self.focus(); }
                     key-pressed(e) => {
                         if (e.text == Key.Escape || e.text == Key.Backspace) { root.detail-key("b"); return EventResult.accept; }
@@ -1884,7 +1884,7 @@ export component MainWindow inherits Window {
     // ── Elegir versión ───────────────────────────────────
     if root.chooser-visible: chooser-dlg := FocusScope {
         width: 100%; height: 100%;
-        property <float> pulse: 0.55 + 0.45 * Math.abs(Math.sin(animation-tick() / 1s * 160deg));
+        property <float> pulse: 1.0;   // static: a constant animation repainted the whole window 60×/s
         init => { self.focus(); }
         key-pressed(e) => {
             if (e.text == Key.Escape || e.text == Key.Backspace) { root.dialog-key("b"); return EventResult.accept; }

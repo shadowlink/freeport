@@ -477,6 +477,56 @@ pub fn set_rom(paths: &Paths, project: &Project, rom_source: &str) -> AppResult<
 /// Writes the ROM/dump path into the port's own launcher settings when the
 /// catalog says where they live (`rom.register`), so the port needs no manual
 /// folder pick. Best-effort: a missing or odd file is created/left alone.
+/// Sets `key=value` in INI text: replaces the key wherever it is, else adds it
+/// at the end of `section` (created when missing; no section given: the first
+/// one, or the top of the file). Keeps the file's line endings.
+fn ini_set(text: &str, section: Option<&str>, key: &str, value: &str) -> String {
+    let crlf = text.contains("\r\n");
+    let mut lines: Vec<String> = text.lines().map(|l| l.trim_end_matches('\r').to_string()).collect();
+    let is_key = |l: &str| {
+        let t = l.trim_start();
+        !t.starts_with(';') && !t.starts_with('#') && t.split_once('=').map(|(k, _)| k.trim() == key).unwrap_or(false)
+    };
+    let entry = format!("{key}={value}");
+    if let Some(l) = lines.iter_mut().find(|l| is_key(l)) {
+        *l = entry;
+    } else {
+        let header = |l: &str| l.trim_start().starts_with('[');
+        let start = match section {
+            Some(sec) => lines.iter().position(|l| l.trim() == format!("[{sec}]")),
+            None => lines.iter().position(|l| header(l)),
+        };
+        match start {
+            Some(i) => {
+                // After the section's last non-empty line.
+                let mut end = i + 1;
+                for (j, l) in lines.iter().enumerate().skip(i + 1) {
+                    if header(l) {
+                        break;
+                    }
+                    if !l.trim().is_empty() {
+                        end = j + 1;
+                    }
+                }
+                lines.insert(end, entry);
+            }
+            None => {
+                if let Some(sec) = section {
+                    if !lines.is_empty() {
+                        lines.push(String::new());
+                    }
+                    lines.push(format!("[{sec}]"));
+                }
+                lines.push(entry);
+            }
+        }
+    }
+    let nl = if crlf { "\r\n" } else { "\n" };
+    let mut out = lines.join(nl);
+    out.push_str(nl);
+    out
+}
+
 pub fn register_rom_path(project: &Project, path: &Path) -> AppResult<()> {
     let Some(reg) = project.rom.register.as_ref() else { return Ok(()) };
     let expand = |p: &str| -> PathBuf {
@@ -485,6 +535,15 @@ pub fn register_rom_path(project: &Project, path: &Path) -> AppResult<()> {
             None => PathBuf::from(p),
         }
     };
+    if let (Some(file), Some(key)) = (reg.ini.as_deref(), reg.key.as_deref()) {
+        let file = expand(file);
+        let old = std::fs::read_to_string(&file).unwrap_or_default();
+        let new = ini_set(&old, reg.section.as_deref(), key, &path.display().to_string());
+        if let Some(parent) = file.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(&file, new)?;
+    }
     if let (Some(file), Some(key)) = (reg.file.as_deref(), reg.key.as_deref()) {
         let file = expand(file);
         let mut doc: serde_json::Value = std::fs::read_to_string(&file)
@@ -1114,6 +1173,15 @@ pub fn launch_project(paths: &Paths, project: &Project) -> AppResult<u32> {
         .get(&project.id)
         .ok_or_else(|| AppError::msg("el proyecto no está instalado"))?;
     let install_dir = Path::new(&entry.install_path);
+    // Tell the port's own launcher where the imported game is (again on every
+    // start: its settings may have been reset, or the import predates the rule).
+    if let Some(rom) = entry.rom_path.as_deref() {
+        if project.rom.register.is_some() && Path::new(rom).exists() && !entry.windows {
+            if let Err(e) = register_rom_path(project, Path::new(rom)) {
+                eprintln!("[freeport] no se pudo registrar la carpeta en el launcher del port: {e}");
+            }
+        }
+    }
     let hint_os = if entry.windows { "windows" } else { std::env::consts::OS };
     let hint = project.launch.get(hint_os).and_then(|v| v.clone());
     let bin = match external_launch(project, entry.windows) {
@@ -1508,3 +1576,23 @@ mod live_openpete_test {
         assert!(bin.to_string_lossy().ends_with(".AppImage"));
     }
 }
+
+#[cfg(test)]
+mod ini_set_tests {
+    use super::ini_set;
+
+    #[test]
+    fn replaces_or_adds_the_key() {
+        // Existing key anywhere: replaced in place, CRLF kept.
+        let t = "[Video]\r\nwidth=1\r\n[Launcher]\r\nsetup_base=/old\r\nx=2\r\n";
+        assert_eq!(ini_set(t, Some("Launcher"), "setup_base", "/new"), "[Video]\r\nwidth=1\r\n[Launcher]\r\nsetup_base=/new\r\nx=2\r\n");
+        // Missing key: at the end of its section, before the next one.
+        let t = "[Launcher]\nx=2\n\n[Video]\nwidth=1\n";
+        assert_eq!(ini_set(t, Some("Launcher"), "setup_base", "/g"), "[Launcher]\nx=2\nsetup_base=/g\n\n[Video]\nwidth=1\n");
+        // No file yet: the section is created.
+        assert_eq!(ini_set("", Some("Launcher"), "setup_base", "/g"), "[Launcher]\nsetup_base=/g\n");
+        // A commented-out key is not the key.
+        assert_eq!(ini_set(";setup_base=/a\n", None, "setup_base", "/g"), ";setup_base=/a\nsetup_base=/g\n");
+    }
+}
+

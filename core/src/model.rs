@@ -259,6 +259,13 @@ pub struct RomRegister {
     /// Top-level key that holds the game folder / ROM path.
     #[serde(default)]
     pub key: Option<String>,
+    /// Alternatively, an INI settings file (`~` expands): `key` is set there,
+    /// replaced wherever it is or added to `section`. A field of its own so
+    /// older Freeports, which only know JSON `file`, leave it alone.
+    #[serde(default)]
+    pub ini: Option<String>,
+    #[serde(default)]
+    pub section: Option<String>,
     /// Alternatively, a path the port expects its game files at: Freeport
     /// creates a symlink there pointing to the imported folder (e.g. LAS
     /// Recomp's `~/.local/share/lasrecomp/extracted`).

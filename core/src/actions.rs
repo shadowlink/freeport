@@ -209,7 +209,7 @@ async fn resolve_release(
     let slug = project.repo.slug();
     if project.repo.host == "gitlab" {
         let releases = github::fetch_releases_gitlab(client, &slug).await?;
-        return github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
+        return github::pick_release_for(&releases, &project.release_channel, project.rolling_tag.as_deref(), rule)
             .ok_or_else(|| AppError::msg("no se encontró una release adecuada"));
     }
     if let Some(cached) = project.cached.as_ref() {
@@ -225,7 +225,7 @@ async fn resolve_release(
         }
     }
     let releases = github::fetch_releases(client, &slug, token).await?;
-    github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref())
+    github::pick_release_for(&releases, &project.release_channel, project.rolling_tag.as_deref(), rule)
         .ok_or_else(|| AppError::msg("no se encontró una release adecuada"))
 }
 

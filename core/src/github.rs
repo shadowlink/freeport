@@ -167,6 +167,24 @@ fn gitlab_release_with(v: &serde_json::Value, project_id: Option<u64>) -> Releas
     }
 }
 
+/// Like `pick_release`, but skips releases that carry nothing for this
+/// platform: a project whose newest release is an Android-only APK or a
+/// notes-only tag still installs from the newest release that has a file the
+/// rule matches. No release matching at all: the channel's pick, unchanged
+/// (its error then names the rule).
+pub fn pick_release_for(
+    releases: &[Release],
+    channel: &str,
+    rolling_tag: Option<&str>,
+    rule: &str,
+) -> Option<Release> {
+    if channel == "rolling" && rolling_tag.is_some() {
+        return pick_release(releases, channel, rolling_tag);
+    }
+    let matching: Vec<Release> = releases.iter().filter(|r| pick_asset(r, rule).is_ok()).cloned().collect();
+    pick_release(&matching, channel, rolling_tag).or_else(|| pick_release(releases, channel, rolling_tag))
+}
+
 /// Picks the release matching a project's channel:
 /// - "stable": newest non-draft, non-prerelease
 /// - "prerelease": newest non-draft (prereleases allowed)
@@ -405,6 +423,19 @@ mod tests {
         );
         assert_eq!(r.assets[1].name, "Power Moon-linux.AppImage");
         assert!(pick_asset(&r, "(?i)^Power.Moon.Recomp-.*-windows\\.zip$").is_ok());
+    }
+
+    #[test]
+    fn pick_release_for_skips_releases_without_this_platforms_file() {
+        let releases = vec![
+            rel("android-v3.4.6", false, false, &["DBZ_BT4_Android.apk"]),
+            rel("v2.5.6", false, false, &["DBZ_BT4_Mac.zip", "DBZ_BT4_Windows_Recomp.zip"]),
+        ];
+        let win = "(?i)^DBZ_BT4_Windows_Recomp\\.zip$";
+        assert_eq!(pick_release_for(&releases, "stable", None, win).unwrap().tag_name, "v2.5.6");
+        assert_eq!(pick_release(&releases, "stable", None).unwrap().tag_name, "android-v3.4.6");
+        // Nothing matches: the channel's own pick.
+        assert_eq!(pick_release_for(&releases, "stable", None, "nope").unwrap().tag_name, "android-v3.4.6");
     }
 
     fn rel(tag: &str, prerelease: bool, draft: bool, assets: &[&str]) -> Release {

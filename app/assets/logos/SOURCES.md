@@ -28,3 +28,5 @@ Notas generales:
 - Todos son SVG vectoriales (sin <text>, sin <image>, salvo el PNG oculto que se eliminó de ps4.svg). xbox.svg usa un feGaussianBlur que rsvg renderiza bien.
 - Rellenos negros (invisibles sobre #202020, intactos sobre blanco): ps4, ps5, psx (wordmark), psp, switch, nds, gc, dc (wordmark), arcade. Si el launcher es oscuro, recolorear fill en esos ficheros.
 - Rate limit: upload.wikimedia.org devuelve HTTP 429 (retry-after 600 s) tras ~12-20 descargas seguidas con este User-Agent; espaciar las descargas.
+
+| `switch2` | File:Nintendo Switch 2 logo transparent black.svg | https://commons.wikimedia.org/wiki/File:Nintendo_Switch_2_logo_transparent_black.svg | Public domain | 355x317. Icono Joy-Con + «2» + 'NINTENDO SWITCH'. Descargado el 2026-11-09; rellenos agrupados en fill="#ececec" como el resto. |

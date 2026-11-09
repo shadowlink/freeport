@@ -101,6 +101,7 @@ pub fn slugs_for_system(system: &str) -> &'static [&'static str] {
         "xbox" => &["xbox"],
         "x360" => &["xbox360", "x360"],
         "switch" => &["switch"],
+        "switch2" => &["switch2", "switch-2"],
         "arcade" => &["arcade", "mame", "fbneo"],
         "pc" => &["win", "dos", "pc"],
         _ => &[],

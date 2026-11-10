@@ -1505,8 +1505,12 @@ fn ui_refresh() {
     UI.with(|u| {
         if let Some((app, weak)) = &*u.borrow() {
             if let Some(w) = weak.upgrade() {
+                let t0 = std::time::Instant::now();
                 rebuild(app, &w);
                 build_detail(app, &w);
+                if std::env::var_os("FREEPORT_DEBUG_TIMING").is_some() {
+                    eprintln!("[timing] ui_refresh {:.1} ms", t0.elapsed().as_secs_f64() * 1000.0);
+                }
             }
         }
     });
@@ -2138,8 +2142,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let weak = win.as_weak();
         move |i| {
             let Some(w) = weak.upgrade() else { return };
+            // Click on the box already in focus: its page (with Jugar/Descargar
+            // on it). Never the action itself: a double click on a box would
+            // start a multi-GB download or launch the game.
             if i == w.get_home_game() {
-                home_key(&app, &w, "a");
+                home_key(&app, &w, "x");
                 return;
             }
             if let Some(id) = app.home_game_ids.borrow().get(i as usize) {
@@ -3195,6 +3202,31 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 });
             }
         }
+    }
+    if std::env::var_os("FREEPORT_DEBUG_HOMETEST").is_some() {
+        // dev aid: walks the home carousel through every console (one step
+        // every 400 ms), to time each move with FREEPORT_DEBUG_TIMING=1.
+        let weak = win.as_weak();
+        let app2 = app.clone();
+        let timer = slint::Timer::default();
+        let tick = std::rc::Rc::new(std::cell::Cell::new(0u32));
+        // FREEPORT_DEBUG_HOMETEST=games walks the games of the first console instead.
+        let games = std::env::var("FREEPORT_DEBUG_HOMETEST").map(|v| v == "games").unwrap_or(false);
+        timer.start(slint::TimerMode::Repeated, std::time::Duration::from_millis(150), move || {
+            let Some(w) = weak.upgrade() else { return };
+            let t = tick.get();
+            tick.set(t + 1);
+            if games && w.get_home_level() == 0 {
+                home_key(&app2, &w, "a");
+                return;
+            }
+            let n = if games { app2.home_game_ids.borrow().len().min(12) as u32 } else { app2.home_sys_ids.borrow().len() as u32 };
+            let k = if (t / n.max(1)).is_multiple_of(2) { "right" } else { "left" };
+            let t0 = std::time::Instant::now();
+            home_key(&app2, &w, k);
+            let _ = t0;
+        });
+        SCROLLTEST_TIMER.with(|t| *t.borrow_mut() = Some(timer));
     }
     if std::env::var_os("FREEPORT_DEBUG_SCROLLTEST").is_some() {
         // dev aid: synthetic wheel scrolling over the grid, to measure frame

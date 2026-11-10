@@ -232,6 +232,23 @@ component Cover inherits Rectangle {
     }
 }
 
+// Soft shadow without blur: three stacked translucent rounded rectangles.
+// (drop-shadow-blur is re-rendered on every frame of an animation and took the
+// carousel from 60 to ~24 fps.) Place it before the element, same geometry.
+component SoftShadow inherits Rectangle {
+    in property <length> radius;
+    in property <length> spread: 12px;
+    in property <length> dy: 6px;
+    in property <float> strength: 1.0;
+    in property <color> tint: black;
+    Rectangle { x: -root.spread; y: -root.spread + root.dy; width: parent.width + root.spread * 2; height: parent.height + root.spread * 2;
+                border-radius: root.radius + root.spread; background: root.tint.with-alpha(0.07 * root.strength); }
+    Rectangle { x: -root.spread * 0.6; y: -root.spread * 0.6 + root.dy; width: parent.width + root.spread * 1.2; height: parent.height + root.spread * 1.2;
+                border-radius: root.radius + root.spread * 0.6; background: root.tint.with-alpha(0.10 * root.strength); }
+    Rectangle { x: -root.spread * 0.25; y: -root.spread * 0.25 + root.dy; width: parent.width + root.spread * 0.5; height: parent.height + root.spread * 0.5;
+                border-radius: root.radius + root.spread * 0.25; background: root.tint.with-alpha(0.16 * root.strength); }
+}
+
 // On/off switch.
 component Toggle inherits Rectangle {
     in-out property <bool> checked;
@@ -627,9 +644,9 @@ export component MainWindow inherits Window {
     in-out property <bool> fullscreen;
     // Page transitions (console view): 0 hidden … 1 shown, animated.
     out property <float> dv: root.detail-visible ? 1 : 0;
-    animate dv { duration: 360ms; easing: cubic-bezier(0.3, 0.7, 0.2, 1); }
+    animate dv { duration: 240ms; easing: cubic-bezier(0.3, 0.7, 0.2, 1); }
     out property <float> sv: root.settings-visible ? 1 : 0;
-    animate sv { duration: 360ms; easing: cubic-bezier(0.3, 0.7, 0.2, 1); }
+    animate sv { duration: 240ms; easing: cubic-bezier(0.3, 0.7, 0.2, 1); }
     callback toggle-fullscreen(bool);
     callback detail-key(string);
     callback settings-key(string);
@@ -748,7 +765,7 @@ export component MainWindow inherits Window {
         // Level transition: consoles slide out to the left while the games
         // slide in from the right (and back), both fading.
         property <float> lv: root.home-level;
-        animate lv { duration: 420ms; easing: cubic-bezier(0.3, 0.7, 0.2, 1); }
+        animate lv { duration: 280ms; easing: cubic-bezier(0.3, 0.7, 0.2, 1); }
         // Under a page or dialog: take the keys back when it closes.
         property <bool> covered: root.detail-visible || root.settings-visible || root.confirm-visible || root.chooser-visible;
         changed covered => { if (!self.covered) { self.focus(); } }
@@ -782,9 +799,15 @@ export component MainWindow inherits Window {
                 horizontal-tiling: repeat; vertical-tiling: repeat; opacity: 0.028; }
 
         // Wheel = previous / next anywhere; a click on empty space takes the keys back.
+        // Deltas add up until a full notch (60 px): a touchpad or a free-spinning
+        // wheel no longer flies past ten items, and a tiny nudge does nothing.
+        property <length> wheel-acc: 0;
+        Timer { interval: 300ms; running: home.wheel-acc != 0; triggered => { home.wheel-acc = 0; } }
         TouchArea {
             scroll-event(e) => {
-                if (e.delta-y < 0 || e.delta-x < 0) { root.home-key("right"); } else { root.home-key("left"); }
+                home.wheel-acc += Math.abs(e.delta-x) > Math.abs(e.delta-y) ? e.delta-x : e.delta-y;
+                if (home.wheel-acc <= -45px) { home.wheel-acc = 0; root.home-key("right"); }
+                else if (home.wheel-acc >= 45px) { home.wheel-acc = 0; root.home-key("left"); }
                 return EventResult.accept;
             }
             clicked => { home.focus(); }
@@ -865,7 +888,7 @@ export component MainWindow inherits Window {
             property <length> mid: self.height * 0.40 - 40px * home.k;
             property <length> step: 270px * home.k;
             property <float> pos: root.home-sys;     // follows the selection smoothly
-            animate pos { duration: 280ms; easing: cubic-bezier(0.25, 0.8, 0.25, 1); }
+            animate pos { duration: 200ms; easing: cubic-bezier(0.25, 0.8, 0.25, 1); }
             for s[i] in root.home-systems: Rectangle {
                 property <bool> sel: i == root.home-sys;
                 property <float> d: i - parent.pos;
@@ -875,17 +898,23 @@ export component MainWindow inherits Window {
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.mid - self.height / 2 + (1 - parent.t) * 30px * home.k;
                 visible: Math.abs(self.d) <= 5.5;
-                opacity: (sel ? 1.0 : max(0.4, 1 - Math.abs(self.d) * 0.3)) * parent.t;
-                animate width, height { duration: 260ms; easing: ease-out; }
+                opacity: (sel || sys-ta.has-hover ? 1.0 : max(0.4, 1 - Math.abs(self.d) * 0.3)) * parent.t;
+                animate width, height { duration: 180ms; easing: ease-out; }
                 // pulsing focus ring
+                SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 28px * home.k;
+                             spread: (sel ? 26px : 12px) * home.k; dy: 8px * home.k; strength: sel ? 1.6 : 1.0; }
+                if sel: Rectangle { x: -14px * home.k; y: -14px * home.k; width: parent.width + 28px * home.k; height: parent.height + 28px * home.k;
+                    border-radius: 42px * home.k; border-width: 6px * home.k; border-color: home.cyan.with-alpha(0.16); }
                 if sel: Rectangle { x: -8px * home.k; y: -8px * home.k; width: parent.width + 16px * home.k; height: parent.height + 16px * home.k;
-                    border-radius: 36px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(home.pulse);
-                    drop-shadow-blur: 22px; drop-shadow-color: home.cyan.with-alpha(0.35 * home.pulse); }
+                    border-radius: 36px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(home.pulse); }
+                // Hover (mouse): a faint ring on the cards that aren't selected.
+                if !sel && sys-ta.has-hover: Rectangle { x: -6px * home.k; y: -6px * home.k; width: parent.width + 12px * home.k; height: parent.height + 12px * home.k;
+                    border-radius: 34px * home.k; border-width: 3px * home.k; border-color: #ffffff55; }
                 Rectangle {
                     border-radius: 28px * home.k; clip: true;
-                    background: sel ? @linear-gradient(160deg, #4a4e59 0%, #33363e 100%) : @linear-gradient(160deg, #34363e 0%, #26282e 100%);
+                    background: sel ? @linear-gradient(160deg, #4a4e59 0%, #33363e 100%)
+                              : (sys-ta.has-hover ? @linear-gradient(160deg, #40434c 0%, #2e3037 100%) : @linear-gradient(160deg, #34363e 0%, #26282e 100%));
                     border-width: 1px; border-color: #ffffff18;
-                    drop-shadow-blur: sel ? 34px : 12px; drop-shadow-color: #000000aa; drop-shadow-offset-y: 8px;
                     Rectangle { x: 0; y: parent.height - 5px * home.k; width: parent.width; height: 5px * home.k; background: s.color; opacity: sel ? 1.0 : 0.6; }
                     if s.has-logo: Image { source: s.logo; x: parent.width * 0.13; y: parent.height * 0.25;
                                            width: parent.width * 0.74; height: parent.height * 0.46; image-fit: contain; }
@@ -896,7 +925,7 @@ export component MainWindow inherits Window {
                         cnt := Text { width: 100%; height: 100%; text: s.count; color: white; font-size: 13px * home.k; font-weight: 900;
                                       horizontal-alignment: center; vertical-alignment: center; } }
                 }
-                TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-system(i); home.focus(); } }
+                sys-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-system(i); home.focus(); } }
             }
             Text { x: 0; y: parent.mid + parent.sel-h / 2 + 28px * home.k; width: parent.width; text: root.home-systems[root.home-sys].name;
                    color: white; font-size: 34px * home.k; font-weight: 900; horizontal-alignment: center; opacity: parent.t; }
@@ -912,7 +941,6 @@ export component MainWindow inherits Window {
                 for c in root.home-preview: Rectangle {
                     width: 96px * home.k * Math.min(1.4, Math.max(0.6, c.aspect)); height: 96px * home.k; border-radius: 10px * home.k; clip: true; background: #2a2c33;
                     opacity: 0.92;
-                    drop-shadow-blur: 10px; drop-shadow-color: #00000088;
                     Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
                 }
             }
@@ -933,7 +961,7 @@ export component MainWindow inherits Window {
             property <length> small-w: self.small-h * Math.min(1.45, Math.max(0.56, self.asp));
             property <length> gap: 20px * home.k;
             property <float> pos: root.home-game;
-            animate pos { duration: 260ms; easing: cubic-bezier(0.25, 0.8, 0.25, 1); }
+            animate pos { duration: 200ms; easing: cubic-bezier(0.25, 0.8, 0.25, 1); }
             property <length> near: self.big-w / 2 + 28px * home.k + self.small-w / 2;   // centre to first neighbour
             // the whole block (header, boxes, info) is centred vertically
             property <length> block: 56px * home.k + self.big-h + 230px * home.k;
@@ -963,24 +991,27 @@ export component MainWindow inherits Window {
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.base - self.height + (1 - parent.t) * 40px * home.k;
                 visible: self.a <= 8.5;
-                opacity: (sel ? 1.0 : max(0.45, 1 - self.a * 0.25)) * parent.t;
-                animate width, height { duration: 240ms; easing: ease-out; }
+                opacity: (sel || game-ta.has-hover ? 1.0 : max(0.45, 1 - self.a * 0.25)) * parent.t;
+                animate width, height { duration: 180ms; easing: ease-out; }
+                SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 15px * home.k;
+                             spread: (sel ? 22px : 12px) * home.k; dy: 8px * home.k; strength: sel ? 1.5 : 1.0; }
+                if sel: Rectangle { x: -14px * home.k; y: -14px * home.k; width: parent.width + 28px * home.k; height: parent.height + 28px * home.k;
+                    border-radius: 28px * home.k; border-width: 6px * home.k; border-color: home.cyan.with-alpha(0.16); }
                 if sel: Rectangle { x: -8px * home.k; y: -8px * home.k; width: parent.width + 16px * home.k; height: parent.height + 16px * home.k;
-                    border-radius: 22px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(home.pulse);
-                    drop-shadow-blur: 22px; drop-shadow-color: home.cyan.with-alpha(0.35 * home.pulse); }
+                    border-radius: 22px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(home.pulse); }
+                if !sel && game-ta.has-hover: Rectangle { x: -6px * home.k; y: -6px * home.k; width: parent.width + 12px * home.k; height: parent.height + 12px * home.k;
+                    border-radius: 20px * home.k; border-width: 3px * home.k; border-color: #ffffff55; }
                 Rectangle {
                     width: 100%; height: 100%; border-radius: 15px * home.k; clip: true; background: #2a2c33;
-                    drop-shadow-blur: 24px; drop-shadow-color: #000000bb; drop-shadow-offset-y: 8px;
                     Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
                     if c.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
                         Rectangle { x: 0; width: parent.width * c.progress; background: home.cyan; } }
                 }
                 if c.installed: Rectangle { x: parent.width - 34px * home.k; y: 10px * home.k; width: 26px * home.k; height: self.width; border-radius: self.width / 2;
                     background: c.update-available ? #ffd166 : #2fd3ef;
-                    drop-shadow-blur: 8px; drop-shadow-color: #00000088;
                     Image { x: parent.width * 0.2; y: parent.width * 0.2; width: parent.width * 0.6; height: parent.width * 0.6; colorize: #15161a;
                             source: c.update-available ? @image-url("../assets/icons/arrow-up.svg") : @image-url("../assets/icons/check.svg"); } }
-                TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-game(i); home.focus(); } }
+                game-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-game(i); home.focus(); } }
             }
             // Selected game: name, one plain status line, big buttons.
             VerticalLayout {
@@ -1316,7 +1347,7 @@ export component MainWindow inherits Window {
                                         width: min(360px, 300px * self.a);
                                         height: self.width / self.a;
                                         border-radius: 16px; clip: true; background: #2c2e35;
-                                        drop-shadow-blur: 34px; drop-shadow-color: #000000aa;
+                                        border-width: 1px; border-color: #ffffff14;
                                         Cover { width: 100%; height: 100%; source: root.detail.cover; title: root.detail.title; fit-cover: root.detail.fit-cover; }
                                     }
                                     VerticalLayout {
@@ -1751,9 +1782,7 @@ export component MainWindow inherits Window {
                                             clip: true;
                                             border-width: c.installed ? 2px : 1px;
                                             border-color: hov ? (c.installed ? #4de1c1 : #2fd3ef) : (c.installed ? #4de1c1aa : #3c3f48);
-                                            drop-shadow-blur: hov ? 18px : 0px;
-                                            drop-shadow-color: hov ? #000000cc : #00000000;
-                                            animate border-color, drop-shadow-blur, drop-shadow-color { duration: 180ms; easing: ease-out; }
+                                            animate border-color { duration: 120ms; easing: ease-out; }
                                             Cover { width: 100%; height: 100%; source: c.cover; title: c.title; hovered: hov; fit-cover: c.fit-cover; }
                                             cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
                                             // Chips on the art: only what matters at a glance.

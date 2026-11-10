@@ -1638,6 +1638,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Pin the winit backend (the one every platform ships with).
     let backend = i_slint_backend_winit::Backend::new().expect("winit backend");
     slint::platform::set_platform(Box::new(backend)).expect("set winit platform");
+    // Wayland app_id / X11 WM_CLASS = the .desktop file's name, so the taskbar
+    // and Alt+Tab find freeport.desktop and show its icon.
+    let _ = slint::set_xdg_app_id("freeport");
 
     // Bundle DejaVu Sans so UI glyphs (arrows, ★, ⚓, ⚙…) render identically on
     // every OS instead of falling back to each system's fonts (Windows showed

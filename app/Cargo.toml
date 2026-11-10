@@ -1,6 +1,6 @@
 [package]
 name = "freeport"
-version = "0.2.100"
+version = "0.2.101"
 edition = "2021"
 license = "MIT"
 

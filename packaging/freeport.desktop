@@ -5,5 +5,6 @@ GenericName=Game Launcher
 Comment=Instala y lanza decompilaciones y ports de consola a PC
 Exec=freeport
 Icon=freeport
+StartupWMClass=freeport
 Categories=Game;
 Terminal=false

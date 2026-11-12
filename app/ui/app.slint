@@ -29,6 +29,7 @@ struct CardItem {
     experimental: bool,  // tier experimental: shown with a warning badge
     fit-cover: bool,     // art shape differs from the box: crop instead of letterboxing
     size: string,        // on-disk size when installed ("12.3 GB"), else ""
+    cx: float,           // home row: centre of this box, in box heights from the first one
 }
 
 // Home (simple console-style view): one console in the carousel.
@@ -855,12 +856,7 @@ export component MainWindow inherits Window {
                     // Keeps the logo readable over the art.
                     Rectangle { background: @linear-gradient(90deg, s.color.mix(#101114, 0.5) 0%, s.color.mix(#101114, 0.42).with-alpha(0.8) 40%, #10111400 70%); }
                     Rectangle { x: 0; y: parent.height - 5px * home.k; width: parent.width; height: 5px * home.k; background: s.color; opacity: sel ? 1.0 : 0.6; }
-                    // In white over the tint; GBA's logo is a filled box with the
-                    // text cut out, so it keeps its own colours.
-                    if s.has-logo && s.id != "gba": Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.2;
-                                           width: parent.width * 0.48; height: parent.height * 0.34; image-fit: contain;
-                                           horizontal-alignment: left; colorize: white; }
-                    if s.has-logo && s.id == "gba": Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.2;
+                    if s.has-logo: Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.2;
                                            width: parent.width * 0.48; height: parent.height * 0.34; image-fit: contain;
                                            horizontal-alignment: left; }
                     if !s.has-logo: Text { x: parent.width * 0.08; y: parent.height * 0.16; width: parent.width * 0.5; height: parent.height * 0.44;
@@ -905,15 +901,23 @@ export component MainWindow inherits Window {
             opacity: clamp(home.lv * 2 - 1, 0, 1);
             x: (1 - home.lv) * 120px * home.k; y: 72px * home.kb; width: parent.width; height: parent.height - 72px * home.kb - 56px * home.kb;
             property <float> t: 1;
-            property <float> asp: root.home-games.length > 0 ? root.home-games[0].aspect : 0.7;
+            // Each box has its own console's shape («Jugados recientemente» mixes
+            // them): Rust lays them out in a row (`cx`, in small-box heights,
+            // gap included) and the row slides to the selection.
+            property <float> asp: root.home-games.length > 0 ? Math.min(1.45, Math.max(0.56, root.home-games[root.home-game].aspect)) : 0.7;
             property <length> big-h: min(340px * home.k, self.height * 0.56);
             property <length> small-h: self.big-h * 0.72;
-            property <length> big-w: self.big-h * Math.min(1.45, Math.max(0.56, self.asp));
-            property <length> small-w: self.small-h * Math.min(1.45, Math.max(0.56, self.asp));
-            property <length> gap: 20px * home.k;
+            property <length> big-w: self.big-h * self.asp;
+            property <length> small-w: self.small-h * self.asp;
             property <float> pos: root.home-game;
             animate pos { duration: 200ms; easing: cubic-bezier(0.25, 0.8, 0.25, 1); }
-            property <length> near: self.big-w / 2 + 28px * home.k + self.small-w / 2;   // centre to first neighbour
+            // Centre of the (moving) selection along the row.
+            property <int> p0: Math.max(0, Math.min(root.home-games.length - 1, Math.floor(self.pos)));
+            property <int> p1: Math.min(root.home-games.length - 1, self.p0 + 1);
+            property <float> pcx: root.home-games.length == 0 ? 0
+                : root.home-games[self.p0].cx + (root.home-games[self.p1].cx - root.home-games[self.p0].cx) * (self.pos - self.p0);
+            // Room the big selected box needs beyond a small one, each side.
+            property <length> extra: (self.big-w - self.small-w) / 2 + 8px * home.k;
             // the whole block (header, boxes, info) is centred vertically
             property <length> block: 56px * home.k + self.big-h + 230px * home.k;
             property <length> top: max(0px, (self.height - self.block) / 2);
@@ -936,11 +940,11 @@ export component MainWindow inherits Window {
                 property <float> a: Math.abs(self.d);
                 // Size follows the slide itself (no separate zoom animation).
                 property <float> grow: clamp(1 - self.a, 0, 1);
-                property <length> off: self.a < 1 ? self.d * parent.near
-                    : (self.d > 0 ? 1 : -1) * (parent.near + (self.a - 1) * (parent.small-w + parent.gap));
+                property <float> my-asp: Math.min(1.45, Math.max(0.56, c.aspect));
+                property <length> off: (c.cx - parent.pcx) * parent.small-h + clamp(self.d, -1, 1) * parent.extra;
                 property <length> tx: root.width / 2 + self.off - self.width / 2;
-                width: parent.small-w + (parent.big-w - parent.small-w) * self.grow;
                 height: parent.small-h + (parent.big-h - parent.small-h) * self.grow;
+                width: self.height * self.my-asp;
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.base - self.height + (1 - parent.t) * 40px * home.k;
                 visible: self.a <= 8.5;

@@ -580,6 +580,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 experimental: p.is_experimental(),
                 fit_cover: fit_for(&app.cover_cached(p), &p.system),
                 size: app.size_label(&p.id),
+                cx: 0.0,
             },
             p.system.clone(),
         ));
@@ -786,7 +787,6 @@ fn request_cover(app: &App, url: &str, hd: bool) {
 /// game page.
 fn patch_covers(app: &App, w: &MainWindow, url: &str) {
     let sel = w.get_home_game().max(0) as usize;
-    let in_recent = *app.home_sys_id.borrow() == RECENT_ID;
     let patch = |model: ModelRc<CardItem>, near_hd: bool| {
         for i in 0..model.row_count() {
             let Some(mut row) = model.row_data(i) else { continue };
@@ -801,7 +801,7 @@ fn patch_covers(app: &App, w: &MainWindow, url: &str) {
                 app.cover_cached(&p)
             };
             if img != row.cover {
-                row.fit_cover = !in_recent && fit_for(&img, &p.system);
+                row.fit_cover = fit_for(&img, &p.system);
                 row.cover = img;
                 model.set_row_data(i, row);
             }
@@ -837,7 +837,6 @@ const HD_RADIUS: usize = 3;
 fn home_window(app: &App, w: &MainWindow) {
     let games = w.get_home_games();
     let sel = w.get_home_game().max(0) as usize;
-    let in_recent = *app.home_sys_id.borrow() == RECENT_ID;
     let mut wanted = HashSet::new();
     for i in 0..games.row_count() {
         let Some(mut row) = games.row_data(i) else { continue };
@@ -850,7 +849,7 @@ fn home_window(app: &App, w: &MainWindow) {
             app.cover(&p)
         };
         if img != row.cover {
-            row.fit_cover = !in_recent && fit_for(&img, &p.system);
+            row.fit_cover = fit_for(&img, &p.system);
             row.cover = img;
             games.set_row_data(i, row);
         }
@@ -964,6 +963,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         experimental: r.is_experimental(),
         fit_cover: app.fit_cover(r),
         size: app.size_label(&r.id),
+        cx: 0.0,
         })
         .collect();
 
@@ -1342,8 +1342,6 @@ fn build_home(
                 } else {
                     format!("Jugado {}", fmt_ago(last)).into()
                 };
-                // Mixed consoles in one row: one square slot, art letterboxed.
-                c.aspect = 1.0;
                 (last, c)
             })
         })
@@ -1414,8 +1412,16 @@ fn build_home(
     for c in games.iter_mut() {
         if let Some(p) = app.find(c.id.as_str()) {
             c.cover = app.cover_cached(&p);
-            c.fit_cover = sel_id != RECENT_ID && fit_for(&c.cover, &p.system);
+            c.fit_cover = fit_for(&c.cover, &p.system);
         }
+    }
+    // Row layout for the home boxes: each one as wide as its console's box
+    // (mixed in «Jugados recientemente»), centres in small-box heights.
+    let mut x = 0.0f32;
+    for c in games.iter_mut() {
+        let a = c.aspect.clamp(0.56, 1.45);
+        c.cx = x + a / 2.0;
+        x += a + 0.1;
     }
     let game_ids: Vec<String> = games.iter().map(|c| c.id.to_string()).collect();
     let gsel = game_ids.iter().position(|i| *i == *app.home_game_id.borrow()).unwrap_or(0);

@@ -138,6 +138,7 @@ mod tests {
             launch: Default::default(),
             launch_external: Default::default(),
             data_dirs: Default::default(),
+            lb: None,
             cached: Some(Cached {
                 platforms: platforms.iter().map(|s| s.to_string()).collect(),
                 latest_tag: Some("v1".into()),

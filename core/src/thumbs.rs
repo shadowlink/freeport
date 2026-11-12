@@ -153,3 +153,33 @@ pub fn load_rgba(path: &std::path::Path, max_side: u32) -> Option<(u32, u32, Vec
     let (w, h) = rgba.dimensions();
     Some((w, h, rgba.into_raw()))
 }
+
+/// Art for the game list (logo, screenshot, fanart): downloaded once into
+/// `media_cache`, keeping the URL's extension so the decoder picks the format.
+pub fn media_path_for(paths: &Paths, url: &str) -> PathBuf {
+    let ext = url.rsplit('.').next().filter(|e| e.len() <= 4 && e.chars().all(|c| c.is_ascii_alphanumeric())).unwrap_or("img");
+    paths.data_dir.join("media_cache").join(format!("{}.{}", hash_hex(url), ext.to_ascii_lowercase()))
+}
+
+pub async fn get_media(client: &reqwest::Client, paths: &Paths, url: &str) -> Result<PathBuf, String> {
+    let file = media_path_for(paths, url);
+    if file.exists() {
+        return Ok(file);
+    }
+    let _ = std::fs::create_dir_all(file.parent().unwrap_or(&file));
+    let bytes = client
+        .get(url)
+        .header("User-Agent", "freeport")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?
+        .error_for_status()
+        .map_err(|e| e.to_string())?
+        .bytes()
+        .await
+        .map_err(|e| e.to_string())?;
+    let tmp = file.with_extension("part");
+    std::fs::write(&tmp, &bytes).map_err(|e| e.to_string())?;
+    std::fs::rename(&tmp, &file).map_err(|e| e.to_string())?;
+    Ok(file)
+}

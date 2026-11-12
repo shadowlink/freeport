@@ -115,6 +115,10 @@ pub struct Project {
     /// removal on uninstall, next to the ones Freeport can infer.
     #[serde(default)]
     pub data_dirs: Vec<String>,
+    /// LaunchBox Games Database facts and art (filled offline by the
+    /// catalog's tools/launchbox.py): players, rating, art URLs.
+    #[serde(default)]
+    pub lb: Option<LbMeta>,
     #[serde(default)]
     pub cached: Option<Cached>,
 }
@@ -469,4 +473,27 @@ mod lenient_tests {
         let r: RomInfo = serde_json::from_str(j).unwrap();
         assert_eq!(r.register.unwrap().link.as_deref(), Some("~/x"));
     }
+}
+
+/// Per-game facts and art URLs from the LaunchBox Games Database.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct LbMeta {
+    #[serde(default)]
+    pub id: u64,
+    #[serde(default)]
+    pub players: Option<u32>,
+    #[serde(default)]
+    pub coop: bool,
+    #[serde(default)]
+    pub rating: Option<f32>,
+    #[serde(default)]
+    pub overview: Option<String>,
+    #[serde(default)]
+    pub logo: Option<String>,
+    #[serde(default)]
+    pub snap: Option<String>,
+    #[serde(default)]
+    pub title: Option<String>,
+    #[serde(default)]
+    pub fanart: Option<String>,
 }

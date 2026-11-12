@@ -45,6 +45,19 @@ struct HomeSystem {
     is-recent: bool,     // the «Jugados recientemente» card
 }
 
+// Game list side panel (ES-DE style): art and facts of the selected game.
+struct HomeInfo {
+    logo: image,
+    has-logo: bool,
+    shot: image,         // in-game screenshot (or title screen)
+    has-shot: bool,
+    art: image,          // fanart for the background (or the screenshot)
+    has-art: bool,
+    facts: [string],     // año, desarrolladora, género, jugadores…
+    rating: float,       // 0-5 (LaunchBox community), 0 = none
+    desc: string,
+}
+
 // Settings → disk usage: one installed game.
 struct DiskGame {
     id: string,
@@ -528,6 +541,7 @@ export component MainWindow inherits Window {
     in property <[HomeSystem]> home-systems;
     in-out property <int> home-sys;
     in property <[CardItem]> home-games;
+    in property <HomeInfo> home-info;
     in-out property <int> home-game;
     in-out property <int> home-level;             // 0 consoles, 1 games of the console
     in property <color> home-color: #3a3d46;      // tint of the selected console
@@ -686,6 +700,8 @@ export component MainWindow inherits Window {
             if (e.text == Key.Return || e.text == " ") { root.home-key("a"); return EventResult.accept; }
             if (e.text == Key.Escape || e.text == Key.Backspace) { root.home-key("b"); return EventResult.accept; }
             if (e.text == "x" || e.text == "i") { root.home-key("x"); return EventResult.accept; }
+            if (e.text == Key.PageUp) { root.home-key("pgup"); return EventResult.accept; }
+            if (e.text == Key.PageDown) { root.home-key("pgdn"); return EventResult.accept; }
             if (e.text == Key.F11) { root.toggle-fullscreen(!root.fullscreen); return EventResult.accept; }
             return EventResult.reject;
         }
@@ -693,8 +709,15 @@ export component MainWindow inherits Window {
         // ── Backdrop: dark base, a glow of the console's colour, and (inside a
         // console) the selected game's art, very faint.
         Rectangle { x: 0; y: 0; width: parent.width; height: parent.height; background: #15161a; }
+        // Inside a console: the game's fanart (or screenshot), dimmed.
         Image {
-            x: 0; y: 0; width: parent.width; height: parent.height; source: home.g.cover; image-fit: cover; opacity: 0.08 * home.lv;
+            x: 0; y: 0; width: parent.width; height: parent.height; image-fit: cover;
+            source: root.home-info.has-art ? root.home-info.art : home.g.cover;
+            opacity: (root.home-info.has-art ? 0.30 : 0.08) * home.lv;
+        }
+        if home.lv > 0.01 && root.home-info.has-art: Rectangle {
+            x: 0; y: 0; width: parent.width; height: parent.height; opacity: home.lv;
+            background: @linear-gradient(90deg, #15161af0 0%, #15161aa0 38%, #15161a40 100%);
         }
         // Glow of the console's colour from the top. A square much bigger than
         // the window, so the gradient is already transparent at its edges and
@@ -716,8 +739,8 @@ export component MainWindow inherits Window {
         TouchArea {
             scroll-event(e) => {
                 home.wheel-acc += Math.abs(e.delta-x) > Math.abs(e.delta-y) ? e.delta-x : e.delta-y;
-                if (home.wheel-acc <= -45px) { home.wheel-acc = 0; root.home-key("right"); }
-                else if (home.wheel-acc >= 45px) { home.wheel-acc = 0; root.home-key("left"); }
+                if (home.wheel-acc <= -45px) { home.wheel-acc = 0; root.home-key(root.home-level == 1 ? "down" : "right"); }
+                else if (home.wheel-acc >= 45px) { home.wheel-acc = 0; root.home-key(root.home-level == 1 ? "up" : "left"); }
                 return EventResult.accept;
             }
             clicked => { home.focus(); }
@@ -891,39 +914,18 @@ export component MainWindow inherits Window {
             }
         }
 
-        // ── Level 1: games of the console ──
-        // Entering: the boxes fan out from the centre (where the console card
-        // was) while fading in; the info under them rises into place.
+        // ── Level 1: games of the console, ES-DE style ──
+        // A list of titles on the left; on the right the selected game: its
+        // logo, box, a screenshot, facts, description and the buttons. Its
+        // fanart (or screenshot) fills the background, dimmed.
         lv1 := Rectangle {
             visible: home.lv > 0.5;
             opacity: clamp(home.lv * 2 - 1, 0, 1);
             x: (1 - home.lv) * 120px * home.k; y: 72px * home.kb; width: parent.width; height: parent.height - 72px * home.kb - 56px * home.kb;
             property <float> t: 1;
-            // Each box has its own console's shape («Jugados recientemente» mixes
-            // them): Rust lays them out in a row (`cx`, in small-box heights,
-            // gap included) and the row slides to the selection.
-            property <float> asp: root.home-games.length > 0 ? Math.min(1.45, Math.max(0.56, root.home-games[root.home-game].aspect)) : 0.7;
-            property <length> big-h: min(340px * home.k, self.height * 0.56);
-            property <length> small-h: self.big-h * 0.72;
-            property <length> big-w: self.big-h * self.asp;
-            property <length> small-w: self.small-h * self.asp;
-            property <float> pos: root.home-game;
-            animate pos { duration: 200ms; easing: cubic-bezier(0.25, 0.8, 0.25, 1); }
-            // Centre of the (moving) selection along the row.
-            property <int> p0: Math.max(0, Math.min(root.home-games.length - 1, Math.floor(self.pos)));
-            property <int> p1: Math.min(root.home-games.length - 1, self.p0 + 1);
-            property <float> pcx: root.home-games.length == 0 ? 0
-                : root.home-games[self.p0].cx + (root.home-games[self.p1].cx - root.home-games[self.p0].cx) * (self.pos - self.p0);
-            // Room the big selected box needs beyond a small one, each side.
-            property <length> extra: (self.big-w - self.small-w) / 2 + 8px * home.k;
-            // the whole block (header, boxes, info) is centred vertically
-            property <length> block: 56px * home.k + self.big-h + 230px * home.k;
-            property <length> top: max(0px, (self.height - self.block) / 2);
-            property <length> base: self.top + 56px * home.k + self.big-h;   // bottom line of the boxes
             // Console header: back to consoles, position
             HorizontalLayout {
                 x: 30px; y: 6px; width: parent.width - 60px; height: 40px * home.kb; spacing: 14px;
-                opacity: parent.t;
                 IconCircle { size: 40px * home.kb; icon: @image-url("../assets/icons/back.svg"); clicked => { root.home-key("b"); home.focus(); } }
                 if root.home-systems[root.home-sys].has-logo: Image { source: root.home-systems[root.home-sys].logo; height: 28px * home.kb; width: 170px * home.kb;
                     image-fit: contain; horizontal-alignment: left; y: 6px * home.kb; }
@@ -932,76 +934,137 @@ export component MainWindow inherits Window {
                 Rectangle { horizontal-stretch: 1; }
                 Text { text: "\{root.home-game + 1} de \{root.home-games.length}"; color: #ffffff99; font-size: 14px * home.kb; font-weight: 700; vertical-alignment: center; }
             }
-            for c[i] in root.home-games: Rectangle {
-                property <bool> sel: i == root.home-game;
-                property <float> d: i - parent.pos;
-                property <float> a: Math.abs(self.d);
-                // No zoom at all: the selected box is big at once, the rest
-                // only slide.
-                property <float> grow: self.sel ? 1 : 0;
-                property <float> my-asp: Math.min(1.45, Math.max(0.56, c.aspect));
-                property <length> off: (c.cx - parent.pcx) * parent.small-h + clamp(self.d, -1, 1) * parent.extra;
-                property <length> tx: root.width / 2 + self.off - self.width / 2;
-                height: parent.small-h + (parent.big-h - parent.small-h) * self.grow;
-                width: self.height * self.my-asp;
-                x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
-                y: parent.base - self.height + (1 - parent.t) * 40px * home.k;
-                visible: self.a <= 8.5;
-                property <float> dim: sel || game-ta.has-hover ? 0 : 1 - max(0.45, 1 - self.a * 0.25);   // veil, see the console cards
-                // Only the boxes on screen are built (a console can hold 120 games).
-                if self.a <= 8.5: Rectangle {
-                    x: 0; y: 0; width: parent.width; height: parent.height;
-                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 15px * home.k;
-                                 spread: (sel ? 22px : 12px) * home.k; dy: 8px * home.k; strength: sel ? 1.5 : 1.0; }
-                    if sel: Rectangle { x: -14px * home.k; y: -14px * home.k; width: parent.width + 28px * home.k; height: parent.height + 28px * home.k;
-                        border-radius: 28px * home.k; border-width: 6px * home.k; border-color: home.cyan.with-alpha(root.home-btn >= 0 ? 0.06 : 0.16); }
-                    if sel: Rectangle { x: -8px * home.k; y: -8px * home.k; width: parent.width + 16px * home.k; height: parent.height + 16px * home.k;
-                        border-radius: 22px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(root.home-btn >= 0 ? 0.35 : home.pulse); }
-                    if !sel && game-ta.has-hover: Rectangle { x: -6px * home.k; y: -6px * home.k; width: parent.width + 12px * home.k; height: parent.height + 12px * home.k;
-                        border-radius: 20px * home.k; border-width: 3px * home.k; border-color: #ffffff55; }
-                    Rectangle {
-                        width: 100%; height: 100%; border-radius: 15px * home.k; clip: true; background: #2a2c33;
-                        Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
-                        if c.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
-                            Rectangle { x: 0; width: parent.width * c.progress; background: home.cyan; } }
-                        if dim > 0.01: Rectangle { background: #15161a; opacity: dim; }
+
+            // ── The list ──
+            list := Rectangle {
+                x: 30px; y: 62px * home.kb; width: clamp(parent.width * 0.3, 300px, 560px * home.k); height: parent.height - 62px * home.kb - 10px;
+                border-radius: 18px * home.k; background: #0d0e11b0; clip: true;
+                border-width: 1px; border-color: #ffffff12;
+                property <length> rh: 44px * home.k;
+                property <int> vis: floor((self.height - 16px) / self.rh);
+                property <int> n: root.home-games.length;
+                // First row shown: the selection stays in the middle, except at the ends.
+                property <float> top: Math.max(0, Math.min(self.n - self.vis, root.home-game - (self.vis - 1) / 2));
+                property <float> scroll: self.top;
+                animate scroll { duration: 140ms; easing: ease-out; }
+                for c[i] in root.home-games: Rectangle {
+                    property <bool> sel: i == root.home-game;
+                    property <float> rel: i - list.scroll;
+                    visible: self.rel > -1.5 && self.rel < list.vis + 1;
+                    x: 8px; width: parent.width - 16px; height: list.rh;
+                    y: 8px + self.rel * list.rh;
+                    // Only the rows on screen are built (a console can hold 120 games).
+                    if self.rel > -1.5 && self.rel < list.vis + 1: Rectangle {
+                        border-radius: 12px * home.k;
+                        background: sel ? (root.home-btn >= 0 ? #ffffff1f : home.cyan) : (row-ta.has-hover ? #ffffff14 : transparent);
+                        Text { x: 16px * home.k; width: parent.width - 60px * home.k; height: 100%; vertical-alignment: center; overflow: elide;
+                               text: c.title; font-size: 16px * home.k; font-weight: sel ? 900 : 600;
+                               color: sel && root.home-btn < 0 ? #101114 : (sel ? white : #ffffffc4); }
+                        // installed ✓ / update ↑ / downloading %
+                        if c.busy: Text { x: parent.width - 52px * home.k; width: 40px * home.k; height: 100%; horizontal-alignment: right; vertical-alignment: center;
+                               text: "\{Math.round(c.progress * 100)}%"; font-size: 12px * home.k; font-weight: 800;
+                               color: sel && root.home-btn < 0 ? #101114 : home.cyan; }
+                        if !c.busy && c.installed: Rectangle {
+                            x: parent.width - 34px * home.k; y: (parent.height - self.height) / 2; width: 20px * home.k; height: self.width; border-radius: self.width / 2;
+                            background: sel && root.home-btn < 0 ? #101114 : (c.update-available ? #ffd166 : #2fd3ef);
+                            Image { x: parent.width * 0.2; y: parent.width * 0.2; width: parent.width * 0.6; height: parent.width * 0.6;
+                                    colorize: sel && root.home-btn < 0 ? (c.update-available ? #ffd166 : #2fd3ef) : #15161a;
+                                    source: c.update-available ? @image-url("../assets/icons/arrow-up.svg") : @image-url("../assets/icons/check.svg"); }
+                        }
                     }
-                    if c.installed: Rectangle { x: parent.width - 34px * home.k; y: 10px * home.k; width: 26px * home.k; height: self.width; border-radius: self.width / 2;
-                        background: c.update-available ? #ffd166 : #2fd3ef;
-                        Image { x: parent.width * 0.2; y: parent.width * 0.2; width: parent.width * 0.6; height: parent.width * 0.6; colorize: #15161a;
-                                source: c.update-available ? @image-url("../assets/icons/arrow-up.svg") : @image-url("../assets/icons/check.svg"); } }
+                    row-ta := TouchArea { mouse-cursor: pointer;
+                        clicked => { root.home-btn = -1; if (sel) { root.home-key("a"); } else { root.home-pick-game(i); } home.focus(); } }
                 }
-                game-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-btn = -1; root.home-pick-game(i); home.focus(); } }
+                // Scroll position (thin bar on the right)
+                if list.n > list.vis: Rectangle {
+                    x: parent.width - 5px; width: 3px; border-radius: 1.5px; background: #ffffff40;
+                    height: Math.max(24px, (parent.height - 16px) * list.vis / list.n);
+                    y: 8px + (parent.height - 16px - self.height) * list.scroll / Math.max(1, list.n - list.vis);
+                }
             }
-            // Selected game: name, one plain status line, big buttons.
-            VerticalLayout {
-                x: 0; y: parent.base + 30px * home.k + (1 - parent.t) * 24px; width: parent.width; spacing: 6px * home.k; alignment: start;
-                opacity: parent.t;
-                Text { text: home.g.title; color: white; font-size: 30px * home.k; font-weight: 900; horizontal-alignment: center; overflow: elide; }
-                if home.g.versions > 1: Text { text: "\{home.g.versions} versiones disponibles";
-                    color: #ffffff88; font-size: 14px * home.k; font-weight: 600; horizontal-alignment: center; }
-                Text { horizontal-alignment: center; font-size: 15px * home.k; font-weight: 800;
-                       color: home.g.busy ? home.cyan : (home.g.update-available ? #ffd166 : (home.g.installed ? #4de1c1 : #ffffffaa));
-                       text: home.g.busy ? "Descargando… \{Math.round(home.g.progress * 100)}%"
-                           : (home.g.installed
-                               ? (home.g.update-available ? "Hay una versión nueva" : (home.g.meta != "" ? home.g.meta : "Listo para jugar"))
-                               : (home.g.experimental ? "Disponible · versión de pruebas" : "Disponible para descargar")); }
-                HorizontalLayout {
-                    alignment: center; spacing: 14px * home.k; padding-top: 12px * home.k;
-                    // ▼ from the boxes walks these with the keys / gamepad
-                    // (home-btn: 0 main, then «Actualizar» if shown, then «Más opciones»).
-                    PillBtn { s: home.k; wide: true; kind: "primary"; focused: root.home-btn == 0;
-                              icon: home.g.installed ? @image-url("../assets/icons/play.svg") : @image-url("../assets/icons/download.svg");
-                              has-icon: !home.g.busy;
-                              label: home.g.busy ? "Descargando…" : (home.g.installed ? "Jugar" : "Descargar");
-                              clicked => { root.home-btn = -1; root.home-key("a"); home.focus(); } }
-                    if home.g.installed && home.g.update-available: PillBtn { s: home.k; label: "Actualizar"; kind: "update";
-                              focused: root.home-btn == 1;
-                              icon: @image-url("../assets/icons/arrow-up.svg"); has-icon: true;
-                              clicked => { root.home-btn = -1; root.install(home.g.id); home.focus(); } }
-                    PillBtn { s: home.k; label: "Más opciones"; kind: "secondary";
-                              focused: root.home-btn == (home.g.installed && home.g.update-available ? 2 : 1);
-                              clicked => { root.home-btn = -1; root.home-key("x"); } }
+
+            // ── The selected game ──
+            panel := Rectangle {
+                x: list.x + list.width + 44px * home.k; y: list.y; width: parent.width - self.x - 40px; height: list.height;
+                property <length> logo-h: min(110px * home.k, self.height * 0.16);
+                // what goes under the box: chips, ~4 lines, status, buttons
+                property <length> below: 30px * home.k + 15px * home.k * 1.45 * 4 + 22px * home.k + 64px * home.k + 4 * 12px * home.k + 26px * home.k;
+                property <length> media-h: clamp(self.height - self.logo-h - 22px * home.k - self.below, 120px, 380px * home.k);
+                property <float> asp: Math.min(1.45, Math.max(0.56, home.g.aspect));
+                // Logo in its own colours (or the title in big letters)
+                if root.home-info.has-logo: Image {
+                    x: 0; y: 0; width: min(parent.width * 0.62, 560px * home.k); height: parent.logo-h;
+                    source: root.home-info.logo; image-fit: contain; horizontal-alignment: left; vertical-alignment: center;
+                }
+                if !root.home-info.has-logo: Text {
+                    x: 0; y: 0; width: parent.width; height: parent.logo-h;
+                    text: home.g.title; color: white; font-size: 40px * home.k; font-weight: 900;
+                    wrap: word-wrap; overflow: elide; vertical-alignment: center;
+                }
+                // Box + screenshot
+                Rectangle {
+                    x: 0; y: parent.logo-h + 22px * home.k; height: parent.media-h; width: self.height * parent.asp;
+                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 14px * home.k; spread: 16px * home.k; dy: 8px * home.k; strength: 1.3; }
+                    Rectangle { border-radius: 14px * home.k; clip: true; background: #2a2c33;
+                        Cover { width: 100%; height: 100%; source: home.g.cover; title: home.g.title; fit-cover: home.g.fit-cover; } }
+                    if home.g.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
+                        Rectangle { x: 0; width: parent.width * home.g.progress; background: home.cyan; } }
+                }
+                if root.home-info.has-shot: Rectangle {
+                    property <length> bw: parent.media-h * parent.asp;
+                    x: self.bw + 24px * home.k; y: parent.logo-h + 22px * home.k;
+                    height: parent.media-h; width: min(parent.width - self.x, self.height * 4 / 3);
+                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 14px * home.k; spread: 16px * home.k; dy: 8px * home.k; strength: 1.3; }
+                    Rectangle { border-radius: 14px * home.k; clip: true; background: #000;
+                        Image { width: 100%; height: 100%; source: root.home-info.shot; image-fit: cover; } }
+                }
+                // Facts, description, status, buttons
+                VerticalLayout {
+                    x: 0; y: parent.logo-h + 22px * home.k + parent.media-h + 26px * home.k; width: parent.width;
+                    height: parent.height - self.y;
+                    spacing: 12px * home.k; alignment: start;
+                    HorizontalLayout {
+                        spacing: 8px * home.k; alignment: start;
+                        if root.home-info.rating > 0: Rectangle {
+                            height: 30px * home.k; width: rt.preferred-width + 24px * home.k; border-radius: 15px * home.k; background: #ffd16626;
+                            border-width: 1px; border-color: #ffd16666;
+                            rt := Text { x: 12px * home.k; height: 100%; vertical-alignment: center; color: #ffd166; font-size: 14px * home.k; font-weight: 900;
+                                         text: "★ \{round(root.home-info.rating * 10) / 10}"; }
+                        }
+                        for f in root.home-info.facts: Rectangle {
+                            height: 30px * home.k; width: ft.preferred-width + 24px * home.k; border-radius: 15px * home.k; background: #ffffff14;
+                            border-width: 1px; border-color: #ffffff1c;
+                            ft := Text { x: 12px * home.k; height: 100%; vertical-alignment: center; text: f; color: #ffffffdd; font-size: 14px * home.k; font-weight: 700; }
+                        }
+                    }
+                    Text {
+                        text: root.home-info.desc; color: #ffffffbb; font-size: 15px * home.k; wrap: word-wrap; overflow: elide;
+                        max-height: 15px * home.k * 1.45 * 4; vertical-stretch: 0;
+                    }
+                    Text { font-size: 15px * home.k; font-weight: 800;
+                           color: home.g.busy ? home.cyan : (home.g.update-available ? #ffd166 : (home.g.installed ? #4de1c1 : #ffffffaa));
+                           text: home.g.busy ? "Descargando… \{Math.round(home.g.progress * 100)}%"
+                               : (home.g.installed
+                                   ? (home.g.update-available ? "Hay una versión nueva" : (home.g.meta != "" ? home.g.meta : "Listo para jugar"))
+                                   : (home.g.experimental ? "Disponible · versión de pruebas" : "Disponible para descargar"))
+                                 + (home.g.versions > 1 ? " · \{home.g.versions} versiones" : ""); }
+                    HorizontalLayout {
+                        alignment: start; spacing: 14px * home.k; padding-top: 4px * home.k;
+                        // ▶ from the list walks these with the keys / gamepad
+                        // (home-btn: 0 main, then «Actualizar» if shown, then «Más opciones»).
+                        PillBtn { s: home.k; wide: true; kind: "primary"; focused: root.home-btn == 0;
+                                  icon: home.g.installed ? @image-url("../assets/icons/play.svg") : @image-url("../assets/icons/download.svg");
+                                  has-icon: !home.g.busy;
+                                  label: home.g.busy ? "Descargando…" : (home.g.installed ? "Jugar" : "Descargar");
+                                  clicked => { root.home-btn = -1; root.home-key("a"); home.focus(); } }
+                        if home.g.installed && home.g.update-available: PillBtn { s: home.k; label: "Actualizar"; kind: "update";
+                                  focused: root.home-btn == 1;
+                                  icon: @image-url("../assets/icons/arrow-up.svg"); has-icon: true;
+                                  clicked => { root.home-btn = -1; root.install(home.g.id); home.focus(); } }
+                        PillBtn { s: home.k; label: "Más opciones"; kind: "secondary";
+                                  focused: root.home-btn == (home.g.installed && home.g.update-available ? 2 : 1);
+                                  clicked => { root.home-btn = -1; root.home-key("x"); } }
+                    }
                 }
             }
         }
@@ -1042,8 +1105,8 @@ export component MainWindow inherits Window {
             keys: root.home-level == 0
                   ? [{k: "A", t: "Abrir"}, {k: "◀ ▶", t: "Elegir consola"}, {k: "F11", t: "Pantalla completa"}]
                   : root.home-btn >= 0
-                    ? [{k: "A", t: "Pulsar"}, {k: "◀ ▶", t: "Elegir botón"}, {k: "▲", t: "Volver a los juegos"}]
-                    : [{k: "A", t: home.g.installed ? "Jugar" : "Descargar"}, {k: "B", t: "Volver"}, {k: "X", t: "Más opciones"}, {k: "▼", t: "Botones"}, {k: "◀ ▶", t: "Elegir juego"}];
+                    ? [{k: "A", t: "Pulsar"}, {k: "◀ ▶", t: "Elegir botón"}, {k: "B", t: "Volver a la lista"}]
+                    : [{k: "A", t: home.g.installed ? "Jugar" : "Descargar"}, {k: "B", t: "Volver"}, {k: "X", t: "Más opciones"}, {k: "▲ ▼", t: "Elegir juego"}, {k: "LB RB", t: "Saltar 10"}, {k: "▶", t: "Botones"}];
         }
     }
 

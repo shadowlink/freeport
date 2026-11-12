@@ -185,6 +185,11 @@ struct App {
     img_pending: RefCell<HashSet<String>>,
     /// Big covers the home carousel wants kept (around the selection).
     hd_wanted: RefCell<HashSet<String>>,
+    /// Game list side panel: decoded art (logo / screenshot / fanart) by URL,
+    /// Spanish Wikipedia text by project id, and the game it is showing.
+    media: RefCell<std::collections::HashMap<String, Image>>,
+    info_desc: RefCell<std::collections::HashMap<String, String>>,
+    info_id: RefCell<String>,
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
     // id -> (tag, published_at ISO, changelog body)
     changelog_cache: RefCell<std::collections::HashMap<String, (String, String, String)>>,
@@ -855,6 +860,149 @@ fn home_window(app: &App, w: &MainWindow) {
         }
     }
     *app.hd_wanted.borrow_mut() = wanted;
+    home_info(app, w);
+}
+
+/// Side panel of the game list (ES-DE style): logo, screenshot, fanart,
+/// facts and description of the selected game. Art and text not loaded yet
+/// are fetched in the background, a moment after the selection settles.
+fn home_info(app: &App, w: &MainWindow) {
+    let sel = w.get_home_game().max(0) as usize;
+    let id = app.home_game_ids.borrow().get(sel).cloned().unwrap_or_default();
+    let Some(p) = app.find(&id) else {
+        w.set_home_info(HomeInfo::default());
+        return;
+    };
+    let changed = *app.info_id.borrow() != id;
+    *app.info_id.borrow_mut() = id.clone();
+    let lb = p.lb.clone().unwrap_or_default();
+    let media = app.media.borrow();
+    let pick = |u: &Option<String>| u.as_ref().and_then(|u| media.get(u).cloned());
+    let logo = pick(&lb.logo);
+    let shot = pick(&lb.snap).or_else(|| pick(&lb.title));
+    let art = pick(&lb.fanart).or_else(|| pick(&lb.snap));
+    let mut facts: Vec<SharedString> = Vec::new();
+    if let Some(y) = p.year {
+        facts.push(y.to_string().into());
+    }
+    if let Some(d) = p.developer.as_ref().filter(|d| !d.is_empty()) {
+        facts.push(d.clone().into());
+    }
+    if let Some(g) = p.genre.as_ref().filter(|g| !g.is_empty()) {
+        facts.push(g.clone().into());
+    }
+    match lb.players {
+        Some(1) => facts.push("1 jugador".into()),
+        Some(n) if n > 1 => facts.push(format!("1–{n} jugadores").into()),
+        _ => {}
+    }
+    if lb.coop {
+        facts.push("Cooperativo".into());
+    }
+    let desc = app
+        .info_desc
+        .borrow()
+        .get(&id)
+        .cloned()
+        .unwrap_or_default();
+    w.set_home_info(HomeInfo {
+        has_logo: logo.is_some(),
+        logo: logo.unwrap_or_default(),
+        has_shot: shot.is_some(),
+        shot: shot.unwrap_or_default(),
+        has_art: art.is_some(),
+        art: art.unwrap_or_default(),
+        facts: ModelRc::new(VecModel::from(facts)),
+        rating: lb.rating.unwrap_or(0.0),
+        desc: desc.into(),
+    });
+    drop(media);
+    let _ = changed;
+    // Fetch what is missing, once the selection has rested for a moment
+    // (scrolling fast through a list doesn't download every game's art).
+    let urls: Vec<String> = [&lb.logo, &lb.snap, &lb.title, &lb.fanart]
+        .into_iter()
+        .flatten()
+        .filter(|u| !app.media.borrow().contains_key(*u))
+        .cloned()
+        .collect();
+    let need_desc = !app.info_desc.borrow().contains_key(&id);
+    if urls.is_empty() && !need_desc {
+        return;
+    }
+    // One request per game at a time.
+    let key = format!("info:{id}");
+    if !app.img_pending.borrow_mut().insert(key.clone()) {
+        return;
+    }
+    let Some(h) = RUNTIME.with(|r| r.borrow().clone()) else {
+        app.img_pending.borrow_mut().remove(&key);
+        return;
+    };
+    let (client, paths) = (app.client.clone(), app.paths.clone());
+    let wiki_title = p.wiki.clone();
+    let overview = lb.overview.clone().unwrap_or_default();
+    h.spawn(async move {
+        tokio::time::sleep(std::time::Duration::from_millis(140)).await;
+        let still = {
+            let (tx, rx) = tokio::sync::oneshot::channel();
+            let want = id.clone();
+            let _ = slint::invoke_from_event_loop(move || {
+                let ok = UI.with(|u| u.borrow().as_ref().map(|(a, _)| *a.info_id.borrow() == want).unwrap_or(false));
+                let _ = tx.send(ok);
+            });
+            rx.await.unwrap_or(false)
+        };
+        if !still {
+            let _ = slint::invoke_from_event_loop(move || {
+                UI.with(|u| {
+                    if let Some((app, _)) = &*u.borrow() {
+                        app.img_pending.borrow_mut().remove(&key);
+                    }
+                });
+            });
+            return;
+        }
+        let mut imgs: Vec<(String, u32, u32, Vec<u8>)> = Vec::new();
+        for u in urls {
+            if let Ok(path) = thumbs::get_media(&client, &paths, &u).await {
+                if let Ok(Some((wd, ht, buf))) = tokio::task::spawn_blocking(move || thumbs::load_rgba(&path, 1600)).await {
+                    imgs.push((u, wd, ht, buf));
+                }
+            }
+        }
+        let mut desc = None;
+        if need_desc {
+            let wiki = match wiki_title {
+                Some(t) => wiki::fetch(&client, &paths, &t).await,
+                None => None,
+            };
+            desc = Some(wiki.map(|w| w.extract).filter(|e| !e.trim().is_empty()).unwrap_or(overview));
+        }
+        let _ = slint::invoke_from_event_loop(move || {
+            UI.with(|u| {
+                let Some((app, weak)) = &*u.borrow() else { return };
+                app.img_pending.borrow_mut().remove(&key);
+                {
+                    let mut m = app.media.borrow_mut();
+                    if m.len() > 24 {
+                        m.clear();
+                    }
+                    for (url, wd, ht, buf) in imgs {
+                        m.insert(url, Image::from_rgba8(SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(&buf, wd, ht)));
+                    }
+                }
+                if let Some(d) = desc {
+                    app.info_desc.borrow_mut().insert(id.clone(), d);
+                }
+                if *app.info_id.borrow() == id {
+                    if let Some(w) = weak.upgrade() {
+                        home_info(app, &w);
+                    }
+                }
+            });
+        });
+    });
 }
 
 fn build_detail(app: &App, win: &MainWindow) {
@@ -1488,9 +1636,10 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
         let has_update = g.as_ref().map(|g| g.installed && g.update_available).unwrap_or(false);
         let n = if has_update { 3 } else { 2 };
         match k {
-            "left" | "lb" => w.set_home_btn((btn - 1).max(0)),
+            // ◀ on the first button goes back to the list.
+            "left" | "lb" => w.set_home_btn(btn - 1),
             "right" | "rb" => w.set_home_btn((btn + 1).min(n - 1)),
-            "up" | "b" | "back" => w.set_home_btn(-1),
+            "up" | "down" | "b" | "back" => w.set_home_btn(-1),
             "a" | "start" => {
                 let action = match (btn, has_update) {
                     (0, _) => "a",
@@ -1512,22 +1661,29 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
         return;
     }
     match k {
-        "left" | "right" | "lb" | "rb" => {
+        // The list: ▲ ▼ one game (wrapping), LB / RB and Re Pág / Av Pág a page.
+        "up" | "down" | "lb" | "rb" | "pgup" | "pgdn" => {
             if ids.is_empty() {
                 return;
             }
-            let step = if k == "lb" || k == "rb" { 5 } else { 1 };
-            let next = if k.starts_with('l') { cur.saturating_sub(step) } else { (cur + step).min(ids.len() - 1) };
+            let n = ids.len();
+            let next = match k {
+                "up" => (cur + n - 1) % n,
+                "down" => (cur + 1) % n,
+                "lb" | "pgup" => cur.saturating_sub(10),
+                _ => (cur + 10).min(n - 1),
+            };
             *app.home_game_id.borrow_mut() = ids[next].clone();
             w.set_home_game(next as i32);
             home_window(app, w);
         }
-        "down" => {
+        // ▶ into the buttons of the panel.
+        "right" => {
             if !ids.is_empty() {
                 w.set_home_btn(0);
             }
         }
-        "b" | "up" | "back" => {
+        "b" | "back" => {
             w.set_home_level(0);
             w.invoke_nav_push();
         }
@@ -1878,6 +2034,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         bulk_items: RefCell::new(Vec::new()),
         img_pending: RefCell::new(HashSet::new()),
         hd_wanted: RefCell::new(HashSet::new()),
+        media: RefCell::new(std::collections::HashMap::new()),
+        info_desc: RefCell::new(std::collections::HashMap::new()),
+        info_id: RefCell::new(String::new()),
         size_cache: RefCell::new(std::collections::HashMap::new()),
         changelog_cache: RefCell::new(std::collections::HashMap::new()),
         pending_update: RefCell::new(None),
@@ -3483,7 +3642,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return;
             }
             let n = if games { app2.home_game_ids.borrow().len().min(12) as u32 } else { app2.home_sys_ids.borrow().len() as u32 };
-            let k = if (t / n.max(1)).is_multiple_of(2) { "right" } else { "left" };
+            let fwd = (t / n.max(1)).is_multiple_of(2);
+            let k = match (games, fwd) {
+                (true, true) => "down",
+                (true, false) => "up",
+                (false, true) => "right",
+                (false, false) => "left",
+            };
             let t0 = std::time::Instant::now();
             home_key(&app2, &w, k);
             let _ = t0;

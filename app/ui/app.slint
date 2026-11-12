@@ -45,19 +45,6 @@ struct HomeSystem {
     is-recent: bool,     // the «Jugados recientemente» card
 }
 
-// Game list side panel (ES-DE style): art and facts of the selected game.
-struct HomeInfo {
-    logo: image,
-    has-logo: bool,
-    shot: image,         // in-game screenshot (or title screen)
-    has-shot: bool,
-    art: image,          // fanart for the background (or the screenshot)
-    has-art: bool,
-    facts: [string],     // año, desarrolladora, género, jugadores…
-    rating: float,       // 0-5 (LaunchBox community), 0 = none
-    desc: string,
-}
-
 // Settings → disk usage: one installed game.
 struct DiskGame {
     id: string,
@@ -112,6 +99,19 @@ struct FactRow {
     label: string,
     value: string,
     accent: color,
+}
+
+// Game list side panel (ES-DE style): art and facts of the selected game.
+struct HomeInfo {
+    logo: image,
+    has-logo: bool,
+    shot: image,         // in-game screenshot (or title screen)
+    has-shot: bool,
+    art: image,          // fanart for the background (or the screenshot)
+    has-art: bool,
+    facts: [FactRow],    // año, desarrolladora, género, jugadores…
+    rating: float,       // 0-5 (LaunchBox community), 0 = none
+    desc: string,
 }
 
 struct RaBadge {
@@ -986,62 +986,88 @@ export component MainWindow inherits Window {
             // ── The selected game ──
             panel := Rectangle {
                 x: list.x + list.width + 44px * home.k; y: list.y; width: parent.width - self.x - 40px; height: list.height;
-                property <length> logo-h: min(110px * home.k, self.height * 0.16);
-                // what goes under the box: chips, ~4 lines, status, buttons
-                property <length> below: 30px * home.k + 15px * home.k * 1.45 * 4 + 22px * home.k + 64px * home.k + 4 * 12px * home.k + 26px * home.k;
-                property <length> media-h: clamp(self.height - self.logo-h - 22px * home.k - self.below, 120px, 380px * home.k);
+                // Same composition for every game, whatever its art:
+                //  left column  — logo (same visual weight: same area, within
+                //                 limits) and the screenshot in a fixed 16:10
+                //                 frame, the box (its shape, same area) on its corner;
+                //  right column — rating, facts, description;
+                //  bottom       — status and buttons.
+                property <length> gap: 40px * home.k;
+                property <length> bottom-h: 20px * home.k + 14px * home.k + 52px * home.k;
+                property <length> logo-h: min(110px * home.k, self.height * 0.15);
+                property <length> over: 30px * home.k;     // the box hangs below the frame
+                property <length> avail-h: self.height - self.logo-h - 20px * home.k - self.over - 28px * home.k - self.bottom-h;
+                property <length> frame-w: min(self.width * 0.58, self.avail-h * 1.6);
+                property <length> frame-h: self.frame-w / 1.6;
+                // the whole block centred vertically in the panel
+                property <length> top: max(0px, (self.height - (self.logo-h + 20px * home.k + self.frame-h + self.over + 28px * home.k + self.bottom-h)) / 2);
+                property <length> frame-y: self.top + self.logo-h + 20px * home.k;
                 property <float> asp: Math.min(1.45, Math.max(0.56, home.g.aspect));
-                // Logo in its own colours (or the title in big letters)
+                property <length> box-h: self.frame-h * 0.6 * Math.sqrt(0.7 / self.asp);
+                property <length> box-w: self.box-h * self.asp;
+                property <float> la: root.home-info.has-logo ? Math.max(0.4, root.home-info.logo.width / Math.max(1, root.home-info.logo.height)) : 3.2;
+                property <length> lg-h: min(self.logo-h, min(self.frame-w * 0.85, self.logo-h * 0.72 * Math.sqrt(3.2 * self.la)) / self.la);
+                property <length> col-x: self.frame-w + self.gap + 20px * home.k;
+
                 if root.home-info.has-logo: Image {
-                    x: 0; y: 0; width: min(parent.width * 0.62, 560px * home.k); height: parent.logo-h;
-                    source: root.home-info.logo; image-fit: contain; horizontal-alignment: left; vertical-alignment: center;
+                    x: 0; y: parent.top + (parent.logo-h - parent.lg-h) / 2; height: parent.lg-h; width: parent.lg-h * parent.la;
+                    source: root.home-info.logo; image-fit: contain;
                 }
                 if !root.home-info.has-logo: Text {
-                    x: 0; y: 0; width: parent.width; height: parent.logo-h;
-                    text: home.g.title; color: white; font-size: 40px * home.k; font-weight: 900;
+                    x: 0; y: parent.top; width: parent.frame-w; height: parent.logo-h;
+                    text: home.g.title; color: white; font-size: 36px * home.k; font-weight: 900;
                     wrap: word-wrap; overflow: elide; vertical-alignment: center;
                 }
-                // Box + screenshot
+                // Frame: screenshot (or the box art blown up and dimmed when there is none)
                 Rectangle {
-                    x: 0; y: parent.logo-h + 22px * home.k; height: parent.media-h; width: self.height * parent.asp;
-                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 14px * home.k; spread: 16px * home.k; dy: 8px * home.k; strength: 1.3; }
-                    Rectangle { border-radius: 14px * home.k; clip: true; background: #2a2c33;
+                    x: 0; y: parent.frame-y; width: parent.frame-w; height: parent.frame-h;
+                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 16px * home.k; spread: 16px * home.k; dy: 8px * home.k; strength: 1.3; }
+                    Rectangle { border-radius: 16px * home.k; clip: true; background: #0b0c0f;
+                        border-width: 1px; border-color: #ffffff14;
+                        if root.home-info.has-shot: Image { width: 100%; height: 100%; source: root.home-info.shot; image-fit: cover; }
+                        if !root.home-info.has-shot: Image { width: 100%; height: 100%; source: home.g.cover; image-fit: cover; opacity: 0.35; }
+                    }
+                }
+                // Box on the frame's bottom-right corner
+                Rectangle {
+                    x: parent.frame-w - self.width + 20px * home.k;
+                    y: parent.frame-y + parent.frame-h - self.height + parent.over;
+                    width: parent.box-w; height: parent.box-h;
+                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 12px * home.k; spread: 20px * home.k; dy: 10px * home.k; strength: 1.7; }
+                    Rectangle { border-radius: 12px * home.k; clip: true; background: #2a2c33;
+                        border-width: 1px; border-color: #ffffff22;
                         Cover { width: 100%; height: 100%; source: home.g.cover; title: home.g.title; fit-cover: home.g.fit-cover; } }
                     if home.g.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
                         Rectangle { x: 0; width: parent.width * home.g.progress; background: home.cyan; } }
                 }
-                if root.home-info.has-shot: Rectangle {
-                    property <length> bw: parent.media-h * parent.asp;
-                    x: self.bw + 24px * home.k; y: parent.logo-h + 22px * home.k;
-                    height: parent.media-h; width: min(parent.width - self.x, self.height * 4 / 3);
-                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 14px * home.k; spread: 16px * home.k; dy: 8px * home.k; strength: 1.3; }
-                    Rectangle { border-radius: 14px * home.k; clip: true; background: #000;
-                        Image { width: 100%; height: 100%; source: root.home-info.shot; image-fit: cover; } }
-                }
-                // Facts, description, status, buttons
+                // Right column: rating, facts, description
                 VerticalLayout {
-                    x: 0; y: parent.logo-h + 22px * home.k + parent.media-h + 26px * home.k; width: parent.width;
-                    height: parent.height - self.y;
-                    spacing: 12px * home.k; alignment: start;
-                    HorizontalLayout {
-                        spacing: 8px * home.k; alignment: start;
-                        if root.home-info.rating > 0: Rectangle {
-                            height: 30px * home.k; width: rt.preferred-width + 24px * home.k; border-radius: 15px * home.k; background: #ffd16626;
-                            border-width: 1px; border-color: #ffd16666;
-                            rt := Text { x: 12px * home.k; height: 100%; vertical-alignment: center; color: #ffd166; font-size: 14px * home.k; font-weight: 900;
-                                         text: "★ \{round(root.home-info.rating * 10) / 10}"; }
-                        }
-                        for f in root.home-info.facts: Rectangle {
-                            height: 30px * home.k; width: ft.preferred-width + 24px * home.k; border-radius: 15px * home.k; background: #ffffff14;
-                            border-width: 1px; border-color: #ffffff1c;
-                            ft := Text { x: 12px * home.k; height: 100%; vertical-alignment: center; text: f; color: #ffffffdd; font-size: 14px * home.k; font-weight: 700; }
-                        }
+                    x: parent.col-x; y: parent.frame-y; width: parent.width - parent.col-x; height: parent.frame-h + parent.over;
+                    spacing: 10px * home.k;
+                    if root.home-info.rating > 0: HorizontalLayout {
+                        spacing: 10px * home.k; alignment: start; padding-bottom: 4px * home.k;
+                        Text { text: "★"; color: #ffd166; font-size: 26px * home.k; vertical-alignment: center; }
+                        Text { text: "\{round(root.home-info.rating * 10) / 10}"; color: white; font-size: 26px * home.k; font-weight: 900; vertical-alignment: center; }
+                        Text { text: "/ 5"; color: #ffffff66; font-size: 16px * home.k; font-weight: 700; vertical-alignment: center; }
                     }
-                    Text {
-                        text: root.home-info.desc; color: #ffffffbb; font-size: 15px * home.k; wrap: word-wrap; overflow: elide;
-                        max-height: 15px * home.k * 1.45 * 4; vertical-stretch: 0;
+                    for f in root.home-info.facts: HorizontalLayout {
+                        spacing: 12px * home.k;
+                        Text { text: f.label; color: #ffffff77; font-size: 14px * home.k; font-weight: 700; width: 104px * home.k; vertical-alignment: center; }
+                        Text { text: f.value; color: #ffffffee; font-size: 15px * home.k; font-weight: 800; overflow: elide; horizontal-stretch: 1; vertical-alignment: center; }
                     }
-                    Text { font-size: 15px * home.k; font-weight: 800;
+                    Rectangle { height: 6px * home.k; }
+                    desc := Rectangle {
+                        vertical-stretch: 1; clip: true;
+                        Text { x: 0; y: 0; width: parent.width; height: parent.height;
+                               text: root.home-info.desc; color: #ffffffbb; font-size: 15px * home.k; wrap: word-wrap; overflow: elide;
+                               vertical-alignment: TextVerticalAlignment.top; }
+                    }
+                }
+                // Bottom: status and buttons
+                VerticalLayout {
+                    x: 0; y: parent.frame-y + parent.frame-h + parent.over + 28px * home.k; width: parent.width; height: parent.bottom-h;
+                    spacing: 14px * home.k;
+                    Text { font-size: 15px * home.k; font-weight: 800; height: 20px * home.k;
                            color: home.g.busy ? home.cyan : (home.g.update-available ? #ffd166 : (home.g.installed ? #4de1c1 : #ffffffaa));
                            text: home.g.busy ? "Descargando… \{Math.round(home.g.progress * 100)}%"
                                : (home.g.installed
@@ -1049,7 +1075,7 @@ export component MainWindow inherits Window {
                                    : (home.g.experimental ? "Disponible · versión de pruebas" : "Disponible para descargar"))
                                  + (home.g.versions > 1 ? " · \{home.g.versions} versiones" : ""); }
                     HorizontalLayout {
-                        alignment: start; spacing: 14px * home.k; padding-top: 4px * home.k;
+                        alignment: start; spacing: 14px * home.k;
                         // ▶ from the list walks these with the keys / gamepad
                         // (home-btn: 0 main, then «Actualizar» if shown, then «Más opciones»).
                         PillBtn { s: home.k; wide: true; kind: "primary"; focused: root.home-btn == 0;

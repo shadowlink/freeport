@@ -881,24 +881,22 @@ fn home_info(app: &App, w: &MainWindow) {
     let logo = pick(&lb.logo);
     let shot = pick(&lb.snap).or_else(|| pick(&lb.title));
     let art = pick(&lb.fanart).or_else(|| pick(&lb.snap));
-    let mut facts: Vec<SharedString> = Vec::new();
-    if let Some(y) = p.year {
-        facts.push(y.to_string().into());
-    }
-    if let Some(d) = p.developer.as_ref().filter(|d| !d.is_empty()) {
-        facts.push(d.clone().into());
-    }
-    if let Some(g) = p.genre.as_ref().filter(|g| !g.is_empty()) {
-        facts.push(g.clone().into());
-    }
-    match lb.players {
-        Some(1) => facts.push("1 jugador".into()),
-        Some(n) if n > 1 => facts.push(format!("1–{n} jugadores").into()),
-        _ => {}
-    }
-    if lb.coop {
-        facts.push("Cooperativo".into());
-    }
+    let white = Color::from_rgb_u8(0xff, 0xff, 0xff);
+    let mut facts: Vec<FactRow> = Vec::new();
+    let mut fact = |label: &str, value: String| {
+        if !value.is_empty() {
+            facts.push(FactRow { label: label.into(), value: value.into(), accent: white });
+        }
+    };
+    fact("Año", p.year.map(|y| y.to_string()).unwrap_or_default());
+    fact("Desarrolla", p.developer.clone().unwrap_or_default());
+    fact("Género", p.genre.clone().unwrap_or_default());
+    let players = match lb.players {
+        Some(1) => "1 jugador".to_string(),
+        Some(n) if n > 1 => format!("1 a {n} jugadores"),
+        _ => String::new(),
+    };
+    fact("Jugadores", if lb.coop && !players.is_empty() { format!("{players} · cooperativo") } else { players });
     let desc = app
         .info_desc
         .borrow()

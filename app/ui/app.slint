@@ -1,4 +1,4 @@
-import { ListView, LineEdit, ScrollView, ComboBox } from "std-widgets.slint";
+import { ScrollView } from "std-widgets.slint";
 
 // ── Data ───────────────────────────────────────────────────────────────────
 
@@ -25,18 +25,10 @@ struct CardItem {
     is-new: bool,        // recently added to the catalog
     versions: int,       // projects folded into this card (1 = plain project)
     aspect: float,       // width/height of the system's original box (1.43 N64, 1.0 PS1, 0.58 PSP…)
-    card-w: float,       // px: slot width for this card (box height is shared by the whole grid)
+
     experimental: bool,  // tier experimental: shown with a warning badge
     fit-cover: bool,     // art shape differs from the box: crop instead of letterboxing
     size: string,        // on-disk size when installed ("12.3 GB"), else ""
-}
-
-// A grid row: either a section header or a packed row of cards.
-struct GridRow {
-    header: string,     // non-empty = section header row (no cards)
-    cards: [CardItem],
-    logo: image,        // system logo for a section header (optional)
-    has-logo: bool,
 }
 
 // Home (simple console-style view): one console in the carousel.
@@ -48,6 +40,16 @@ struct HomeSystem {
     has-logo: bool,
     count: int,
     installed: int,
+    covers: [CardItem],  // up to three of its games, fanned on the card
+    is-recent: bool,     // the «Jugados recientemente» card
+}
+
+// Settings → disk usage: one installed game.
+struct DiskGame {
+    id: string,
+    title: string,
+    version: string,
+    size: string,
 }
 
 // Settings → disk usage per system.
@@ -59,6 +61,14 @@ struct DiskRow {
     count: int,
     size: string,
     frac: float,         // share of the biggest console (bar length)
+    games: [DiskGame],
+}
+
+// «Actualizar todo»: one game of the batch.
+struct BulkItem {
+    title: string,
+    state: int,          // 0 en cola, 1 actualizando, 2 hecho, 3 error, 4 cancelado
+    progress: float,
 }
 
 // One version of a game in the detail page's selector.
@@ -286,95 +296,6 @@ component Bar inherits Rectangle {
 }
 
 // Small status chip: tinted text on a translucent fill of the same colour.
-component Tag inherits Rectangle {
-    in property <string> label;
-    in property <color> tint: #ffffffcc;
-    in property <bool> solid: false;
-    border-radius: 4px;
-    background: root.solid ? root.tint : root.tint.with-alpha(0.16);
-    height: 18px;
-    width: tg-l.preferred-width;
-    tg-l := HorizontalLayout {
-        padding-left: 6px; padding-right: 6px;
-        Text { text: root.label; color: root.solid ? #1b1c20 : root.tint; font-size: 9px; font-weight: 800;
-               vertical-alignment: center; letter-spacing: 0.4px; }
-    }
-}
-
-// Section header with an accent bar.
-component SectionHeader inherits HorizontalLayout {
-    in property <string> label;
-    in property <string> meta;
-    in property <color> accent: #2fd3ef;
-    spacing: 10px;
-    alignment: start;
-    Rectangle { width: 3px; height: 18px; border-radius: 2px; background: root.accent; }
-    Text { text: root.label; font-size: 16px; font-weight: 800; color: white; vertical-alignment: center; }
-    if root.meta != "": Text { text: root.meta; color: #ffffff66; font-size: 12px; vertical-alignment: center; }
-}
-
-// Sidebar navigation entry: icon + label, optional count badge.
-component NavItem inherits Rectangle {
-    in property <image> icon;
-    in property <string> label;
-    in property <bool> active;
-    in property <int> badge: 0;
-    callback clicked;
-    height: 36px; border-radius: 8px;
-    background: root.active ? #2fd3ef1a : (nv-ta.has-hover ? #ffffff0a : #00000000);
-    animate background { duration: 130ms; easing: ease-out; }
-    Rectangle { x: 0px; y: 9px; width: 3px; height: 18px; border-radius: 2px;
-                background: root.active ? #2fd3ef : #00000000; animate background { duration: 160ms; } }
-    HorizontalLayout {
-        padding-left: 14px; padding-right: 10px; spacing: 10px;
-        Image { source: root.icon; width: 18px; height: 18px; y: (parent.height - 18px) / 2;
-                colorize: root.active ? #2fd3ef : (nv-ta.has-hover ? white : #ffffffb0); }
-        Text { text: root.label; color: root.active ? white : #ffffffcc; font-size: 13px; font-weight: 700;
-               vertical-alignment: center; horizontal-stretch: 1; }
-        if root.badge > 0: Rectangle {
-            width: 22px; height: 18px; border-radius: 9px; background: #2fd3ef; y: (parent.height - 18px) / 2;
-            Text { text: "\{root.badge}"; color: #1b1c20; font-size: 10px; font-weight: 900;
-                   horizontal-alignment: center; vertical-alignment: center; }
-        }
-    }
-    nv-ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
-}
-
-// Sidebar console entry: colour logo, name, count.
-component SideRow inherits Rectangle {
-    in property <string> label;
-    in property <int> count;
-    in property <image> logo;
-    in property <bool> has-logo;
-    in property <bool> active;
-    in property <image> icon;      // shown in the logo slot when there is no logo
-    callback clicked;
-    height: 36px; border-radius: 8px;
-    background: root.active ? #2fd3ef1a : (sr-ta.has-hover ? #ffffff0a : #00000000);
-    animate background { duration: 130ms; easing: ease-out; }
-    Rectangle { x: 0px; y: 8px; width: 3px; height: 18px; border-radius: 2px;
-                background: root.active ? #2fd3ef : #00000000; animate background { duration: 160ms; } }
-    HorizontalLayout {
-        padding-left: 12px; padding-right: 10px; spacing: 10px;
-        // With a real logo the name is redundant: the logo fills the row.
-        if root.has-logo: Rectangle {
-            horizontal-stretch: 1;
-            Image { source: root.logo; width: parent.width; height: 26px; image-fit: contain;
-                    horizontal-alignment: left; y: (parent.height - 26px) / 2;
-                    opacity: root.active ? 1.0 : 0.9; }
-        }
-        if !root.has-logo: Rectangle {
-            width: 22px;
-            Image { source: root.icon; width: 18px; height: 18px; x: 2px; y: (parent.height - 18px) / 2;
-                    colorize: root.active ? #2fd3ef : #ffffffaa; }
-        }
-        if !root.has-logo: Text { text: root.label; color: root.active ? white : #ffffffcc; font-size: 12px; font-weight: 600;
-               vertical-alignment: center; horizontal-stretch: 1; overflow: elide; }
-        Text { text: "\{root.count}"; color: #ffffff55; font-size: 11px; vertical-alignment: center; }
-    }
-    sr-ta := TouchArea { mouse-cursor: pointer; clicked => { root.clicked(); } }
-}
-
 // ── Console-style building blocks ──────────────────────────────────────────
 // Big rounded "pill" button. kind: primary (cyan), secondary (soft), ghost
 // (outline), update (yellow text), attention (yellow fill: something to do),
@@ -386,6 +307,7 @@ component PillBtn inherits Rectangle {
     in property <image> icon;
     in property <bool> has-icon: false;
     in property <float> s: 1.0;      // scale (the home grows with the window)
+    in property <bool> focused: false; // keyboard / gamepad focus ring
     callback clicked;
     property <color> bg: root.kind == "primary" ? #2fd3ef
                        : root.kind == "attention" ? #ffd166
@@ -402,6 +324,10 @@ component PillBtn inherits Rectangle {
     drop-shadow-blur: root.kind == "primary" ? 18px : 0px;
     drop-shadow-color: #2fd3ef55;
     animate background { duration: 120ms; }
+    if root.focused: Rectangle {
+        x: -6px * root.s; y: -6px * root.s; width: parent.width + 12px * root.s; height: parent.height + 12px * root.s;
+        border-radius: self.height / 2; border-width: 4px * root.s; border-color: white;
+    }
     HorizontalLayout {
         alignment: center;
         spacing: 10px * root.s;
@@ -546,11 +472,6 @@ component Hints inherits Rectangle {
 // ── Window ─────────────────────────────────────────────────────────────────
 
 export component MainWindow inherits Window {
-    in property <[SysRow]> systems;
-    in property <[GridRow]> rows;
-    in property <string> header-title;
-    in property <int> header-count;
-    in-out property <string> active-system;
     in-out property <bool> library-tab;
     in-out property <string> search-text;
     // Bulk "update everything" state
@@ -559,15 +480,6 @@ export component MainWindow inherits Window {
     in property <float> bulk-progress;
     in property <string> bulk-label;
     callback update-all();
-    // "Seguir jugando" strip (library tab)
-    in property <[CardItem]> recent;
-    // "Nuevas incorporaciones" strip (catalog tab): games added in the last week.
-    in property <[CardItem]> newcomers;
-    // Card size (from settings): height of every box in the grid; widths follow
-    // each system's box shape so a row reads like a shelf.
-    in property <length> card-h: 190px;
-    in-out property <string> card-size: "m";
-    callback set-card-size(string);
     // Library footprint on disk ("3.2 GB"), shown in settings.
     in property <string> library-size;
     // Add-to-Steam (game page side panel)
@@ -613,11 +525,7 @@ export component MainWindow inherits Window {
     in-out property <bool> show-windows;
     in property <[SysRow]> settings-systems;    // first half of every system (per-system experimental switches)
     in property <[SysRow]> settings-systems-b;  // second half (two columns)
-    in property <bool> active-exp-on;         // header: experimentals shown for the selected system
-    in property <int> active-exp-hidden;      // header: how many are hidden for it
     // ── Home: simple console-style view (ES-DE carousel, Switch look) ──
-    in-out property <bool> classic-view: false;   // old sidebar + grid layout
-    callback set-classic-view(bool);
     in property <[HomeSystem]> home-systems;
     in-out property <int> home-sys;
     in property <[CardItem]> home-games;
@@ -636,6 +544,20 @@ export component MainWindow inherits Window {
     callback nav-forward();
     in property <[DiskRow]> disk-rows;        // settings: disk usage per system
     in property <string> disk-total;
+    in-out property <string> expanded-sys;    // settings: console unfolded in Almacenamiento
+    callback confirm-uninstall(string);       // ask to remove this exact project
+    in property <string> confirm-extra;       // port data folders that «borrar también» removes
+    in-out property <bool> confirm-wipe;
+    // «Actualizar todo»: the games of the batch and their state.
+    in property <[BulkItem]> bulk-items;
+    in-out property <bool> bulk-open;
+    callback bulk-dismiss();
+    // Home: button row in focus inside a console (-1 = the boxes).
+    in-out property <int> home-btn: -1;
+    callback home-pick-preview(int);
+    // Settings: experimental versions in every console at once.
+    in-out property <bool> exp-all-on;
+    callback set-all-experimental(bool);
     // Console-style pages: section in focus and the keys they react to (also
     // invoked from Rust for the gamepad).
     in-out property <int> detail-tab;
@@ -734,28 +656,14 @@ export component MainWindow inherits Window {
     default-font-size: 13px;
     default-font-family: "Nunito";
 
-    // Layout constants shared with Rust's row packer.
-    property <length> side-w: root.classic-view ? 240px : 0px;
-    property <length> grid-pad: 24px;
-    // Pixel width the grid rows can use (Rust packs variable-width cards into it).
-    out property <length> grid-width: root.width - root.side-w - 2 * root.grid-pad;
-    // Coarse column estimate: repack when it changes (not on every resize pixel).
-    out property <int> cols: max(1, floor(root.grid-width / (root.card-h * 0.75 + 14px)));
-    changed cols => { root.refresh(); }
-    // Narrow main column (set from Rust on repack): shorter header labels.
-    in property <bool> narrow;
-
     // Navigation helpers: every sidebar action lands on a clean view.
-    function go-catalog() { root.settings-visible = false; root.library-tab = false; root.active-system = ""; root.close-detail(); root.nav-push(); }
-    function go-library() { root.settings-visible = false; root.library-tab = true; root.active-system = ""; root.close-detail(); root.nav-push(); }
-    function go-system(id: string) { root.settings-visible = false; root.active-system = id; root.close-detail(); root.nav-push(); }
     function go-settings() { root.settings-visible = true; root.nav-push(); }
 
 
 
 
     // ── Inicio: carrusel de consolas y de juegos (vista sencilla) ─────────
-    if !root.classic-view: home := FocusScope {
+    home := FocusScope {
         x: 0; y: 0; width: root.width; height: root.height;
         property <float> pulse: 1.0;   // static: a constant animation repainted the whole window 60×/s
         property <color> cyan: #2fd3ef;
@@ -789,15 +697,17 @@ export component MainWindow inherits Window {
         Image {
             x: 0; y: 0; width: parent.width; height: parent.height; source: home.g.cover; image-fit: cover; opacity: 0.08 * home.lv;
         }
+        // Glow of the console's colour from the top. A square much bigger than
+        // the window, so the gradient is already transparent at its edges and
+        // never shows a cut (the radius is half the diagonal).
         Rectangle {
-            x: (parent.width - self.width) / 2; y: -self.height * 0.42; width: max(parent.width * 1.3, 1400px); height: parent.height * 1.25;
-            background: @radial-gradient(circle, root.home-color.with-alpha(0.55) 0%, root.home-color.with-alpha(0.16) 38%, #15161a00 70%);
+            property <length> side: max(parent.width, parent.height) * 2.2;
+            x: (parent.width - self.side) / 2; y: parent.height * 0.2 - self.side / 2;
+            width: self.side; height: self.side;
+            background: @radial-gradient(circle, root.home-color.with-alpha(0.50) 0%, root.home-color.with-alpha(0.15) 17%, #15161a00 33%);
         }
         Rectangle { x: 0; y: 0; width: parent.width; height: parent.height;
                     background: @linear-gradient(180deg, #15161a00 0%, #15161a00 55%, #15161ae6 100%); }
-        // Fine grain over the gradients: breaks the visible banding.
-        Image { x: 0; y: 0; width: parent.width; height: parent.height; source: @image-url("../assets/noise.png");
-                horizontal-tiling: repeat; vertical-tiling: repeat; opacity: 0.028; }
 
         // Wheel = previous / next anywhere; a click on empty space takes the keys back.
         // Deltas add up until a full notch (60 px): a touchpad or a free-spinning
@@ -821,22 +731,17 @@ export component MainWindow inherits Window {
             Image { source: @image-url("../assets/logo.svg"); width: 30px; height: 30px; y: (parent.height - 30px) / 2; }
             Text { text: "Freeport"; color: white; font-size: 21px; font-weight: 900; vertical-alignment: center; letter-spacing: 0.3px; }
             Rectangle { horizontal-stretch: 1; }
-            // Mis juegos / Explorar
-            Rectangle {
-                width: 260px; height: 42px; y: (parent.height - 42px) / 2; border-radius: 21px; background: #00000066;
-                border-width: 1px; border-color: #ffffff14;
-                Rectangle { x: root.library-tab ? 4px : 130px; y: 4px; width: 126px; height: 34px; border-radius: 17px; background: white;
-                            drop-shadow-blur: 8px; drop-shadow-color: #00000055;
-                            animate x { duration: 200ms; easing: ease-out; } }
-                Text { x: 4px; y: 4px; width: 126px; height: 34px; text: "Mis juegos"; font-size: 14px; font-weight: 900;
-                       color: root.library-tab ? #15161a : #ffffffcc; horizontal-alignment: center; vertical-alignment: center; }
-                Text { x: 130px; y: 4px; width: 126px; height: 34px; text: "Explorar"; font-size: 14px; font-weight: 900;
-                       color: !root.library-tab ? #15161a : #ffffffcc; horizontal-alignment: center; vertical-alignment: center; }
-                TouchArea { mouse-cursor: pointer;
-                    clicked => { root.library-tab = !root.library-tab; root.home-level = 0; root.refresh(); root.nav-push(); home.focus(); } }
-            }
             Rectangle { horizontal-stretch: 1; }
-            if root.bulk-busy: Text { text: "Actualizando juegos… \{floor(root.bulk-progress * 100)}%"; color: #2fd3ef; font-size: 13px; font-weight: 800; vertical-alignment: center; }
+            // «Actualizar todo» in progress (or just finished): what it is
+            // doing; click for the whole list.
+            if root.bulk-items.length > 0: Rectangle {
+                height: 40px; y: 16px; width: min(380px, bl.preferred-width + 36px); border-radius: 20px;
+                background: bk-ta.has-hover || root.bulk-open ? #ffffff26 : #00000066;
+                border-width: 1px; border-color: root.bulk-busy ? #2fd3ef88 : #ffffff22;
+                bl := Text { x: 18px; width: parent.width - 36px; height: 100%; vertical-alignment: center; overflow: elide;
+                             text: root.bulk-label; color: root.bulk-busy ? #2fd3ef : white; font-size: 13px; font-weight: 800; }
+                bk-ta := TouchArea { mouse-cursor: pointer; clicked => { root.bulk-open = !root.bulk-open; } }
+            }
             if root.update-available: PillBtn { height: 40px; y: 16px; label: root.update-busy ? "Actualizando…" : "Nueva versión de Freeport"; kind: "primary";
                                                 clicked => { if (!root.update-busy) { root.do-update(); } } }
             if root.library-tab && root.updates-pending > 0 && !root.bulk-busy: PillBtn { height: 40px; y: 16px;
@@ -867,6 +772,21 @@ export component MainWindow inherits Window {
             }
         }
 
+        // Mis juegos / Explorar: always in the middle, whatever the bar holds.
+        Rectangle {
+                x: (parent.width - 260px) / 2; width: 260px; height: 42px; y: 15px; border-radius: 21px; background: #00000066;
+                border-width: 1px; border-color: #ffffff14;
+                Rectangle { x: root.library-tab ? 4px : 130px; y: 4px; width: 126px; height: 34px; border-radius: 17px; background: white;
+                            drop-shadow-blur: 8px; drop-shadow-color: #00000055;
+                            animate x { duration: 200ms; easing: ease-out; } }
+                Text { x: 4px; y: 4px; width: 126px; height: 34px; text: "Mis juegos"; font-size: 14px; font-weight: 900;
+                       color: root.library-tab ? #15161a : #ffffffcc; horizontal-alignment: center; vertical-alignment: center; }
+                Text { x: 130px; y: 4px; width: 126px; height: 34px; text: "Explorar"; font-size: 14px; font-weight: 900;
+                       color: !root.library-tab ? #15161a : #ffffffcc; horizontal-alignment: center; vertical-alignment: center; }
+                TouchArea { mouse-cursor: pointer;
+                    clicked => { root.library-tab = !root.library-tab; root.home-level = 0; root.refresh(); root.nav-push(); home.focus(); } }
+            }
+
         // ── Empty state ──
         if root.home-systems.length == 0: VerticalLayout {
             x: 0; y: 72px; width: parent.width; height: parent.height - 130px;
@@ -893,15 +813,19 @@ export component MainWindow inherits Window {
             for s[i] in root.home-systems: Rectangle {
                 property <bool> sel: i == root.home-sys;
                 property <float> d: i - parent.pos;
+                // Size follows the slide (no separate zoom): full at the
+                // selection, small one step away.
+                property <float> grow: clamp(1 - Math.abs(self.d), 0, 1);
+                property <float> cs: self.width / (350px * home.k);   // card scale for its text
                 property <length> tx: root.width / 2 - self.width / 2 + self.d * parent.step + clamp(self.d, -1, 1) * 55px * home.k;
-                width: sel ? parent.sel-w : 240px * home.k;
-                height: sel ? parent.sel-h : 156px * home.k;
+                width: 240px * home.k + (parent.sel-w - 240px * home.k) * self.grow;
+                height: 156px * home.k + (parent.sel-h - 156px * home.k) * self.grow;
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.mid - self.height / 2 + (1 - parent.t) * 30px * home.k;
                 visible: Math.abs(self.d) <= 5.5;
-                opacity: (sel || sys-ta.has-hover ? 1.0 : max(0.4, 1 - Math.abs(self.d) * 0.3)) * parent.t;
-                animate width, height { duration: 180ms; easing: ease-out; }
-                // pulsing focus ring
+                // Dimmed with a veil, not `opacity`: opacity renders the whole
+                // card into a layer on every frame of the slide (half the fps).
+                property <float> dim: sel || sys-ta.has-hover ? 0 : 1 - max(0.45, 1 - Math.abs(self.d) * 0.28);
                 SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 28px * home.k;
                              spread: (sel ? 26px : 12px) * home.k; dy: 8px * home.k; strength: sel ? 1.6 : 1.0; }
                 if sel: Rectangle { x: -14px * home.k; y: -14px * home.k; width: parent.width + 28px * home.k; height: parent.height + 28px * home.k;
@@ -913,18 +837,39 @@ export component MainWindow inherits Window {
                     border-radius: 34px * home.k; border-width: 3px * home.k; border-color: #ffffff55; }
                 Rectangle {
                     border-radius: 28px * home.k; clip: true;
-                    background: sel ? @linear-gradient(160deg, #4a4e59 0%, #33363e 100%)
-                              : (sys-ta.has-hover ? @linear-gradient(160deg, #40434c 0%, #2e3037 100%) : @linear-gradient(160deg, #34363e 0%, #26282e 100%));
-                    border-width: 1px; border-color: #ffffff18;
+                    // Deep tint of the console's own colour, fading to night on the right.
+                    background: @linear-gradient(120deg, s.color.mix(#101114, 0.55) 0%, s.color.mix(#101114, 0.25) 55%, #101114 100%);
+                    border-width: 1px; border-color: sel ? s.color.with-alpha(0.6) : #ffffff1a;
+                    // A fan of its games coming out of the right edge.
+                    for c[j] in s.covers: Rectangle {
+                        property <length> h: parent.height * 0.82;
+                        width: self.h * 0.72; height: self.h;
+                        x: parent.width * 0.52 + j * parent.width * 0.14;
+                        y: parent.height * 0.34 - j * parent.height * 0.05 + (sel ? 0px : 8px * home.k);
+                        transform-rotation: (j * 8 - 6) * 1deg;
+                        border-radius: 9px * home.k; clip: true; background: #2a2c33;
+                        border-width: 1px; border-color: #ffffff22;
+
+                        Image { width: 100%; height: 100%; source: c.cover; image-fit: cover; }
+                    }
+                    // Keeps the logo readable over the art.
+                    Rectangle { background: @linear-gradient(90deg, s.color.mix(#101114, 0.5) 0%, s.color.mix(#101114, 0.42).with-alpha(0.8) 40%, #10111400 70%); }
                     Rectangle { x: 0; y: parent.height - 5px * home.k; width: parent.width; height: 5px * home.k; background: s.color; opacity: sel ? 1.0 : 0.6; }
-                    if s.has-logo: Image { source: s.logo; x: parent.width * 0.13; y: parent.height * 0.25;
-                                           width: parent.width * 0.74; height: parent.height * 0.46; image-fit: contain; }
-                    if !s.has-logo: Text { width: 100%; height: 100%; text: s.name; color: white; font-size: 24px * home.k; font-weight: 900;
-                                           horizontal-alignment: center; vertical-alignment: center; wrap: word-wrap; }
-                    if sel: Rectangle { x: parent.width - self.width - 14px; y: 14px; height: 26px * home.k; width: cnt.preferred-width + 20px * home.k;
-                        border-radius: self.height / 2; background: #00000066;
-                        cnt := Text { width: 100%; height: 100%; text: s.count; color: white; font-size: 13px * home.k; font-weight: 900;
-                                      horizontal-alignment: center; vertical-alignment: center; } }
+                    // In white over the tint; GBA's logo is a filled box with the
+                    // text cut out, so it keeps its own colours.
+                    if s.has-logo && s.id != "gba": Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.2;
+                                           width: parent.width * 0.48; height: parent.height * 0.34; image-fit: contain;
+                                           horizontal-alignment: left; colorize: white; }
+                    if s.has-logo && s.id == "gba": Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.2;
+                                           width: parent.width * 0.48; height: parent.height * 0.34; image-fit: contain;
+                                           horizontal-alignment: left; }
+                    if !s.has-logo: Text { x: parent.width * 0.08; y: parent.height * 0.16; width: parent.width * 0.5; height: parent.height * 0.44;
+                                           text: s.is-recent ? "Jugados recientemente" : s.name; color: white; font-size: 25px * home.k * cs; font-weight: 900;
+                                           wrap: word-wrap; vertical-alignment: center; }
+                    Text { x: parent.width * 0.08; y: parent.height * 0.66; width: parent.width * 0.5;
+                           text: s.is-recent ? "Vuelve a lo último" : (s.count == 1 ? "1 juego" : "\{s.count} juegos");
+                           color: #ffffffbb; font-size: 14px * home.k * cs; font-weight: 800; overflow: elide; }
+                    if dim > 0.01: Rectangle { background: #15161a; opacity: dim; }
                 }
                 sys-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-system(i); home.focus(); } }
             }
@@ -932,17 +877,22 @@ export component MainWindow inherits Window {
                    color: white; font-size: 34px * home.k; font-weight: 900; horizontal-alignment: center; opacity: parent.t; }
             Text { x: 0; y: parent.mid + parent.sel-h / 2 + 76px * home.k; width: parent.width; horizontal-alignment: center; color: #ffffffaa;
                    font-size: 16px * home.k; font-weight: 600; opacity: parent.t;
-                   text: root.library-tab
+                   text: root.home-systems[root.home-sys].is-recent
+                         ? "Tus últimas partidas, con el tiempo que llevas"
+                         : root.library-tab
                          ? (root.home-systems[root.home-sys].count == 1 ? "1 juego" : "\{root.home-systems[root.home-sys].count} juegos")
                          : "\{root.home-systems[root.home-sys].count} juegos · \{root.home-systems[root.home-sys].installed} en tu biblioteca"; }
             // A peek at what's inside
             HorizontalLayout {
                 x: 0; y: parent.mid + parent.sel-h / 2 + 120px * home.k + (1 - parent.t) * 20px; width: parent.width; height: 96px * home.k;
                 alignment: center; spacing: 12px * home.k; opacity: parent.t;
-                for c in root.home-preview: Rectangle {
+                // Click one: straight into the console with that game selected.
+                for c[pi] in root.home-preview: Rectangle {
                     width: 96px * home.k * Math.min(1.4, Math.max(0.6, c.aspect)); height: 96px * home.k; border-radius: 10px * home.k; clip: true; background: #2a2c33;
-                    opacity: 0.92;
+                    opacity: pv-ta.has-hover ? 1.0 : 0.85;
+                    border-width: pv-ta.has-hover ? 3px : 0px; border-color: white;
                     Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
+                    pv-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-preview(pi); home.focus(); } }
                 }
             }
         }
@@ -984,35 +934,41 @@ export component MainWindow inherits Window {
                 property <bool> sel: i == root.home-game;
                 property <float> d: i - parent.pos;
                 property <float> a: Math.abs(self.d);
+                // Size follows the slide itself (no separate zoom animation).
+                property <float> grow: clamp(1 - self.a, 0, 1);
                 property <length> off: self.a < 1 ? self.d * parent.near
                     : (self.d > 0 ? 1 : -1) * (parent.near + (self.a - 1) * (parent.small-w + parent.gap));
                 property <length> tx: root.width / 2 + self.off - self.width / 2;
-                width: sel ? parent.big-w : parent.small-w;
-                height: sel ? parent.big-h : parent.small-h;
+                width: parent.small-w + (parent.big-w - parent.small-w) * self.grow;
+                height: parent.small-h + (parent.big-h - parent.small-h) * self.grow;
                 x: root.width / 2 - self.width / 2 + (self.tx - (root.width / 2 - self.width / 2)) * parent.t;
                 y: parent.base - self.height + (1 - parent.t) * 40px * home.k;
                 visible: self.a <= 8.5;
-                opacity: (sel || game-ta.has-hover ? 1.0 : max(0.45, 1 - self.a * 0.25)) * parent.t;
-                animate width, height { duration: 180ms; easing: ease-out; }
-                SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 15px * home.k;
-                             spread: (sel ? 22px : 12px) * home.k; dy: 8px * home.k; strength: sel ? 1.5 : 1.0; }
-                if sel: Rectangle { x: -14px * home.k; y: -14px * home.k; width: parent.width + 28px * home.k; height: parent.height + 28px * home.k;
-                    border-radius: 28px * home.k; border-width: 6px * home.k; border-color: home.cyan.with-alpha(0.16); }
-                if sel: Rectangle { x: -8px * home.k; y: -8px * home.k; width: parent.width + 16px * home.k; height: parent.height + 16px * home.k;
-                    border-radius: 22px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(home.pulse); }
-                if !sel && game-ta.has-hover: Rectangle { x: -6px * home.k; y: -6px * home.k; width: parent.width + 12px * home.k; height: parent.height + 12px * home.k;
-                    border-radius: 20px * home.k; border-width: 3px * home.k; border-color: #ffffff55; }
-                Rectangle {
-                    width: 100%; height: 100%; border-radius: 15px * home.k; clip: true; background: #2a2c33;
-                    Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
-                    if c.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
-                        Rectangle { x: 0; width: parent.width * c.progress; background: home.cyan; } }
+                property <float> dim: sel || game-ta.has-hover ? 0 : 1 - max(0.45, 1 - self.a * 0.25);   // veil, see the console cards
+                // Only the boxes on screen are built (a console can hold 120 games).
+                if self.a <= 8.5: Rectangle {
+                    x: 0; y: 0; width: parent.width; height: parent.height;
+                    SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 15px * home.k;
+                                 spread: (sel ? 22px : 12px) * home.k; dy: 8px * home.k; strength: sel ? 1.5 : 1.0; }
+                    if sel: Rectangle { x: -14px * home.k; y: -14px * home.k; width: parent.width + 28px * home.k; height: parent.height + 28px * home.k;
+                        border-radius: 28px * home.k; border-width: 6px * home.k; border-color: home.cyan.with-alpha(root.home-btn >= 0 ? 0.06 : 0.16); }
+                    if sel: Rectangle { x: -8px * home.k; y: -8px * home.k; width: parent.width + 16px * home.k; height: parent.height + 16px * home.k;
+                        border-radius: 22px * home.k; border-width: 5px * home.k; border-color: home.cyan.with-alpha(root.home-btn >= 0 ? 0.35 : home.pulse); }
+                    if !sel && game-ta.has-hover: Rectangle { x: -6px * home.k; y: -6px * home.k; width: parent.width + 12px * home.k; height: parent.height + 12px * home.k;
+                        border-radius: 20px * home.k; border-width: 3px * home.k; border-color: #ffffff55; }
+                    Rectangle {
+                        width: 100%; height: 100%; border-radius: 15px * home.k; clip: true; background: #2a2c33;
+                        Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
+                        if c.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
+                            Rectangle { x: 0; width: parent.width * c.progress; background: home.cyan; } }
+                        if dim > 0.01: Rectangle { background: #15161a; opacity: dim; }
+                    }
+                    if c.installed: Rectangle { x: parent.width - 34px * home.k; y: 10px * home.k; width: 26px * home.k; height: self.width; border-radius: self.width / 2;
+                        background: c.update-available ? #ffd166 : #2fd3ef;
+                        Image { x: parent.width * 0.2; y: parent.width * 0.2; width: parent.width * 0.6; height: parent.width * 0.6; colorize: #15161a;
+                                source: c.update-available ? @image-url("../assets/icons/arrow-up.svg") : @image-url("../assets/icons/check.svg"); } }
                 }
-                if c.installed: Rectangle { x: parent.width - 34px * home.k; y: 10px * home.k; width: 26px * home.k; height: self.width; border-radius: self.width / 2;
-                    background: c.update-available ? #ffd166 : #2fd3ef;
-                    Image { x: parent.width * 0.2; y: parent.width * 0.2; width: parent.width * 0.6; height: parent.width * 0.6; colorize: #15161a;
-                            source: c.update-available ? @image-url("../assets/icons/arrow-up.svg") : @image-url("../assets/icons/check.svg"); } }
-                game-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-pick-game(i); home.focus(); } }
+                game-ta := TouchArea { mouse-cursor: pointer; clicked => { root.home-btn = -1; root.home-pick-game(i); home.focus(); } }
             }
             // Selected game: name, one plain status line, big buttons.
             VerticalLayout {
@@ -1029,15 +985,50 @@ export component MainWindow inherits Window {
                                : (home.g.experimental ? "Disponible · versión de pruebas" : "Disponible para descargar")); }
                 HorizontalLayout {
                     alignment: center; spacing: 14px * home.k; padding-top: 12px * home.k;
-                    PillBtn { s: home.k; wide: true; kind: "primary";
+                    // ▼ from the boxes walks these with the keys / gamepad
+                    // (home-btn: 0 main, then «Actualizar» if shown, then «Más opciones»).
+                    PillBtn { s: home.k; wide: true; kind: "primary"; focused: root.home-btn == 0;
                               icon: home.g.installed ? @image-url("../assets/icons/play.svg") : @image-url("../assets/icons/download.svg");
                               has-icon: !home.g.busy;
                               label: home.g.busy ? "Descargando…" : (home.g.installed ? "Jugar" : "Descargar");
-                              clicked => { root.home-key("a"); home.focus(); } }
+                              clicked => { root.home-btn = -1; root.home-key("a"); home.focus(); } }
                     if home.g.installed && home.g.update-available: PillBtn { s: home.k; label: "Actualizar"; kind: "update";
+                              focused: root.home-btn == 1;
                               icon: @image-url("../assets/icons/arrow-up.svg"); has-icon: true;
-                              clicked => { root.install(home.g.id); home.focus(); } }
-                    PillBtn { s: home.k; label: "Más opciones"; kind: "secondary"; clicked => { root.home-key("x"); } }
+                              clicked => { root.home-btn = -1; root.install(home.g.id); home.focus(); } }
+                    PillBtn { s: home.k; label: "Más opciones"; kind: "secondary";
+                              focused: root.home-btn == (home.g.installed && home.g.update-available ? 2 : 1);
+                              clicked => { root.home-btn = -1; root.home-key("x"); } }
+                }
+            }
+        }
+
+        // ── «Actualizar todo»: the list of games and how each one went (on top) ──
+        if root.bulk-open && root.bulk-items.length > 0: Rectangle {
+            x: parent.width - self.width - 26px; y: 66px; width: 440px; height: bp-l.preferred-height;
+            border-radius: 22px; background: #2c2e35; border-width: 1px; border-color: #ffffff1a;
+            SoftShadow { x: 0; y: 0; width: parent.width; height: parent.height; radius: 22px; spread: 18px; strength: 1.6; }
+            Rectangle { border-radius: 22px; background: #2c2e35; }
+            TouchArea { }
+            bp-l := VerticalLayout {
+                padding: 18px; spacing: 6px;
+                Text { text: root.bulk-busy ? "Actualizando tus juegos" : "Actualización terminada"; color: white; font-size: 17px; font-weight: 900; }
+                if root.bulk-busy: Bar { value: root.bulk-progress; height: 8px; }
+                for b in root.bulk-items: Rectangle {
+                    height: 40px;
+                    Text { x: 0; width: parent.width - 120px; height: 100%; text: b.title; color: b.state == 1 ? white : #ffffffcc;
+                           font-size: 14px; font-weight: b.state == 1 ? 900 : 600; vertical-alignment: center; overflow: elide; }
+                    Text { x: parent.width - 116px; width: 116px; height: 100%; horizontal-alignment: right; vertical-alignment: center;
+                           font-size: 13px; font-weight: 800;
+                           text: b.state == 0 ? "En cola" : b.state == 1 ? (b.progress > 0 ? "\{floor(b.progress * 100)}%" : "Empezando…")
+                               : b.state == 2 ? "✓ Al día" : b.state == 3 ? "✕ Falló" : "Cancelado";
+                           color: b.state == 1 ? #2fd3ef : b.state == 2 ? #4de1c1 : b.state == 3 ? #ff5d73 : #ffffff77; }
+                }
+                HorizontalLayout {
+                    alignment: end; spacing: 10px; padding-top: 8px;
+                    if root.bulk-busy: PillBtn { s: 0.75; label: "Cancelar"; kind: "ghost"; clicked => { root.cancel-update-all(); } }
+                    if !root.bulk-busy: PillBtn { s: 0.75; label: "Cerrar"; kind: "secondary"; clicked => { root.bulk-open = false; root.bulk-dismiss(); } }
+                    if root.bulk-busy: PillBtn { s: 0.75; label: "Ocultar"; kind: "secondary"; clicked => { root.bulk-open = false; } }
                 }
             }
         }
@@ -1047,65 +1038,25 @@ export component MainWindow inherits Window {
             x: 0; y: parent.height - 54px * home.kb; width: parent.width; s: home.kb;
             keys: root.home-level == 0
                   ? [{k: "A", t: "Abrir"}, {k: "◀ ▶", t: "Elegir consola"}, {k: "F11", t: "Pantalla completa"}]
-                  : [{k: "A", t: home.g.installed ? "Jugar" : "Descargar"}, {k: "B", t: "Volver"}, {k: "X", t: "Más opciones"}, {k: "◀ ▶", t: "Elegir juego"}];
+                  : root.home-btn >= 0
+                    ? [{k: "A", t: "Pulsar"}, {k: "◀ ▶", t: "Elegir botón"}, {k: "▲", t: "Volver a los juegos"}]
+                    : [{k: "A", t: home.g.installed ? "Jugar" : "Descargar"}, {k: "B", t: "Volver"}, {k: "X", t: "Más opciones"}, {k: "▼", t: "Botones"}, {k: "◀ ▶", t: "Elegir juego"}];
         }
     }
 
     // ── Páginas (ficha, configuración) y vista clásica, por encima del inicio.
     // En la vista consola entran y salen con un fundido y un leve desplazamiento.
-    if !root.classic-view && (root.dv > 0.002 || root.sv > 0.002): Rectangle {
+    if root.dv > 0.002 || root.sv > 0.002: Rectangle {
         x: 0; y: 0; width: root.width; height: root.height;
         background: #15161a;
         opacity: min(1, max(root.dv, root.sv) * 2.2);
     }
-    if root.classic-view || root.dv > 0.002 || root.sv > 0.002: Rectangle {
+    if root.dv > 0.002 || root.sv > 0.002: Rectangle {
         property <float> p: max(root.dv, root.sv);
-        x: 0; y: root.classic-view ? 0 : (1 - self.p) * 48px;
+        x: 0; y: (1 - self.p) * 48px;
         width: root.width; height: root.height;
-        opacity: root.classic-view ? 1 : clamp((self.p - 0.35) / 0.65, 0, 1);
+        opacity: clamp((self.p - 0.35) / 0.65, 0, 1);
         HorizontalLayout {
-            // ── Sidebar: brand, navigation, consoles ─────────────────────────
-            if root.classic-view: Rectangle {
-                width: root.side-w;
-                background: #202127;
-                VerticalLayout {
-                    padding-top: 14px; padding-bottom: 10px; padding-left: 10px; padding-right: 10px;
-                    spacing: 4px;
-                    HorizontalLayout {
-                        padding-left: 10px; padding-right: 6px; padding-bottom: 8px; spacing: 9px;
-                        Image { source: @image-url("../assets/logo.svg"); width: 22px; height: 22px; y: (parent.height - 22px) / 2; }
-                        Text { text: "Freeport"; color: white; font-weight: 800; font-size: 16px; vertical-alignment: center; horizontal-stretch: 1; }
-                    }
-                    NavItem { icon: @image-url("../assets/icons/catalog.svg"); label: "Catálogo";
-                              active: !root.library-tab && !root.settings-visible;
-                              clicked => { root.go-catalog(); } }
-                    NavItem { icon: @image-url("../assets/icons/library.svg"); label: "Mi biblioteca";
-                              active: root.library-tab && !root.settings-visible; badge: root.updates-pending;
-                              clicked => { root.go-library(); } }
-                    NavItem { icon: @image-url("../assets/icons/tv.svg"); label: "Vista consola"; active: false;
-                              clicked => { root.classic-view = false; root.set-classic-view(false); } }
-                    NavItem { icon: @image-url("../assets/icons/settings.svg"); label: "Configuración";
-                              active: root.settings-visible;
-                              clicked => { root.go-settings(); } }
-                    Rectangle { height: 1px; background: #34363e; }
-                    Text { text: "CONSOLAS"; color: #ffffff55; font-size: 10px; font-weight: 800; letter-spacing: 1px;
-                           height: 26px; vertical-alignment: center; x: 14px; }
-                    SideRow { label: "Todas"; count: root.header-count; has-logo: false; icon: @image-url("../assets/icons/catalog.svg");
-                              active: root.active-system == "" && !root.settings-visible;
-                              clicked => { root.go-system(""); } }
-                    ListView {
-                        vertical-stretch: 1;
-                        for s in root.systems: SideRow {
-                            label: s.name; count: s.count; logo: s.logo; has-logo: s.has-logo;
-                            active: root.active-system == s.id && !root.settings-visible;
-                            clicked => { root.go-system(s.id); }
-                        }
-                    }
-                    Text { text: "v\{root.version}"; color: #ffffff33; font-size: 10px; x: 14px; height: 18px; vertical-alignment: center; }
-                }
-            }
-            if root.classic-view: Rectangle { width: 1px; background: #34363e; }
-
             // ── Main column ─────────────────────────────────────────────────
             VerticalLayout {
                 // Self-update banner. Absolute geometry: nothing here can push the
@@ -1133,7 +1084,7 @@ export component MainWindow inherits Window {
                 }
 
                 // ── Configuración: categorías a la izquierda, opciones a la derecha ──
-                if root.settings-visible || (!root.classic-view && root.sv > 0.002): settings-root := FocusScope {
+                if root.settings-visible || root.sv > 0.002: settings-root := FocusScope {
                     vertical-stretch: 1;
                     property <[string]> cats: ["Juegos de Windows", "Pantalla", "Versiones de pruebas", "Cuentas", "Almacenamiento", "Actualizaciones"];
                     property <float> pulse: 1.0;   // static: a constant animation repainted the whole window 60×/s
@@ -1196,16 +1147,6 @@ export component MainWindow inherits Window {
                                     if root.settings-tab == 1: OptionPanel {
                                         SetRow { label: "Pantalla completa"; hint: "También con la tecla F11.";
                                             Toggle { checked: root.fullscreen; y: (parent.height - 30px) / 2; toggled(v) => { root.toggle-fullscreen(v); } } }
-                                        SetRow { label: "Vista clásica"; hint: "Lista de consolas a la izquierda y cuadrícula de carátulas, en lugar del carrusel.";
-                                            Toggle { checked <=> root.classic-view; y: (parent.height - 30px) / 2; toggled(v) => { root.set-classic-view(v); } } }
-                                        if root.classic-view: SetRow { label: "Tamaño de las carátulas"; hint: "En la vista clásica.";
-                                            HorizontalLayout { spacing: 6px; alignment: end;
-                                                for s in [{m: "s", l: "Pequeñas"}, {m: "m", l: "Medianas"}, {m: "l", l: "Grandes"}]: Rectangle {
-                                                    height: 34px; y: 15px; width: szl.preferred-width + 24px; border-radius: 17px;
-                                                    background: root.card-size == s.m ? white : (sza.has-hover ? #ffffff22 : #ffffff12);
-                                                    szl := Text { text: s.l; width: 100%; height: 100%; horizontal-alignment: center; vertical-alignment: center;
-                                                                  color: root.card-size == s.m ? #1b1c20 : white; font-size: 13px; font-weight: 700; }
-                                                    sza := TouchArea { mouse-cursor: pointer; clicked => { root.set-card-size(s.m); } } } } }
                                         SetRow { label: "Efecto de televisor antiguo"; hint: "Líneas de barrido sobre toda la pantalla.";
                                             Toggle { checked <=> root.crt-visible; y: (parent.height - 30px) / 2; toggled(v) => { root.toggle-crt(v); } } }
                                     }
@@ -1214,6 +1155,10 @@ export component MainWindow inherits Window {
                                         spacing: 16px;
                                         Text { text: "Juegos recién publicados o de un solo autor: pueden cerrarse o fallar. Elige en qué consolas quieres verlos.";
                                                color: #ffffffaa; font-size: 14px; wrap: word-wrap; width: settings-root.body-w; }
+                                        OptionPanel {
+                                            SetRow { label: "Todas las consolas"; hint: "Activa o quita las versiones de pruebas en todas a la vez.";
+                                                Toggle { checked <=> root.exp-all-on; y: (parent.height - 30px) / 2; toggled(v) => { root.set-all-experimental(v); } } }
+                                        }
                                         OptionPanel {
                                             for sys in root.settings-systems: SysToggleRow { sys: sys; toggled(v) => { root.toggle-experimental-system(sys.id, v); } }
                                             for sys in root.settings-systems-b: SysToggleRow { sys: sys; toggled(v) => { root.toggle-experimental-system(sys.id, v); } }
@@ -1264,17 +1209,39 @@ export component MainWindow inherits Window {
                                         spacing: 16px;
                                         Text { text: root.disk-total != "" ? "Tus juegos ocupan \{root.disk-total}." : "Todavía no hay juegos instalados.";
                                                color: white; font-size: 20px; font-weight: 900; }
+                                        Text { text: "Pulsa una consola para ver sus juegos y eliminarlos."; color: #ffffffaa; font-size: 14px; }
                                         OptionPanel {
-                                            for d[i] in root.disk-rows: Rectangle {
-                                                height: 64px;
-                                                if i > 0: Rectangle { x: 16px; y: 0; width: parent.width - 32px; height: 1px; background: #ffffff12; }
-                                                if d.has-logo: Image { x: 18px; y: 20px; source: d.logo; width: 110px; height: 24px; image-fit: contain; horizontal-alignment: left; }
-                                                if !d.has-logo: Text { x: 18px; text: d.name; color: white; font-size: 14px; font-weight: 800; height: 100%; vertical-alignment: center; }
-                                                Text { x: 146px; y: 12px; text: d.count == 1 ? "1 juego" : "\{d.count} juegos"; color: #ffffffaa; font-size: 13px; }
-                                                Rectangle { x: 146px; y: 36px; width: parent.width - 146px - 120px; height: 8px; border-radius: 4px; background: #ffffff14;
-                                                    Rectangle { x: 0; width: parent.width * d.frac; border-radius: 4px; background: #2fd3ef; } }
-                                                Text { x: parent.width - 108px; width: 90px; text: d.size; color: white; font-size: 15px; font-weight: 800;
-                                                       height: 100%; vertical-alignment: center; horizontal-alignment: right; }
+                                            for d[i] in root.disk-rows: VerticalLayout {
+                                                Rectangle {
+                                                    height: 64px;
+                                                    background: dk-ta.has-hover ? #ffffff08 : #00000000;
+                                                    if i > 0: Rectangle { x: 16px; y: 0; width: parent.width - 32px; height: 1px; background: #ffffff12; }
+                                                    if d.has-logo: Image { x: 18px; y: 20px; source: d.logo; width: 110px; height: 24px; image-fit: contain; horizontal-alignment: left; }
+                                                    if !d.has-logo: Text { x: 18px; text: d.name; color: white; font-size: 14px; font-weight: 800; height: 100%; vertical-alignment: center; }
+                                                    Text { x: 146px; y: 12px; text: d.count == 1 ? "1 juego" : "\{d.count} juegos"; color: #ffffffaa; font-size: 13px; }
+                                                    Rectangle { x: 146px; y: 36px; width: parent.width - 146px - 150px; height: 8px; border-radius: 4px; background: #ffffff14;
+                                                        Rectangle { x: 0; width: parent.width * d.frac; border-radius: 4px; background: #2fd3ef; } }
+                                                    Text { x: parent.width - 138px; width: 90px; text: d.size; color: white; font-size: 15px; font-weight: 800;
+                                                           height: 100%; vertical-alignment: center; horizontal-alignment: right; }
+                                                    Text { x: parent.width - 38px; width: 24px; height: 100%; vertical-alignment: center; horizontal-alignment: center;
+                                                           text: root.expanded-sys == d.id ? "▲" : "▼"; color: #ffffff88; font-size: 12px; }
+                                                    dk-ta := TouchArea { mouse-cursor: pointer;
+                                                        clicked => { root.expanded-sys = root.expanded-sys == d.id ? "" : d.id; } }
+                                                }
+                                                if root.expanded-sys == d.id: VerticalLayout {
+                                                    padding-left: 146px; padding-right: 16px; padding-bottom: 10px;
+                                                    for g in d.games: Rectangle {
+                                                        height: 52px;
+                                                        Rectangle { x: 0; y: 0; width: parent.width; height: 1px; background: #ffffff0c; }
+                                                        Text { x: 0; y: 8px; width: parent.width - 260px; text: g.title; color: white; font-size: 14px; font-weight: 800; overflow: elide; }
+                                                        Text { x: 0; y: 28px; width: parent.width - 260px; text: g.version != "" ? "Versión \{g.version}" : "";
+                                                               color: #ffffff77; font-size: 12px; overflow: elide; }
+                                                        Text { x: parent.width - 250px; width: 100px; height: 100%; text: g.size != "" ? g.size : "…";
+                                                               color: #ffffffcc; font-size: 14px; font-weight: 800; vertical-alignment: center; horizontal-alignment: right; }
+                                                        PillBtn { x: parent.width - self.width; y: (parent.height - self.height) / 2; s: 0.7; label: "Eliminar"; kind: "ghost";
+                                                                  clicked => { root.confirm-uninstall(g.id); } }
+                                                    }
+                                                }
                                             }
                                         }
                                     }
@@ -1301,7 +1268,7 @@ export component MainWindow inherits Window {
                 }
 
                 // ── Game page: console style (cover, plain status, big buttons, tabs) ──
-                if !root.settings-visible && (root.detail-visible || (!root.classic-view && root.dv > 0.002)): detail-root := FocusScope {
+                if !root.settings-visible && (root.detail-visible || root.dv > 0.002): detail-root := FocusScope {
                     vertical-stretch: 1;
                     property <length> body-w: max(240px, dscroll.visible-width - 80px);
                     property <string> tab: root.detail.tabs.length > 0
@@ -1320,8 +1287,6 @@ export component MainWindow inherits Window {
                     Image { x: 0; y: 0; source: root.detail.cover; width: parent.width; height: parent.height * 0.66; image-fit: cover; opacity: 0.16; }
                     Rectangle { x: 0; y: 0; width: parent.width; height: parent.height * 0.66 + 1px;
                                 background: @linear-gradient(180deg, root.detail.sys-color.with-alpha(0.38) 0%, #1b1c2000 35%, #1b1c20 100%); }
-                    Image { x: 0; y: 0; width: parent.width; height: parent.height; source: @image-url("../assets/noise.png");
-                            horizontal-tiling: repeat; vertical-tiling: repeat; opacity: 0.028; }
                     TouchArea { clicked => { detail-root.focus(); } }
                     VerticalLayout {
                         // ── Top bar: back, console logo ──
@@ -1572,7 +1537,7 @@ export component MainWindow inherits Window {
                                                                                    clicked => { root.open-url(root.detail.repo-url); } }
                                         if root.detail.installed: OptionRow { label: "Eliminar del equipo"; danger: true;
                                             hint: "Borra el juego y lo que hayas añadido. Tus copias originales no se tocan.";
-                                            clicked => { root.confirm-id = root.detail.id; root.confirm-title = root.detail.title; root.confirm-visible = true; } }
+                                            clicked => { root.confirm-uninstall(root.detail.id); } }
                                         if !root.detail.installed: OptionRow { label: "Descárgalo para ver más opciones"; enabled: false; }
                                     }
                                 }
@@ -1583,282 +1548,6 @@ export component MainWindow inherits Window {
                     }
                 }
 
-                // ── Catalog / library ───────────────────────────────────────
-                if root.classic-view && !root.settings-visible && !root.detail-visible: VerticalLayout {
-                    // Header: title, count, filters, search. Inside a Flickable so its
-                    // content can never widen the column (and push things off-screen).
-                    Flickable {
-                        height: 62px;
-                        interactive: false;
-                        HorizontalLayout {
-                            padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 14px; padding-bottom: 10px;
-                            spacing: 10px;
-                            Text { text: root.header-title; color: white; font-size: 22px; font-weight: 800; vertical-alignment: center; }
-                            Text { text: root.header-count == 1 ? "1 juego" : "\{root.header-count} juegos"; color: #ffffff66; font-size: 13px; vertical-alignment: center; }
-                            Rectangle { horizontal-stretch: 1; }
-                            if root.active-system != "" && (root.active-exp-hidden > 0 || root.active-exp-on): Rectangle {
-                                height: 30px; width: hx-l.preferred-width; border-radius: 7px; y: (parent.height - 30px) / 2;
-                                background: root.active-exp-on ? #ff9f4322 : (hx-ta.has-hover ? #ffffff12 : #2a2c33);
-                                border-width: 1px; border-color: root.active-exp-on ? #ff9f43 : #3c3f48;
-                                hx-l := HorizontalLayout { padding-left: 10px; padding-right: 10px;
-                                    Text { text: root.narrow
-                                               ? (root.active-exp-on ? "⚠ visibles" : "⚠ \{root.active-exp-hidden} ocultos")
-                                               : (root.active-exp-on ? "⚠ Experimentales visibles" : (root.active-exp-hidden == 1 ? "⚠ 1 experimental oculto" : "⚠ \{root.active-exp-hidden} experimentales ocultos"));
-                                           color: root.active-exp-on ? #ff9f43 : #ffffffaa; font-size: 11px; font-weight: 700; vertical-alignment: center; } }
-                                hx-ta := TouchArea { mouse-cursor: pointer; clicked => { root.toggle-experimental-system(root.active-system, !root.active-exp-on); } }
-                            }
-                            if root.library-tab && (root.updates-pending > 0 || root.bulk-busy): Btn {
-                                y: (parent.height - 30px) / 2; height: 30px; horizontal-stretch: 0;
-                                kind: root.bulk-busy ? "secondary" : "primary";
-                                label: root.bulk-busy ? "Actualizando…"
-                                     : (root.narrow ? "↑ \{root.updates-pending}"
-                                        : (root.updates-pending == 1 ? "↑ Actualizar 1 juego" : "↑ Actualizar \{root.updates-pending} juegos"));
-                                clicked => { if (!root.bulk-busy) { root.update-all(); } }
-                            }
-                            Rectangle {
-                                width: root.narrow ? 140px : 200px; height: 32px; y: (parent.height - 32px) / 2;
-                                LineEdit { width: 100%; height: 100%; placeholder-text: "Buscar juego…"; font-size: 12px;
-                                           text <=> root.search-text; edited => { root.refresh(); } }
-                            }
-                        }
-                    }
-                    if root.bulk-busy: Rectangle {
-                        height: 30px;
-                        HorizontalLayout {
-                            padding-left: root.grid-pad; padding-right: root.grid-pad; spacing: 10px;
-                            VerticalLayout { alignment: center; horizontal-stretch: 1; Bar { value: root.bulk-progress; } }
-                            Text { text: root.bulk-label; color: #ffffff99; font-size: 11px; overflow: elide; vertical-alignment: center; width: 320px; }
-                            Btn { label: "Cancelar"; kind: "ghost"; height: 24px; y: 3px; clicked => { root.cancel-update-all(); } }
-                        }
-                    }
-                    if !root.bulk-busy && root.bulk-label != "": Rectangle {
-                        height: 24px;
-                        Text { x: root.grid-pad; width: parent.width - 2 * root.grid-pad; height: 100%; text: root.bulk-label; color: #ffd166; font-size: 11px; overflow: elide; vertical-alignment: center; }
-                    }
-                    Rectangle { height: 1px; background: #34363e; }
-
-                    // "Nuevas incorporaciones": what landed in the catalog this week.
-                    if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: Rectangle {
-                        height: 150px;
-                        background: #202127;
-                        VerticalLayout {
-                            padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 12px; padding-bottom: 12px;
-                            spacing: 10px;
-                            SectionHeader { label: "Nuevas incorporaciones"; accent: #7de17d; }
-                            ScrollView {
-                                height: 90px;
-                                HorizontalLayout {
-                                    spacing: 10px;
-                                    alignment: start;
-                                    for c in root.newcomers: Rectangle {
-                                        width: 262px;
-                                        height: 86px;
-                                        border-radius: 10px;
-                                        clip: true;
-                                        background: nc-ta.has-hover ? #33363e : #2a2c33;
-                                        border-width: 1px;
-                                        border-color: nc-ta.has-hover ? #7de17d88 : #3c3f48;
-                                        animate border-color, background { duration: 150ms; easing: ease-out; }
-                                        nc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
-                                        HorizontalLayout {
-                                            padding: 9px;
-                                            spacing: 10px;
-                                            Rectangle {
-                                                width: 50px; border-radius: 5px; clip: true;
-                                                Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
-                                            }
-                                            VerticalLayout {
-                                                alignment: center;
-                                                spacing: 3px;
-                                                horizontal-stretch: 1;
-                                                Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
-                                                Text { text: c.is-windows ? "\{c.meta} · Windows" : c.meta; color: #ffffff77; font-size: 11px; overflow: elide; }
-                                                HorizontalLayout {
-                                                    spacing: 4px;
-                                                    alignment: start;
-                                                    if c.installed: Tag { label: "INSTALADO"; tint: #4de1c1; }
-                                                    if !c.installed: Tag { label: "NUEVO"; tint: #7de17d; }
-                                                    if c.experimental: Tag { label: "⚠ EXPERIMENTAL"; tint: #ff9f43; }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        Rectangle { y: parent.height - 1px; height: 1px; background: #34363e; }
-                    }
-                    if !root.library-tab && root.active-system == "" && root.search-text == "" && root.newcomers.length > 0: VerticalLayout {
-                        padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 14px; padding-bottom: 2px;
-                        SectionHeader { label: "Todo el catálogo"; }
-                    }
-                    // "Seguir jugando": last-played shelf (library).
-                    if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: Rectangle {
-                        height: 142px;
-                        background: #202127;
-                        VerticalLayout {
-                            padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 12px; padding-bottom: 12px;
-                            spacing: 10px;
-                            SectionHeader { label: "Seguir jugando"; }
-                            // ScrollView: the strip never dictates the column's minimum width.
-                            ScrollView {
-                                height: 90px;
-                                HorizontalLayout {
-                                spacing: 10px;
-                                alignment: start;
-                                for c in root.recent: Rectangle {
-                                    width: 290px;
-                                    height: 86px;
-                                    border-radius: 10px;
-                                    clip: true;
-                                    background: rc-ta.has-hover ? #33363e : #2a2c33;
-                                    border-width: 1px;
-                                    border-color: rc-ta.has-hover ? #2fd3ef88 : #3c3f48;
-                                    animate border-color, background { duration: 150ms; easing: ease-out; }
-                                    rc-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
-                                    HorizontalLayout {
-                                        padding: 9px;
-                                        spacing: 10px;
-                                        Rectangle {
-                                            width: 50px; border-radius: 5px; clip: true;
-                                            Cover { width: 100%; height: 100%; source: c.cover; title: c.title; fit-cover: c.fit-cover; }
-                                        }
-                                        VerticalLayout {
-                                            alignment: center;
-                                            spacing: 3px;
-                                            horizontal-stretch: 1;
-                                            Text { text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
-                                            Text { text: c.meta; color: #ffffff77; font-size: 11px; overflow: elide; }
-                                        }
-                                        VerticalLayout {
-                                            alignment: center;
-                                            Rectangle {
-                                                width: 38px; height: 38px; border-radius: 19px;
-                                                background: rp-ta.has-hover ? #2fd3ef : #2fd3ef22;
-                                                animate background { duration: 120ms; }
-                                                Text { text: "▶"; color: rp-ta.has-hover ? #1b1c20 : #2fd3ef; font-size: 14px; font-weight: 900;
-                                                       horizontal-alignment: center; vertical-alignment: center; }
-                                                rp-ta := TouchArea { mouse-cursor: pointer; clicked => { root.play(c.id); } }
-                                            }
-                                        }
-                                    }
-                                }
-                                }
-                            }
-                        }
-                        Rectangle { y: parent.height - 1px; height: 1px; background: #34363e; }
-                    }
-                    if root.library-tab && root.active-system == "" && root.search-text == "" && root.recent.length > 0: VerticalLayout {
-                        padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 14px; padding-bottom: 2px;
-                        SectionHeader { label: "Toda la biblioteca"; }
-                    }
-
-                    // ── Grid: shelves of boxes, one height per row ──
-                    Rectangle {
-                        vertical-stretch: 1;
-                        ListView {
-                            for row in root.rows: VerticalLayout {
-                                if row.header != "": HorizontalLayout {
-                                    padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 18px; padding-bottom: 6px;
-                                    spacing: 10px; alignment: start;
-                                    if row.has-logo: Rectangle { width: 3px; height: 26px; border-radius: 2px; background: #ff9f43; }
-                                    if row.has-logo: Image { source: row.logo; height: 26px; width: 150px; image-fit: contain; horizontal-alignment: left; }
-                                    if !row.has-logo: SectionHeader { label: row.header; accent: #ff9f43; }
-                                }
-                                if row.cards.length > 0: HorizontalLayout {
-                                    spacing: 14px;
-                                    padding-left: root.grid-pad; padding-right: root.grid-pad; padding-top: 10px; padding-bottom: 10px;
-                                    alignment: start;
-                                    // Plain rectangles with absolute geometry: no nested layouts
-                                    // per card, so rows instantiate fast while scrolling.
-                                    for c in row.cards: Rectangle {
-                                        property <length> slot-w: c.card-w > 0 ? c.card-w * 1px : root.card-h * 0.7;
-                                        property <bool> hov: cover-ta.has-hover || act-btn.hovered || fav-ta.has-hover || cancel-ta.has-hover;
-                                        width: self.slot-w;
-                                        height: root.card-h + 44px;
-                                        cover := Rectangle {
-                                            x: 0; y: 0; width: parent.width; height: root.card-h;
-                                            border-radius: 8px;
-                                            background: #2a2c33;
-                                            clip: true;
-                                            border-width: c.installed ? 2px : 1px;
-                                            border-color: hov ? (c.installed ? #4de1c1 : #2fd3ef) : (c.installed ? #4de1c1aa : #3c3f48);
-                                            animate border-color { duration: 120ms; easing: ease-out; }
-                                            Cover { width: 100%; height: 100%; source: c.cover; title: c.title; hovered: hov; fit-cover: c.fit-cover; }
-                                            cover-ta := TouchArea { mouse-cursor: pointer; clicked => { root.open-game(c.id); } }
-                                            // Chips on the art: only what matters at a glance.
-                                            if c.experimental: Tag { x: 6px; y: 6px; label: "⚠"; tint: #ff9f43; solid: true; }
-                                            if c.update-available && !c.busy: Tag { x: 6px; y: c.experimental ? 28px : 6px;
-                                                label: c.new-version != "" ? "↑ \{c.new-version}" : "↑"; tint: #ffd166; solid: true; }
-                                            // Hover: primary action on a dark gradient at the bottom.
-                                            Rectangle {
-                                                visible: hov && !c.busy;
-                                                y: parent.height - 52px; height: 52px; width: parent.width;
-                                                background: @linear-gradient(180deg, #1b1c2000 0%, #1b1c20dd 55%, #1b1c20f2 100%);
-                                            }
-                                            act-btn := Btn {
-                                                visible: hov && !c.busy;
-                                                x: 8px; y: parent.height - 36px; width: parent.width - 16px;
-                                                label: c.installed
-                                                    ? (c.play-state == 1 ? "Jugando…" : (c.play-state == 2 ? "⚠ Reintentar" : "▶  Jugar"))
-                                                    : (c.install-error ? "⚠ Reintentar" : "↓  Instalar");
-                                                kind: (c.play-state == 2 || c.install-error) ? "danger" : "primary";
-                                                clicked => { if (c.installed) { if (c.play-state != 1) { root.play(c.id); } } else { root.install(c.id); } }
-                                            }
-                                            // Busy: progress at the bottom, cancel at the right.
-                                            Rectangle {
-                                                visible: c.busy;
-                                                y: parent.height - 44px; height: 44px; width: parent.width;
-                                                background: @linear-gradient(180deg, #1b1c2000 0%, #1b1c20ee 60%);
-                                                Text { x: 8px; y: 6px; width: parent.width - 40px; height: 16px;
-                                                       text: c.installed
-                                                           ? (c.progress > 0 ? "Actualizando \{floor(c.progress * 100)}%" : "Actualizando…")
-                                                           : (c.progress > 0 ? "Instalando \{floor(c.progress * 100)}%" : "Instalando…");
-                                                       color: #2fd3ef; font-size: 11px; font-weight: 700; overflow: elide; }
-                                                Bar { x: 8px; y: 28px; width: parent.width - 40px; value: c.progress > 0 ? c.progress : -1; }
-                                                Rectangle { x: parent.width - 28px; y: 12px; width: 22px; height: 22px; border-radius: 11px;
-                                                    background: cancel-ta.has-hover ? #ff5d7333 : #00000000;
-                                                    Text { text: "✕"; color: #ff5d73; font-size: 11px; font-weight: 900; horizontal-alignment: center; vertical-alignment: center; }
-                                                    cancel-ta := TouchArea { enabled: c.busy; mouse-cursor: pointer; clicked => { root.cancel-install(c.id); } } }
-                                            }
-                                            // Favorite star (top-right)
-                                            Rectangle {
-                                                x: parent.width - 28px; y: 6px; width: 22px; height: 22px;
-                                                border-radius: 11px;
-                                                background: fav-ta.has-hover ? #000000dd : #00000099;
-                                                visible: c.favorite || hov;
-                                                Text { text: c.favorite ? "★" : "☆"; color: c.favorite ? #ffd166 : white;
-                                                       font-size: 13px; horizontal-alignment: center; vertical-alignment: center; }
-                                                fav-ta := TouchArea { enabled: parent.visible; mouse-cursor: pointer; clicked => { root.toggle-favorite(c.id); } }
-                                            }
-                                        }
-                                        Text { x: 0; y: cover.height + 8px; width: parent.width; height: 16px;
-                                               text: c.title; color: white; font-size: 12px; font-weight: 700; overflow: elide; }
-                                        Text { x: 0; y: cover.height + 25px; width: parent.width; height: 14px;
-                                               text: c.busy ? "" : (c.installed
-                                                         ? (c.needs-rom && !c.rom-ok ? "Falta la ROM" : (c.version != "" ? "Instalado · \{c.version}" : "Instalado") + (c.size != "" ? " · \{c.size}" : ""))
-                                                         : (c.is-windows ? "\{c.subtitle} · Windows" : c.subtitle));
-                                               color: c.installed ? (c.needs-rom && !c.rom-ok ? #ffd166 : #4de1c1aa) : #ffffff66;
-                                               font-size: 10px; overflow: elide; }
-                                    }
-                                }
-                            }
-                        }
-                        if root.header-count == 0: Rectangle {
-                            width: 100%; height: 100%;
-                            VerticalLayout {
-                                alignment: center;
-                                spacing: 6px;
-                                Text { text: root.library-tab ? "Tu biblioteca está vacía"
-                                             : (root.search-text != "" ? "Sin resultados para «\{root.search-text}»" : "Nada por aquí");
-                                       color: #ffffffcc; font-size: 18px; font-weight: 800; horizontal-alignment: center; }
-                                Text { text: root.library-tab ? "Instala un juego desde el catálogo"
-                                             : "Prueba otra búsqueda o cambia de consola";
-                                       color: #ffffff77; font-size: 13px; horizontal-alignment: center; }
-                            }
-                        }
-                    }
-                }
             }
         }
     }
@@ -1899,8 +1588,16 @@ export component MainWindow inherits Window {
             cf-l := VerticalLayout {
                 padding: 30px; spacing: 14px;
                 Text { text: "¿Eliminar «\{root.confirm-title}»?"; color: white; font-size: 22px; font-weight: 900; wrap: word-wrap; horizontal-alignment: center; }
-                Text { text: "Se borra el juego del equipo. Tus copias originales y tus partidas guardadas en la nube no se tocan.";
+                Text { text: "Se borra el juego y todo lo que Freeport preparó para él. Tus copias originales no se tocan.";
                        color: #ffffffaa; font-size: 14px; wrap: word-wrap; horizontal-alignment: center; }
+                if root.confirm-extra != "": HorizontalLayout {
+                    spacing: 12px; padding-top: 6px;
+                    Toggle { checked <=> root.confirm-wipe; }
+                    Text { text: "Borrar también sus partidas y ajustes"; color: white; font-size: 14px; font-weight: 800; vertical-alignment: center; wrap: word-wrap; }
+                }
+                if root.confirm-extra != "": Text {
+                    text: root.confirm-wipe ? "Se borrará también:\n" + root.confirm-extra : "Se conservan en:\n" + root.confirm-extra;
+                    color: root.confirm-wipe ? #ff9aa6 : #ffffff77; font-size: 12px; wrap: word-wrap; }
                 HorizontalLayout {
                     alignment: center; spacing: 14px; padding-top: 12px;
                     PillBtn { label: "Cancelar"; kind: "secondary"; clicked => { root.confirm-visible = false; } }

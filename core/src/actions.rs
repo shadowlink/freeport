@@ -1282,6 +1282,144 @@ pub fn uninstall_project(paths: &Paths, id: &str) -> AppResult<()> {
     store::save_installed(paths, &installed)
 }
 
+/// `~/…` and `$XDG_DATA_HOME/…` to an absolute path.
+fn expand_user_path(raw: &str) -> Option<PathBuf> {
+    let home = dirs::home_dir()?;
+    let data = std::env::var("XDG_DATA_HOME")
+        .ok()
+        .filter(|s| !s.is_empty())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home.join(".local/share"));
+    let expanded = raw.replace("$XDG_DATA_HOME", &data.display().to_string());
+    Some(match expanded.strip_prefix("~/") {
+        Some(rest) => home.join(rest),
+        None => PathBuf::from(expanded),
+    })
+}
+
+/// The folder an app owns for a path inside the usual per-user roots:
+/// `~/.config/<App>/x/y` → `~/.config/<App>`. Anything else → None.
+fn app_root_of(path: &Path) -> Option<PathBuf> {
+    let home = dirs::home_dir()?;
+    let roots = [
+        dirs::config_dir().unwrap_or_else(|| home.join(".config")),
+        dirs::data_dir().unwrap_or_else(|| home.join(".local/share")),
+        dirs::cache_dir().unwrap_or_else(|| home.join(".cache")),
+    ];
+    for root in roots {
+        if let Ok(rest) = path.strip_prefix(&root) {
+            let first = rest.components().next()?;
+            return Some(root.join(first.as_os_str()));
+        }
+    }
+    None
+}
+
+/// A folder that is safe to remove as "this port's data": a real directory
+/// (not a link) in the user's home, at least one level inside a hidden
+/// folder (`~/.config/X`, `~/.local/share/X`), never a root itself.
+fn safe_data_dir(p: &Path) -> bool {
+    let Some(home) = dirs::home_dir() else { return false };
+    let Ok(rest) = p.strip_prefix(&home) else { return false };
+    let parts: Vec<String> = rest.components().map(|c| c.as_os_str().to_string_lossy().into_owned()).collect();
+    let deep_enough = match parts.first().map(|s| s.as_str()) {
+        Some(".local") => parts.len() >= 3,
+        Some(f) if f.starts_with('.') => parts.len() >= 2,
+        _ => false,
+    };
+    let generic = ["freeport", "decompdeck", "wine", "steam", "applications", "icons", "fonts", "systemd", "autostart"];
+    let leaf = parts.last().map(|s| s.to_lowercase()).unwrap_or_default();
+    deep_enough
+        && !generic.contains(&leaf.as_str())
+        && std::fs::symlink_metadata(p).map(|m| m.is_dir()).unwrap_or(false)
+}
+
+/// Every folder a port may keep outside Freeport's: the catalog's explicit
+/// `data_dirs`, the app folder of its settings file / imported-data link /
+/// externally built game, and `~/.config|.local/share/<launch name>`.
+fn port_dir_candidates(project: &Project) -> Vec<PathBuf> {
+    let mut out: Vec<PathBuf> = Vec::new();
+    let mut add = |p: Option<PathBuf>| {
+        if let Some(p) = p {
+            if !out.contains(&p) {
+                out.push(p);
+            }
+        }
+    };
+    for raw in &project.data_dirs {
+        add(expand_user_path(raw));
+    }
+    if let Some(reg) = &project.rom.register {
+        for raw in [&reg.file, &reg.ini, &reg.link].into_iter().flatten() {
+            add(expand_user_path(raw).and_then(|p| app_root_of(&p)));
+        }
+    }
+    for raw in project.launch_external.values() {
+        add(expand_user_path(raw).and_then(|p| app_root_of(&p)));
+    }
+    let names: Vec<String> = project
+        .launch
+        .values()
+        .flatten()
+        .map(|n| n.trim_end_matches(".exe").trim_end_matches(".AppImage").to_string())
+        .filter(|n| n.len() >= 4 && !n.contains('/') && !["game", "launcher", "start", "run", "setup"].contains(&n.to_lowercase().as_str()))
+        .collect();
+    for n in names {
+        add(dirs::config_dir().map(|d| d.join(&n)));
+        add(dirs::data_dir().map(|d| d.join(&n)));
+    }
+    out
+}
+
+/// Folders of `project`'s own data (settings, saves, built game) that exist
+/// and that no other installed port also uses — what «borrar también sus
+/// partidas y ajustes» removes.
+pub fn port_data_dirs(project: &Project, other_installed: &[Project]) -> Vec<PathBuf> {
+    let others: Vec<PathBuf> = other_installed.iter().filter(|o| o.id != project.id).flat_map(port_dir_candidates).collect();
+    port_dir_candidates(project)
+        .into_iter()
+        .filter(|p| safe_data_dir(p))
+        .filter(|p| !others.iter().any(|o| o.starts_with(p) || p.starts_with(o)))
+        .collect()
+}
+
+/// Uninstalls without leaving anything of Freeport's behind: the install
+/// folder (with its Wine prefix), the link it made for the port, the game's
+/// entries in the settings (favorite, runner, preferred version) and mods
+/// state. `wipe` = port data folders to remove too (from `port_data_dirs`).
+pub fn uninstall_project_clean(paths: &Paths, project: &Project, wipe: &[PathBuf]) -> AppResult<()> {
+    let id = project.id.as_str();
+    let app_dir = paths.app_dir(id);
+    // The link Freeport created for the port (`rom.register.link`).
+    if let Some(link) = project.rom.register.as_ref().and_then(|r| r.link.as_deref()).and_then(expand_user_path) {
+        if std::fs::symlink_metadata(&link).map(|m| m.file_type().is_symlink()).unwrap_or(false) {
+            let target = std::fs::read_link(&link).unwrap_or_default();
+            if target.starts_with(&app_dir) || !link.exists() {
+                let _ = std::fs::remove_file(&link);
+            }
+        }
+    }
+    uninstall_project(paths, id)?;
+    if let Ok(mut cfg) = store::load_config(paths) {
+        cfg.favorites.retain(|f| f != id);
+        cfg.game_runners.remove(id);
+        cfg.preferred_version.retain(|_, v| v != id);
+        let _ = store::save_config(paths, &cfg);
+    }
+    if let Ok(mut st) = store::load_mod_state(paths) {
+        if st.remove(id).is_some() {
+            let _ = store::save_mod_state(paths, &st);
+        }
+    }
+    for dir in wipe {
+        // Re-checked here: never trust a path just because it was offered.
+        if safe_data_dir(dir) {
+            std::fs::remove_dir_all(dir)?;
+        }
+    }
+    Ok(())
+}
+
 // ── Mods ────────────────────────────────────────────────────────────────
 
 use crate::mods::{self, ModInfo};
@@ -1596,3 +1734,37 @@ mod ini_set_tests {
     }
 }
 
+
+#[cfg(test)]
+mod uninstall_tests {
+    use super::*;
+
+    #[test]
+    fn data_dir_safety() {
+        let home = dirs::home_dir().unwrap();
+        // Roots and shallow folders are never "a port's data".
+        assert!(!safe_data_dir(&home));
+        assert!(!safe_data_dir(&home.join(".config")));
+        assert!(!safe_data_dir(&home.join(".local/share")));
+        assert!(!safe_data_dir(&home.join("Documentos")));
+        assert!(!safe_data_dir(Path::new("/tmp")));
+        let d = home.join(format!(".local/share/fp-uninstall-test-{}", std::process::id()));
+        std::fs::create_dir_all(&d).unwrap();
+        assert!(safe_data_dir(&d));
+        // A link is never followed.
+        let l = home.join(format!(".local/share/fp-uninstall-link-{}", std::process::id()));
+        std::os::unix::fs::symlink(&d, &l).unwrap();
+        assert!(!safe_data_dir(&l));
+        std::fs::remove_file(&l).unwrap();
+        std::fs::remove_dir(&d).unwrap();
+        // Freeport's own folder is never offered.
+        assert!(!safe_data_dir(&home.join(".local/share/decompdeck")));
+    }
+
+    #[test]
+    fn app_root_is_first_folder_under_a_root() {
+        let data = dirs::data_dir().unwrap();
+        assert_eq!(app_root_of(&data.join("MetroidPrime4Recomp/x/y.ini")), Some(data.join("MetroidPrime4Recomp")));
+        assert_eq!(app_root_of(Path::new("/opt/x")), None);
+    }
+}

@@ -110,6 +110,11 @@ pub struct Project {
     /// starts the binary in the install folder (the installer).
     #[serde(default)]
     pub launch_external: HashMap<String, String>,
+    /// Folders the port keeps its own settings / saves / built data in,
+    /// outside Freeport's (`~` and `$XDG_DATA_HOME` expand). Offered for
+    /// removal on uninstall, next to the ones Freeport can infer.
+    #[serde(default)]
+    pub data_dirs: Vec<String>,
     #[serde(default)]
     pub cached: Option<Cached>,
 }
@@ -407,9 +412,6 @@ pub struct Config {
     /// Retro CRT screen effect (scanlines + vignette).
     #[serde(default)]
     pub crt: bool,
-    /// Old layout (sidebar + cover grid) instead of the console carousel.
-    #[serde(default)]
-    pub classic_view: bool,
     /// RetroAchievements account (managed centrally; handed to the RA mod).
     /// RomM server (the user's own ROM library): base URL and HTTP Basic
     /// credentials, kept like the RetroAchievements ones.
@@ -423,9 +425,6 @@ pub struct Config {
     pub ra_user: Option<String>,
     #[serde(default)]
     pub ra_token: Option<String>,
-    /// Cover grid card size: "s" | "m" (default) | "l".
-    #[serde(default)]
-    pub card_size: String,
 }
 
 /// Enriched view of a project sent to the frontend: the catalog entry plus its

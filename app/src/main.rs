@@ -9,7 +9,7 @@ use freeport_core::store::{self, Paths};
 use freeport_core::mods::ModInfo;
 use freeport_core::wiki::WikiInfo;
 use freeport_core::{actions, gamepad, platform, ra, thumbs, update, wiki};
-use slint::{Color, Image, ModelRc, SharedString, VecModel, Weak};
+use slint::{Color, Image, Model, ModelRc, Rgba8Pixel, SharedPixelBuffer, SharedString, VecModel, Weak};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::path::Path;
@@ -100,7 +100,6 @@ struct NavState {
     home_level: i32,
     settings: bool,
     library: bool,
-    system: String,
     detail: Option<String>,
 }
 
@@ -180,7 +179,12 @@ struct App {
     /// Full-resolution covers for the few boxes shown big (home carousel of
     /// one console, game page); the grid keeps the small thumbnails.
     cover_hd: RefCell<std::collections::HashMap<String, Image>>,
-    hd_pending: RefCell<HashSet<String>>,
+    /// «Actualizar todo»: (id, title, state, progress) of each game of the batch.
+    bulk_items: RefCell<Vec<(String, String, i32, f32)>>,
+    /// Covers being decoded right now ("th:<url>" / "hd:<url>").
+    img_pending: RefCell<HashSet<String>>,
+    /// Big covers the home carousel wants kept (around the selection).
+    hd_wanted: RefCell<HashSet<String>>,
     size_cache: RefCell<std::collections::HashMap<String, u64>>,
     // id -> (tag, published_at ISO, changelog body)
     changelog_cache: RefCell<std::collections::HashMap<String, (String, String, String)>>,
@@ -298,9 +302,6 @@ fn box_aspect(system: &str) -> f32 {
 /// Slot width of a box in the grid: every box in a row shares the grid's
 /// height, so the width follows the system's box shape (an N64 box is wide, a
 /// PSP case narrow), clamped so nothing gets absurdly thin or wide.
-fn slot_width(card_h: f32, aspect: f32) -> f32 {
-    (card_h * aspect).clamp(card_h * 0.56, card_h * 1.5)
-}
 
 /// Every version of the same game as `id` that the user can see (installed
 /// ones always count), in catalog order.
@@ -407,7 +408,6 @@ fn load_logos(dir: &Path) -> std::collections::HashMap<String, Image> {
 
 fn rebuild(app: &App, win: &MainWindow) {
     let installed = store::load_installed(&app.paths).unwrap_or_default();
-    let active = win.get_active_system().to_string();
     let library = win.get_library_tab();
     let query = win.get_search_text().to_lowercase();
     let seen = app.seen.borrow();
@@ -426,7 +426,6 @@ fn rebuild(app: &App, win: &MainWindow) {
     // Sidebar counts: games (grouped versions) in the catalog, installs in the library.
     // `settings_rows` lists every system with games (hidden experimentals included)
     // so the user can switch experimentals on per system.
-    let mut sys_rows: Vec<SysRow> = Vec::new();
     let mut settings_rows: Vec<SysRow> = Vec::new();
     for s in &catalog.systems {
         // Experimental games of this system that the switch would actually bring
@@ -468,37 +467,6 @@ fn rebuild(app: &App, win: &MainWindow) {
                 exp_hidden: exp_hidden as i32,
             });
         }
-        if active == s.id {
-            win.set_active_exp_on(app.experimental_allowed(&s.id));
-            win.set_active_exp_hidden(exp_hidden as i32);
-        }
-        let mut keys: HashSet<&str> = HashSet::new();
-        let mut count = 0usize;
-        for p in catalog
-            .projects
-            .iter()
-            .filter(|p| p.system == s.id && app.visibility(p, &installed, show_windows).0)
-            .filter(|p| !library || installed.contains_key(&p.id))
-        {
-            keys.insert(p.game_key());
-            count += 1;
-        }
-        let _ = count;
-        let count = keys.len();
-        if count == 0 {
-            continue;
-        }
-        let logo = app.logos.get(&s.id).cloned();
-        sys_rows.push(SysRow {
-            id: s.id.clone().into(),
-            name: s.name.clone().into(),
-            count: count as i32,
-            color: parse_color(&s.color),
-            logo: logo.clone().unwrap_or_default(),
-            has_logo: logo.is_some(),
-            exp_on: app.experimental_allowed(&s.id),
-            exp_hidden: exp_hidden as i32,
-        });
     }
 
     // Every filter that decides whether a project shows up in the current view.
@@ -507,7 +475,6 @@ fn rebuild(app: &App, win: &MainWindow) {
         let (visible, is_win) = app.visibility(p, &installed, show_windows);
         if !visible
             || (library && !installed.contains_key(&p.id))
-            || (!active.is_empty() && p.system != active)
         {
             return None;
         }
@@ -591,7 +558,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 } else {
                     p.name.clone().into()
                 },
-                cover: app.cover(p),
+                cover: app.cover_cached(p),
                 installed: any_installed,
                 is_windows: is_win,
                 update_available: any_update,
@@ -610,9 +577,8 @@ fn rebuild(app: &App, win: &MainWindow) {
                 is_new: any_new,
                 versions: g.members.len() as i32,
                 aspect: box_aspect(&p.system),
-                card_w: slot_width(win.get_card_h(), box_aspect(&p.system)),
                 experimental: p.is_experimental(),
-                fit_cover: app.fit_cover(p),
+                fit_cover: fit_for(&app.cover_cached(p), &p.system),
                 size: app.size_label(&p.id),
             },
             p.system.clone(),
@@ -620,85 +586,8 @@ fn rebuild(app: &App, win: &MainWindow) {
     }
     // Favorites first, then alphabetical — always.
     sortable.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(&b.1)));
-    // "Seguir jugando": most recently played installed games (library shelf).
-    let mut recent_pool: Vec<(i64, CardItem)> = sortable
-        .iter()
-        .filter(|t| t.3 > 0 && t.4.installed)
-        .map(|t| (t.3, t.4.clone()))
-        .collect();
-    recent_pool.sort_by_key(|a| std::cmp::Reverse(a.0));
-    let recent: Vec<CardItem> = recent_pool.into_iter().take(4).map(|t| t.1).collect();
-
     let cards: Vec<(CardItem, String)> = sortable.into_iter().map(|t| (t.4, t.5)).collect();
-    build_home(app, win, &catalog, &cards);
-
-    let count = cards.len() as i32;
-    // Pack cards into rows by width: landscape boxes (N64) get a wider slot so
-    // the art isn't tiny, so rows hold a variable number of cards. The usable
-    // width comes from the UI (window minus rail, sidebar and padding).
-    let base_h = win.get_card_h();
-    let avail = win.get_grid_width().max(base_h * 1.5);
-    win.set_narrow(win.get_grid_width() < 560.0);
-    let gap = 14.0;
-    let pack = |cards: Vec<CardItem>, rows: &mut Vec<GridRow>| {
-        let mut row: Vec<CardItem> = Vec::new();
-        let mut used = 0.0f32;
-        for c in cards {
-            let w = c.card_w;
-            let need = if row.is_empty() { w } else { used + gap + w };
-            if !row.is_empty() && need > avail {
-                rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(std::mem::take(&mut row))), logo: Image::default(), has_logo: false });
-                used = 0.0;
-            }
-            used = if row.is_empty() { w } else { used + gap + w };
-            row.push(c);
-        }
-        if !row.is_empty() {
-            rows.push(GridRow { header: "".into(), cards: ModelRc::new(VecModel::from(row)), logo: Image::default(), has_logo: false });
-        }
-    };
-    let mut rows: Vec<GridRow> = Vec::new();
-    if active.is_empty() {
-        // "Todas" (catalog or library): one shelf per console, in the
-        // catalog's order, each headed by the console's logo. Inside a shelf
-        // the stable ports come first and the experimental ones after.
-        for s in &catalog.systems {
-            let (experimental, stable): (Vec<CardItem>, Vec<CardItem>) = cards
-                .iter()
-                .filter(|(_, sys)| *sys == s.id)
-                .map(|(c, _)| c.clone())
-                .partition(|c| c.experimental);
-            let n = stable.len() + experimental.len();
-            if n == 0 {
-                continue;
-            }
-            let logo = app.logos.get(&s.id).cloned();
-            rows.push(GridRow {
-                header: format!("{} · {n}", s.name).into(),
-                cards: ModelRc::new(VecModel::from(Vec::<CardItem>::new())),
-                logo: logo.clone().unwrap_or_default(),
-                has_logo: logo.is_some(),
-            });
-            pack(stable, &mut rows);
-            pack(experimental, &mut rows);
-        }
-    } else {
-        // One console: stable ports first; experimental ones together in their
-        // own section below, so the unstable stuff is easy to find and easy to ignore.
-        let (experimental, stable): (Vec<CardItem>, Vec<CardItem>) =
-            cards.into_iter().map(|(c, _)| c).partition(|c| c.experimental);
-        pack(stable, &mut rows);
-        if !experimental.is_empty() {
-            let n = experimental.len();
-            rows.push(GridRow {
-                header: format!("⚠ Experimentales · {n}").into(),
-                cards: ModelRc::new(VecModel::from(Vec::<CardItem>::new())),
-                logo: Image::default(),
-                has_logo: false,
-            });
-            pack(experimental, &mut rows);
-        }
-    }
+    build_home(app, win, &catalog, &cards, &installed, query.is_empty());
 
     // Settings → disk usage per console (sizes come from `refresh_library_size`).
     {
@@ -709,10 +598,27 @@ fn rebuild(app: &App, win: &MainWindow) {
         for s in &catalog.systems {
             let mut sum = 0u64;
             let mut n = 0;
+            let mut games: Vec<(u64, DiskGame)> = Vec::new();
             for p in catalog.projects.iter().filter(|p| p.system == s.id && installed.contains_key(&p.id)) {
                 n += 1;
-                sum += sizes.get(&p.id).copied().unwrap_or(0);
+                let b = sizes.get(&p.id).copied().unwrap_or(0);
+                sum += b;
+                let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
+                // Two versions of one game: say which.
+                let title = if catalog.projects.iter().filter(|q| q.game_key() == p.game_key() && installed.contains_key(&q.id)).count() > 1 {
+                    format!("{title} ({})", p.name)
+                } else {
+                    title
+                };
+                games.push((b, DiskGame {
+                    id: p.id.clone().into(),
+                    title: title.into(),
+                    version: installed.get(&p.id).and_then(|e| e.installed_tag.clone()).unwrap_or_default().into(),
+                    size: if b > 0 { fmt_bytes(b).into() } else { "".into() },
+                }));
             }
+            games.sort_by_key(|g| std::cmp::Reverse(g.0));
+            let games: Vec<DiskGame> = games.into_iter().map(|g| g.1).collect();
             if n == 0 {
                 continue;
             }
@@ -727,6 +633,7 @@ fn rebuild(app: &App, win: &MainWindow) {
                 count: n,
                 size: if sum > 0 { fmt_bytes(sum).into() } else { "…".into() },
                 frac: 0.0,
+                games: ModelRc::new(VecModel::from(games)),
             });
         }
         // Biggest consoles first.
@@ -741,14 +648,6 @@ fn rebuild(app: &App, win: &MainWindow) {
         win.set_disk_total(if total > 0 { fmt_bytes(total).into() } else { "".into() });
     }
 
-    let header = if !active.is_empty() {
-        catalog.systems.iter().find(|s| s.id == active).map(|s| s.name.clone()).unwrap_or(active)
-    } else if library {
-        "Mi biblioteca".to_string()
-    } else {
-        "Catálogo".to_string()
-    };
-
     // Pending updates across ALL installed games (ignores tab/filter/search),
     // so the sidebar badge is always truthful.
     let pending = catalog
@@ -757,67 +656,12 @@ fn rebuild(app: &App, win: &MainWindow) {
         .filter(|p| installed.get(&p.id).map(|e| has_update(e, &p.cached)).unwrap_or(false))
         .count();
 
-    // "Nuevas incorporaciones": catalog additions from the last week, newest
-    // first (appended at the end of the catalog file), for the showcase strip.
-    let mut newcomers: Vec<CardItem> = Vec::new();
-    for p in catalog.projects.iter().rev() {
-        if newcomers.len() >= 8 {
-            break;
-        }
-        let (visible, is_win) = app.visibility(p, &installed, show_windows);
-        if !visible || !is_new_id(&seen, &p.id, now_secs) {
-            continue;
-        }
-        let sys_name = catalog.systems.iter().find(|s| s.id == p.system).map(|s| s.name.clone()).unwrap_or_default();
-        let meta = match p.year {
-            Some(y) => format!("{sys_name} · {y}"),
-            None => sys_name,
-        };
-        newcomers.push(CardItem {
-            id: p.id.clone().into(),
-            title: (if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() }).into(),
-            subtitle: p.name.clone().into(),
-            cover: app.cover(p),
-            installed: installed.contains_key(&p.id),
-            is_windows: is_win,
-            update_available: false,
-            needs_rom: false,
-            rom_ok: false,
-            busy: false,
-            progress: 0.0,
-            kind: if p.kind == "recompilation" { "RECOMP" } else { "PORT" }.into(),
-            sys_color: Color::from_rgb_u8(0x88, 0x88, 0x88),
-            favorite: false,
-            play_state: 0,
-            install_error: false,
-            version: "".into(),
-            new_version: "".into(),
-            meta: meta.into(),
-            is_new: true,
-                    versions: 1,
-                    aspect: box_aspect(&p.system),
-        card_w: 0.0,
-        experimental: p.is_experimental(),
-                fit_cover: app.fit_cover(p),
-                size: app.size_label(&p.id),
-        });
-    }
-
-    if win.get_active_system().is_empty() {
-        win.set_active_exp_on(false);
-        win.set_active_exp_hidden(0);
-    }
-    win.set_systems(ModelRc::new(VecModel::from(sys_rows)));
+    win.set_exp_all_on(!settings_rows.is_empty() && settings_rows.iter().all(|r| r.exp_on));
     let half = settings_rows.len().div_ceil(2);
     let settings_b = settings_rows.split_off(half);
     win.set_settings_systems(ModelRc::new(VecModel::from(settings_rows)));
     win.set_settings_systems_b(ModelRc::new(VecModel::from(settings_b)));
-    win.set_rows(ModelRc::new(VecModel::from(rows)));
-    win.set_header_title(header.into());
-    win.set_header_count(count);
     win.set_updates_pending(pending as i32);
-    win.set_recent(ModelRc::new(VecModel::from(recent)));
-    win.set_newcomers(ModelRc::new(VecModel::from(newcomers)));
 }
 
 impl App {
@@ -825,13 +669,7 @@ impl App {
     /// letterboxed: SteamGridDB grids are 2:3 while a Switch or PS4 box is
     /// not, so `contain` left black bands above and below.
     fn fit_cover(&self, p: &Project) -> bool {
-        let img = self.cover(p);
-        let sz = img.size();
-        if sz.width == 0 || sz.height == 0 {
-            return false;
-        }
-        let ia = sz.width as f32 / sz.height as f32;
-        (ia - box_aspect(&p.system)).abs() > 0.05
+        fit_for(&self.cover(p), &p.system)
     }
 
     /// "12.3 GB" for an installed game whose size is known, else "".
@@ -842,57 +680,182 @@ impl App {
         }
     }
 
-    /// The cover at its original resolution when it's on disk; otherwise the
-    /// thumbnail now and a background download that refreshes the UI.
+    /// The cover at its original resolution if it's already decoded; else the
+    /// thumbnail (or nothing) now, and the big one is decoded (downloaded
+    /// first if needed) in the background and patched into the screen.
     fn cover_hd(&self, p: &Project) -> Image {
-        let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()).cloned() else { return Image::default() };
+        let Some(url) = cover_url(p) else { return Image::default() };
         if let Some(img) = self.cover_hd.borrow().get(&url) {
             return img.clone();
         }
-        let path = thumbs::hd_path_for(&self.paths, &url);
-        if path.exists() {
-            if let Ok(img) = Image::load_from_path(&path) {
-                let mut cache = self.cover_hd.borrow_mut();
-                // Bounded: a console's games plus a few pages, never the
-                // whole catalogue in memory.
-                if cache.len() >= 90 {
-                    cache.clear();
-                }
-                cache.insert(url, img.clone());
-                return img;
-            }
-        }
-        if self.hd_pending.borrow_mut().insert(url.clone()) {
-            let client = self.client.clone();
-            let paths = self.paths.clone();
-            if let Some(h) = RUNTIME.with(|r| r.borrow().clone()) {
-                h.spawn(async move {
-                    if thumbs::get_hd(&client, &paths, &url).await.is_ok() {
-                        let _ = slint::invoke_from_event_loop(schedule_refresh);
-                    }
-                });
-            }
-        }
+        request_cover(self, &url, true);
         self.cover(p)
     }
 
+    /// The thumbnail if it's already decoded; else nothing now and a
+    /// background decode. Never reads or decodes a file on the UI thread
+    /// (with ~500 covers that froze the first visit to Explorar).
     fn cover(&self, p: &Project) -> Image {
-        let Some(url) = p.box_art.as_ref().or(p.cover_url.as_ref()) else { return Image::default() };
-        if let Some(img) = self.cover_cache.borrow().get(url) {
+        let Some(url) = cover_url(p) else { return Image::default() };
+        if let Some(img) = self.cover_cache.borrow().get(&url) {
             return img.clone();
         }
-        let path = thumbs::path_for(&self.paths, url);
+        request_cover(self, &url, false);
+        Image::default()
+    }
+
+    /// The thumbnail only if it's already in memory (no request).
+    fn cover_cached(&self, p: &Project) -> Image {
+        cover_url(p).and_then(|u| self.cover_cache.borrow().get(&u).cloned()).unwrap_or_default()
+    }
+}
+
+fn cover_url(p: &Project) -> Option<String> {
+    p.box_art.as_ref().or(p.cover_url.as_ref()).cloned()
+}
+
+/// Crop instead of letterbox when the art's shape isn't the box's.
+fn fit_for(img: &Image, system: &str) -> bool {
+    let sz = img.size();
+    if sz.width == 0 || sz.height == 0 {
+        return false;
+    }
+    let ia = sz.width as f32 / sz.height as f32;
+    (ia - box_aspect(system)).abs() > 0.05
+}
+
+/// Decodes a cover (thumbnail or big) on a worker thread and, back on the UI
+/// thread, caches it and patches the boxes on screen. A big cover that isn't
+/// on disk yet is downloaded first.
+fn request_cover(app: &App, url: &str, hd: bool) {
+    let key = format!("{}{url}", if hd { "hd:" } else { "th:" });
+    if !app.img_pending.borrow_mut().insert(key.clone()) {
+        return;
+    }
+    let Some(h) = RUNTIME.with(|r| r.borrow().clone()) else {
+        app.img_pending.borrow_mut().remove(&key);
+        return;
+    };
+    let path = if hd { thumbs::hd_path_for(&app.paths, url) } else { thumbs::path_for(&app.paths, url) };
+    let (client, paths, url) = (app.client.clone(), app.paths.clone(), url.to_string());
+    h.spawn(async move {
         if !path.exists() {
-            return Image::default();
-        }
-        match Image::load_from_path(&path) {
-            Ok(img) => {
-                self.cover_cache.borrow_mut().insert(url.clone(), img.clone());
-                img
+            // Thumbnails come from spawn_missing_thumbs; big covers on demand.
+            if !hd || thumbs::get_hd(&client, &paths, &url).await.is_err() {
+                let _ = slint::invoke_from_event_loop(move || {
+                    UI.with(|u| {
+                        if let Some((app, _)) = &*u.borrow() {
+                            app.img_pending.borrow_mut().remove(&key);
+                        }
+                    });
+                });
+                return;
             }
-            Err(_) => Image::default(),
+        }
+        let px = tokio::task::spawn_blocking(move || thumbs::load_rgba(&path, if hd { 1200 } else { 640 }))
+            .await
+            .ok()
+            .flatten();
+        let _ = slint::invoke_from_event_loop(move || {
+            UI.with(|u| {
+                let Some((app, weak)) = &*u.borrow() else { return };
+                app.img_pending.borrow_mut().remove(&key);
+                let Some((w, hgt, buf)) = px else { return };
+                let img = Image::from_rgba8(SharedPixelBuffer::<Rgba8Pixel>::clone_from_slice(&buf, w, hgt));
+                if hd {
+                    let mut cache = app.cover_hd.borrow_mut();
+                    // Bounded: only the big boxes around the selection stay.
+                    if cache.len() >= 40 {
+                        let wanted = app.hd_wanted.borrow();
+                        cache.retain(|k, _| wanted.contains(k));
+                    }
+                    cache.insert(url.clone(), img);
+                } else {
+                    app.cover_cache.borrow_mut().insert(url.clone(), img);
+                }
+                if let Some(w) = weak.upgrade() {
+                    patch_covers(app, &w, &url);
+                }
+            });
+        });
+    });
+}
+
+/// Puts a freshly decoded cover into the boxes that show it, in place (no
+/// rebuild): the home carousel, its preview strip, the console cards and the
+/// game page.
+fn patch_covers(app: &App, w: &MainWindow, url: &str) {
+    let sel = w.get_home_game().max(0) as usize;
+    let in_recent = *app.home_sys_id.borrow() == RECENT_ID;
+    let patch = |model: ModelRc<CardItem>, near_hd: bool| {
+        for i in 0..model.row_count() {
+            let Some(mut row) = model.row_data(i) else { continue };
+            let Some(p) = app.find(row.id.as_str()) else { continue };
+            if cover_url(&p).as_deref() != Some(url) {
+                continue;
+            }
+            let want_hd = near_hd && i.abs_diff(sel) <= HD_RADIUS;
+            let img = if want_hd {
+                app.cover_hd.borrow().get(url).cloned().unwrap_or_else(|| app.cover_cached(&p))
+            } else {
+                app.cover_cached(&p)
+            };
+            if img != row.cover {
+                row.fit_cover = !in_recent && fit_for(&img, &p.system);
+                row.cover = img;
+                model.set_row_data(i, row);
+            }
+        }
+    };
+    patch(w.get_home_games(), true);
+    patch(w.get_home_preview(), false);
+    let systems = w.get_home_systems();
+    for i in 0..systems.row_count() {
+        let Some(row) = systems.row_data(i) else { continue };
+        let covers = row.covers.clone();
+        for j in 0..covers.row_count() {
+            let Some(mut c) = covers.row_data(j) else { continue };
+            if let Some(p) = app.find(c.id.as_str()) {
+                if cover_url(&p).as_deref() == Some(url) {
+                    c.cover = app.cover_cached(&p);
+                    c.fit_cover = fit_for(&c.cover, &p.system);
+                    covers.set_row_data(j, c);
+                }
+            }
         }
     }
+    if w.get_detail_visible() {
+        schedule_refresh();
+    }
+}
+
+/// Big covers are kept for the boxes this close to the selection.
+const HD_RADIUS: usize = 3;
+
+/// After the selection moves inside a console: big covers for the boxes
+/// around it (decoded in the background), thumbnails further out.
+fn home_window(app: &App, w: &MainWindow) {
+    let games = w.get_home_games();
+    let sel = w.get_home_game().max(0) as usize;
+    let in_recent = *app.home_sys_id.borrow() == RECENT_ID;
+    let mut wanted = HashSet::new();
+    for i in 0..games.row_count() {
+        let Some(mut row) = games.row_data(i) else { continue };
+        let Some(p) = app.find(row.id.as_str()) else { continue };
+        let Some(url) = cover_url(&p) else { continue };
+        let img = if i.abs_diff(sel) <= HD_RADIUS && w.get_home_level() == 1 {
+            wanted.insert(url.clone());
+            app.cover_hd(&p)
+        } else {
+            app.cover(&p)
+        };
+        if img != row.cover {
+            row.fit_cover = !in_recent && fit_for(&img, &p.system);
+            row.cover = img;
+            games.set_row_data(i, row);
+        }
+    }
+    *app.hd_wanted.borrow_mut() = wanted;
 }
 
 fn build_detail(app: &App, win: &MainWindow) {
@@ -998,7 +961,6 @@ fn build_detail(app: &App, win: &MainWindow) {
             is_new: false,
                     versions: 1,
                     aspect: box_aspect(&r.system),
-        card_w: 0.0,
         experimental: r.is_experimental(),
         fit_cover: app.fit_cover(r),
         size: app.size_label(&r.id),
@@ -1305,15 +1267,113 @@ fn build_detail(app: &App, win: &MainWindow) {
 /// Home carousel data: consoles that have something to show under the
 /// current filters (library / search / experimental), and the games of the
 /// console in focus (installed first, then the catalog order).
-fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem, String)]) {
+/// Opens «¿Eliminar…?» for one exact project, listing the port's own data
+/// folders (settings, saves) that «borrar también» would remove.
+fn open_confirm(app: &App, w: &MainWindow, p: &Project, title: &str) {
+    let installed = store::load_installed(&app.paths).unwrap_or_default();
+    let others: Vec<Project> = installed.keys().filter(|k| **k != p.id).filter_map(|k| app.find(k)).collect();
+    let home = dirs_home();
+    let extra: Vec<String> = actions::port_data_dirs(p, &others)
+        .iter()
+        .map(|d| match d.strip_prefix(&home) {
+            Ok(rest) => format!("~/{}", rest.display()),
+            Err(_) => d.display().to_string(),
+        })
+        .collect();
+    w.set_confirm_id(p.id.clone().into());
+    w.set_confirm_title(title.into());
+    w.set_confirm_extra(extra.join("\n").into());
+    w.set_confirm_wipe(false);
+    w.set_confirm_visible(true);
+}
+
+fn dirs_home() -> std::path::PathBuf {
+    std::env::var_os("HOME").map(std::path::PathBuf::from).unwrap_or_default()
+}
+
+/// Id of the home carousel's first card: the games played lately.
+const RECENT_ID: &str = "recent";
+
+/// Home carousel data: consoles that have something to show under the
+/// current filters (library / search / experimental), and the games of the
+/// console in focus (installed first, then the catalog order). The first card
+/// is «Jugados recientemente» when something has been played.
+fn build_home(
+    app: &App,
+    win: &MainWindow,
+    catalog: &Catalog,
+    cards: &[(CardItem, String)],
+    installed: &store::InstalledMap,
+    no_search: bool,
+) {
+    // Up to three covers per console card (installed first), as small thumbs.
+    let peek = |list: &[&CardItem]| -> Vec<CardItem> {
+        let mut v: Vec<CardItem> = list.iter().filter(|c| c.installed).take(3).map(|c| (*c).clone()).collect();
+        for c in list.iter().filter(|c| !c.installed) {
+            if v.len() >= 3 {
+                break;
+            }
+            v.push((*c).clone());
+        }
+        for c in v.iter_mut() {
+            if let Some(p) = app.find(c.id.as_str()) {
+                c.cover = app.cover(&p);
+                c.fit_cover = fit_for(&c.cover, &p.system);
+            }
+        }
+        v
+    };
+    let played = |id: &str| -> (i64, u64) {
+        installed
+            .get(id)
+            .map(|e| (e.last_played.as_ref().and_then(|s| s.parse::<i64>().ok()).unwrap_or(0), e.play_secs))
+            .unwrap_or((0, 0))
+    };
+    // «Jugados recientemente»: installed games by last session, newest first.
+    let mut recent: Vec<(i64, CardItem)> = cards
+        .iter()
+        .filter(|(c, _)| c.installed)
+        .filter_map(|(c, _)| {
+            let (last, secs) = played(c.id.as_str());
+            (last > 0).then(|| {
+                let mut c = c.clone();
+                c.meta = if secs >= 60 {
+                    format!("Jugado {} · {} en total", fmt_ago(last), fmt_duration(secs)).into()
+                } else {
+                    format!("Jugado {}", fmt_ago(last)).into()
+                };
+                // Mixed consoles in one row: one square slot, art letterboxed.
+                c.aspect = 1.0;
+                (last, c)
+            })
+        })
+        .collect();
+    recent.sort_by_key(|t| std::cmp::Reverse(t.0));
+    let recent: Vec<CardItem> = recent.into_iter().take(12).map(|t| t.1).collect();
+
     let mut systems: Vec<HomeSystem> = Vec::new();
     let mut ids: Vec<String> = Vec::new();
+    if no_search && !recent.is_empty() {
+        let refs: Vec<&CardItem> = recent.iter().collect();
+        systems.push(HomeSystem {
+            id: RECENT_ID.into(),
+            name: "Jugados recientemente".into(),
+            color: Color::from_rgb_u8(0x2f, 0xd3, 0xef),
+            logo: Image::default(),
+            has_logo: false,
+            count: recent.len() as i32,
+            installed: recent.len() as i32,
+            covers: ModelRc::new(VecModel::from(peek(&refs))),
+            is_recent: true,
+        });
+        ids.push(RECENT_ID.into());
+    }
     for s in &catalog.systems {
-        let n = cards.iter().filter(|(_, sys)| *sys == s.id).count();
-        if n == 0 {
+        let list: Vec<&CardItem> = cards.iter().filter(|(_, sys)| *sys == s.id).map(|(c, _)| c).collect();
+        if list.is_empty() {
             continue;
         }
-        let inst = cards.iter().filter(|(c, sys)| *sys == s.id && c.installed).count();
+        let inst = list.iter().filter(|c| c.installed).count();
         let logo = app.logos.get(&s.id).cloned();
         systems.push(HomeSystem {
             id: s.id.clone().into(),
@@ -1321,8 +1381,10 @@ fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem
             color: parse_color(&s.color),
             logo: logo.clone().unwrap_or_default(),
             has_logo: logo.is_some(),
-            count: n as i32,
+            count: list.len() as i32,
             installed: inst as i32,
+            covers: ModelRc::new(VecModel::from(peek(&list))),
+            is_recent: false,
         });
         ids.push(s.id.clone());
     }
@@ -1332,24 +1394,29 @@ fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem
         sel_id = id.clone();
         *app.home_sys_id.borrow_mut() = sel_id.clone();
     }
-    let color = catalog
-        .systems
-        .iter()
-        .find(|s| s.id == sel_id)
-        .map(|s| parse_color(&s.color))
-        .unwrap_or(Color::from_rgb_u8(0x3a, 0x3d, 0x46));
-    let mut games: Vec<CardItem> = cards
-        .iter()
-        .filter(|(_, sys)| *sys == sel_id)
-        .map(|(c, _)| {
-            let mut c = c.clone();
-            if let Some(p) = app.find(c.id.as_str()) {
-                c.cover = app.cover_hd(&p);
-            }
-            c
-        })
-        .collect();
-    games.sort_by_key(|c| !c.installed); // stable: keeps favourites/alphabetical inside each half
+    let color = if sel_id == RECENT_ID {
+        Color::from_rgb_u8(0x2f, 0xd3, 0xef)
+    } else {
+        catalog
+            .systems
+            .iter()
+            .find(|s| s.id == sel_id)
+            .map(|s| parse_color(&s.color))
+            .unwrap_or(Color::from_rgb_u8(0x3a, 0x3d, 0x46))
+    };
+    let mut games: Vec<CardItem> = if sel_id == RECENT_ID {
+        recent
+    } else {
+        let mut g: Vec<CardItem> = cards.iter().filter(|(_, sys)| *sys == sel_id).map(|(c, _)| c.clone()).collect();
+        g.sort_by_key(|c| !c.installed); // stable: keeps favourites/alphabetical inside each half
+        g
+    };
+    for c in games.iter_mut() {
+        if let Some(p) = app.find(c.id.as_str()) {
+            c.cover = app.cover_cached(&p);
+            c.fit_cover = sel_id != RECENT_ID && fit_for(&c.cover, &p.system);
+        }
+    }
     let game_ids: Vec<String> = games.iter().map(|c| c.id.to_string()).collect();
     let gsel = game_ids.iter().position(|i| *i == *app.home_game_id.borrow()).unwrap_or(0);
     if let Some(id) = game_ids.get(gsel) {
@@ -1363,11 +1430,17 @@ fn build_home(app: &App, win: &MainWindow, catalog: &Catalog, cards: &[(CardItem
     win.set_home_systems(ModelRc::new(VecModel::from(systems)));
     win.set_home_sys(sel as i32);
     // A peek at the console's games for the console screen: installed first.
-    let preview: Vec<CardItem> = games.iter().take(7).cloned().collect();
+    let mut preview: Vec<CardItem> = games.iter().take(7).cloned().collect();
+    for c in preview.iter_mut() {
+        if let Some(p) = app.find(c.id.as_str()) {
+            c.cover = app.cover(&p);
+        }
+    }
     win.set_home_preview(ModelRc::new(VecModel::from(preview)));
     win.set_home_games(ModelRc::new(VecModel::from(games)));
     win.set_home_game(gsel as i32);
     win.set_home_color(color);
+    home_window(app, win);
 }
 
 /// One input on the home carousel (keyboard, mouse buttons on it, gamepad).
@@ -1384,7 +1457,9 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
             "right" | "rb" => (cur + 1).min(ids.len() - 1),
             "a" | "down" | "start" => {
                 w.set_home_level(1);
+                w.set_home_btn(-1);
                 w.invoke_nav_push();
+                home_window(app, w);
                 return;
             }
             _ => return,
@@ -1399,6 +1474,37 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
     }
     let ids = app.home_game_ids.borrow().clone();
     let cur = w.get_home_game().max(0) as usize;
+    // The row of buttons under the game: ▼ enters it, ◀ ▶ move, A presses,
+    // ▲ / B go back to the boxes.
+    let btn = w.get_home_btn();
+    if btn >= 0 {
+        let g = w.get_home_games().row_data(cur);
+        let has_update = g.as_ref().map(|g| g.installed && g.update_available).unwrap_or(false);
+        let n = if has_update { 3 } else { 2 };
+        match k {
+            "left" | "lb" => w.set_home_btn((btn - 1).max(0)),
+            "right" | "rb" => w.set_home_btn((btn + 1).min(n - 1)),
+            "up" | "b" | "back" => w.set_home_btn(-1),
+            "a" | "start" => {
+                let action = match (btn, has_update) {
+                    (0, _) => "a",
+                    (1, true) => "update",
+                    _ => "x",
+                };
+                w.set_home_btn(-1);
+                match action {
+                    "update" => {
+                        if let Some(id) = ids.get(cur) {
+                            w.invoke_install(id.clone().into());
+                        }
+                    }
+                    other => home_key(app, w, other),
+                }
+            }
+            _ => {}
+        }
+        return;
+    }
     match k {
         "left" | "right" | "lb" | "rb" => {
             if ids.is_empty() {
@@ -1408,6 +1514,12 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
             let next = if k.starts_with('l') { cur.saturating_sub(step) } else { (cur + step).min(ids.len() - 1) };
             *app.home_game_id.borrow_mut() = ids[next].clone();
             w.set_home_game(next as i32);
+            home_window(app, w);
+        }
+        "down" => {
+            if !ids.is_empty() {
+                w.set_home_btn(0);
+            }
         }
         "b" | "up" | "back" => {
             w.set_home_level(0);
@@ -1432,6 +1544,59 @@ fn home_key(app: &App, w: &MainWindow, k: &str) {
         }
         _ => {}
     }
+}
+
+/// Shows the «Actualizar todo» batch: the list and the one-line summary.
+fn push_bulk(app: &App, w: &MainWindow) {
+    let items = app.bulk_items.borrow();
+    let rows: Vec<BulkItem> = items
+        .iter()
+        .map(|(_, t, st, p)| BulkItem { title: t.clone().into(), state: *st, progress: *p })
+        .collect();
+    let total = items.len();
+    let done = items.iter().filter(|i| i.2 >= 2).count();
+    let failed = items.iter().filter(|i| i.2 == 3).count();
+    let label = if let Some((_, t, _, p)) = items.iter().find(|i| i.2 == 1) {
+        let pct = if *p > 0.0 { format!(" · {}%", (p * 100.0).floor()) } else { String::new() };
+        format!("Actualizando {} de {total} · {t}{pct}", done + 1)
+    } else if w.get_bulk_busy() {
+        format!("Actualizando {} de {total}", (done + 1).min(total))
+    } else if failed > 0 {
+        format!("{} al día · {failed} con error", done - failed)
+    } else {
+        let ok = items.iter().filter(|i| i.2 == 2).count();
+        if ok == 1 { "✓ 1 juego actualizado".to_string() } else { format!("✓ {ok} juegos actualizados") }
+    };
+    w.set_bulk_items(ModelRc::new(VecModel::from(rows)));
+    w.set_bulk_label(label.into());
+}
+
+/// Download progress without a rebuild: the bar of the boxes that are busy
+/// and the open game page (a full refresh per percent re-created every box).
+fn progress_refresh() {
+    UI.with(|u| {
+        let Some((app, weak)) = &*u.borrow() else { return };
+        let Some(w) = weak.upgrade() else { return };
+        let busy = app.busy.borrow();
+        let prog = app.install_progress.borrow();
+        for model in [w.get_home_games(), w.get_home_preview()] {
+            for i in 0..model.row_count() {
+                let Some(mut row) = model.row_data(i) else { continue };
+                let id = row.id.to_string();
+                let b = busy.contains(&id);
+                let p = prog.get(&id).copied().unwrap_or(0.0);
+                if row.busy != b || (row.progress - p).abs() > f32::EPSILON {
+                    row.busy = b;
+                    row.progress = p;
+                    model.set_row_data(i, row);
+                }
+            }
+        }
+        drop((busy, prog));
+        if w.get_detail_visible() {
+            build_detail(app, &w);
+        }
+    });
 }
 
 /// One rebuild for a burst of background events (cover downloads arrive in
@@ -1476,7 +1641,7 @@ fn romm_fetch_ui(app: &Rc<App>, pid: &str, rom: freeport_core::romm::Rom) {
                     app.phase.borrow_mut().insert(idc, text);
                 }
             });
-            ui_refresh();
+            progress_refresh();
         });
     };
     let pid2 = id.clone();
@@ -1619,18 +1784,20 @@ async fn refresh_library_size(paths: Paths) {
     });
 }
 
-fn apply_card_size(win: &MainWindow, size: &str) {
-    let h = match size {
-        "s" => 150.0,
-        "l" => 236.0,
-        _ => 190.0,
-    };
-    win.set_card_h(h);
-    win.set_card_size(if size == "s" || size == "l" { size.into() } else { "m".into() });
-}
-
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--list-data-dirs") {
+        // dev aid: what «borrar también sus partidas y ajustes» would offer for
+        // each installed game (prints only, removes nothing).
+        let paths = Paths::resolve()?;
+        let catalog = store::load_catalog(&paths)?;
+        let installed = store::load_installed(&paths)?;
+        let inst: Vec<Project> = catalog.projects.iter().filter(|p| installed.contains_key(&p.id)).cloned().collect();
+        for p in &inst {
+            println!("{}: {:?}", p.id, actions::port_data_dirs(p, &inst));
+        }
+        return Ok(());
+    }
     if let Some(i) = args.iter().position(|a| a == "--play") {
         let id = args.get(i + 1).cloned().unwrap_or_default();
         return cli_play(&id);
@@ -1702,7 +1869,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         screens_cache: RefCell::new(std::collections::HashMap::new()),
         cover_cache: RefCell::new(std::collections::HashMap::new()),
         cover_hd: RefCell::new(std::collections::HashMap::new()),
-        hd_pending: RefCell::new(HashSet::new()),
+        bulk_items: RefCell::new(Vec::new()),
+        img_pending: RefCell::new(HashSet::new()),
+        hd_wanted: RefCell::new(HashSet::new()),
         size_cache: RefCell::new(std::collections::HashMap::new()),
         changelog_cache: RefCell::new(std::collections::HashMap::new()),
         pending_update: RefCell::new(None),
@@ -1747,7 +1916,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             w.invoke_settings_key(b.clone().into());
                         } else if w.get_detail_visible() {
                             w.invoke_detail_key(b.clone().into());
-                        } else if !w.get_classic_view() {
+                        } else {
                             home_key(app, &w, &b);
                         }
                     }
@@ -1764,7 +1933,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         win.set_platform_label(app.triple.clone().into());
         win.set_show_windows(cfg.show_windows);
         win.set_crt_visible(cfg.crt);
-        win.set_classic_view(cfg.classic_view);
         if let (Some(u), Some(_)) = (cfg.ra_user.as_ref(), cfg.ra_token.as_ref()) {
             win.set_ra_logged_in(true);
             win.set_ra_status(format!("Conectado como {u}").into());
@@ -1810,6 +1978,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 if on {
                     c.experimental_systems.push(id);
                 }
+                let _ = store::save_config(&app.paths, &c);
+            }
+            ui_refresh();
+        }
+    });
+
+    win.on_set_all_experimental({
+        let app = app.clone();
+        move |on| {
+            if let Ok(mut c) = store::load_config(&app.paths) {
+                c.show_experimental = false;
+                c.experimental_systems = if on {
+                    app.catalog.borrow().systems.iter().map(|s| s.id.clone()).collect()
+                } else {
+                    Vec::new()
+                };
                 let _ = store::save_config(&app.paths, &c);
             }
             ui_refresh();
@@ -2156,6 +2340,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 *app.home_game_id.borrow_mut() = id.clone();
             }
             w.set_home_game(i);
+            home_window(&app, &w);
+        }
+    });
+    // A cover in the console's preview strip: into the console, on that game.
+    win.on_home_pick_preview({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |i| {
+            let Some(w) = weak.upgrade() else { return };
+            if let Some(id) = app.home_game_ids.borrow().get(i as usize) {
+                *app.home_game_id.borrow_mut() = id.clone();
+            }
+            w.set_home_game(i);
+            w.set_home_level(1);
+            w.set_home_btn(-1);
+            w.invoke_nav_push();
+            home_window(&app, &w);
         }
     });
     win.on_toggle_fullscreen({
@@ -2165,16 +2366,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 w.set_fullscreen(v);
                 w.window().set_fullscreen(v);
             }
-        }
-    });
-    win.on_set_classic_view({
-        let app = app.clone();
-        move |v| {
-            if let Ok(mut c) = store::load_config(&app.paths) {
-                c.classic_view = v;
-                let _ = store::save_config(&app.paths, &c);
-            }
-            ui_refresh();
         }
     });
     win.on_refresh(ui_refresh);
@@ -2477,7 +2668,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         home_level: w.get_home_level(),
         settings: w.get_settings_visible(),
         library: w.get_library_tab(),
-        system: w.get_active_system().to_string(),
         detail: app.detail.borrow().as_ref().map(|d| d.id.clone()),
     };
     win.on_nav_push({
@@ -2507,7 +2697,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         w.set_home_level(st.home_level);
         w.set_settings_visible(st.settings);
         w.set_library_tab(st.library);
-        w.set_active_system(st.system.clone().into());
         match st.detail {
             Some(id) => w.invoke_open_game(id.into()),
             None => *app.detail.borrow_mut() = None,
@@ -2522,7 +2711,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         move || {
             let Some(w) = weak.upgrade() else { return };
             // On the home carousel, «back» first leaves the console's games.
-            if !w.get_classic_view() && !w.get_settings_visible() && !w.get_detail_visible() && w.get_home_level() == 1 {
+            if !w.get_settings_visible() && !w.get_detail_visible() && w.get_home_level() == 1 {
                 w.set_home_level(0);
                 return;
             }
@@ -2619,7 +2808,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 app.install_progress.borrow_mut().insert(idc, f);
                             }
                         });
-                        ui_refresh();
+                        progress_refresh();
                     });
                 };
                 let err = actions::install_project(&client, &paths, &project, &cfg, Some(cancel), on_prog)
@@ -2679,6 +2868,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    win.on_bulk_dismiss({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move || {
+            let Some(w) = weak.upgrade() else { return };
+            if w.get_bulk_busy() {
+                return;
+            }
+            app.bulk_items.borrow_mut().clear();
+            push_bulk(&app, &w);
+            w.set_bulk_label("".into());
+        }
+    });
     win.on_cancel_update_all({
         let app = app.clone();
         move || {
@@ -2715,10 +2917,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 return;
             }
             let total = targets.len();
+            *app.bulk_items.borrow_mut() = targets
+                .iter()
+                .map(|p| {
+                    let t = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
+                    (p.id.clone(), t, 0, 0.0)
+                })
+                .collect();
             if let Some(w) = weak.upgrade() {
                 w.set_bulk_busy(true);
                 w.set_bulk_progress(0.0);
-                w.set_bulk_label(format!("0/{total}").into());
+                push_bulk(&app, &w);
             }
             // Mark everything queued so the whole batch shows as busy at once.
             for p in &targets {
@@ -2746,6 +2955,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                         app.busy.borrow_mut().remove(id);
                                         app.install_progress.borrow_mut().remove(id);
                                     }
+                                    for it in app.bulk_items.borrow_mut().iter_mut() {
+                                        if rest.contains(&it.0) {
+                                            it.2 = 4;
+                                        }
+                                    }
                                 }
                             });
                             ui_refresh();
@@ -2758,13 +2972,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let (pidc, c) = (pid.clone(), cancel.clone());
                         let _ = slint::invoke_from_event_loop(move || {
                             UI.with(|u| {
-                                if let Some((app, _)) = &*u.borrow() {
+                                if let Some((app, weak)) = &*u.borrow() {
+                                    if let Some(it) = app.bulk_items.borrow_mut().iter_mut().find(|it| it.0 == pidc) {
+                                        it.2 = 1;
+                                    }
                                     app.cancels.borrow_mut().insert(pidc, c);
+                                    if let Some(w) = weak.upgrade() {
+                                        push_bulk(app, &w);
+                                    }
                                 }
                             });
                         });
                     }
-                    let game = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
                     let mut last = -1i32;
                     let prog_id = pid.clone();
                     let on_prog = move |done: u64, total_bytes: u64| {
@@ -2779,18 +2998,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         let f = pct as f32 / 100.0;
                         let overall = (i as f32 + f) / total as f32;
                         let idc = prog_id.clone();
-                        let label = format!("{}/{} · {}", i + 1, total, game);
                         let _ = slint::invoke_from_event_loop(move || {
                             UI.with(|u| {
                                 if let Some((app, weak)) = &*u.borrow() {
+                                    if let Some(it) = app.bulk_items.borrow_mut().iter_mut().find(|it| it.0 == idc) {
+                                        it.3 = f;
+                                    }
                                     app.install_progress.borrow_mut().insert(idc, f);
                                     if let Some(w) = weak.upgrade() {
                                         w.set_bulk_progress(overall);
-                                        w.set_bulk_label(label.into());
+                                        push_bulk(app, &w);
                                     }
                                 }
                             });
-                            ui_refresh();
+                            progress_refresh();
                         });
                     };
                     let err = actions::install_project(&client, &paths, p, &cfg, Some(cancel), on_prog)
@@ -2812,11 +3033,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 app.install_progress.borrow_mut().remove(&pid);
                                 app.size_cache.borrow_mut().remove(&pid);
                                 app.cancels.borrow_mut().remove(&pid);
-                                if err.as_ref().map(|e| !e.is_cancelled()).unwrap_or(false) {
+                                let failed_now = err.as_ref().map(|e| !e.is_cancelled()).unwrap_or(false);
+                                if failed_now {
                                     app.install_error.borrow_mut().insert(pid.clone());
+                                }
+                                if let Some(it) = app.bulk_items.borrow_mut().iter_mut().find(|it| it.0 == pid) {
+                                    it.2 = if failed_now { 3 } else if err.is_some() { 4 } else { 2 };
                                 }
                                 if let Some(w) = weak.upgrade() {
                                     w.set_bulk_progress(done);
+                                    push_bulk(app, &w);
                                 }
                             }
                         });
@@ -2826,7 +3052,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 // Summary stays visible under the button when something failed
                 // (silent per-card ⚠ alone was easy to miss).
                 let summary = if failed > 0 {
-                    format!("{done_ok} al día · {failed} con error — reintenta desde la tarjeta")
+                    format!("{done_ok} juegos al día · {failed} con error: reintenta desde su ficha")
+                } else if done_ok > 0 {
+                    if done_ok == 1 { "1 juego actualizado".to_string() } else { format!("{done_ok} juegos actualizados") }
                 } else {
                     String::new()
                 };
@@ -2836,7 +3064,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             *app.bulk_cancel.borrow_mut() = None;
                             if let Some(w) = weak.upgrade() {
                                 w.set_bulk_busy(false);
-                                w.set_bulk_label(summary.into());
+                                push_bulk(app, &w);
+                                if !summary.is_empty() {
+                                    w.set_notice(summary.into());
+                                }
                             }
                         }
                     });
@@ -2936,9 +3167,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             let target = inst.first().map(|m| (*m).clone()).or_else(|| app.find(&id));
             if let Some(t) = target {
-                w.set_confirm_id(t.id.clone().into());
-                w.set_confirm_title(t.original_game.clone().into());
-                w.set_confirm_visible(true);
+                open_confirm(&app, &w, &t, &t.original_game);
             }
         }
     });
@@ -2970,9 +3199,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 _ => {
                     if let (Some(p), Some(w)) = (app.find(&id), weak.upgrade()) {
-                        w.set_confirm_id(p.id.clone().into());
-                        w.set_confirm_title(format!("{} ({})", p.original_game, p.name).into());
-                        w.set_confirm_visible(true);
+                        open_confirm(&app, &w, &p, &format!("{} ({})", p.original_game, p.name));
                     }
                 }
             }
@@ -2997,11 +3224,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    win.on_confirm_uninstall({
+        let app = app.clone();
+        let weak = win.as_weak();
+        move |id| {
+            let (Some(p), Some(w)) = (app.find(&id), weak.upgrade()) else { return };
+            let title = if p.original_game.is_empty() { p.name.clone() } else { p.original_game.clone() };
+            open_confirm(&app, &w, &p, &title);
+        }
+    });
     win.on_uninstall({
         let app = app.clone();
         let handle = handle.clone();
+        let weak = win.as_weak();
         move |id| {
-            let _ = actions::uninstall_project(&app.paths, &id);
+            let wipe_on = weak.upgrade().map(|w| w.get_confirm_wipe()).unwrap_or(false);
+            if let Some(p) = app.find(&id) {
+                let wipe = if wipe_on {
+                    let installed = store::load_installed(&app.paths).unwrap_or_default();
+                    let others: Vec<Project> = installed.keys().filter(|k| **k != p.id).filter_map(|k| app.find(k)).collect();
+                    actions::port_data_dirs(&p, &others)
+                } else {
+                    Vec::new()
+                };
+                if let Err(e) = actions::uninstall_project_clean(&app.paths, &p, &wipe) {
+                    if let Some(w) = weak.upgrade() {
+                        w.set_notice(format!("No se pudo eliminar del todo: {e}").into());
+                    }
+                }
+            } else {
+                let _ = actions::uninstall_project(&app.paths, &id);
+            }
             app.size_cache.borrow_mut().remove(&id.to_string());
             app.install_error.borrow_mut().remove(&id.to_string());
             handle.spawn(refresh_library_size(app.paths.clone()));
@@ -3063,7 +3316,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 app.phase.borrow_mut().insert(idc, text);
                             }
                         });
-                        ui_refresh();
+                        progress_refresh();
                     });
                 };
                 let res = actions::import_ps4_pkgs(&paths, &project, &files, &mut on_prog);
@@ -3271,11 +3524,54 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let title = members.first().map(|m| m.original_game.clone()).unwrap_or_default();
         open_chooser(&app, &win, "play", &format!("Jugar a {title}"), rows);
     }
-    if let Some(sys) = std::env::var("FREEPORT_DEBUG_SYSTEM").ok().filter(|s| !s.is_empty()) {
-        win.set_active_system(sys.into()); // dev aid: preselect a console
+    if let Ok(v) = std::env::var("FREEPORT_DEBUG_SETTINGS") {
+        // dev aid: land on the settings screen; "4:n64" = tab 4, console unfolded
+        win.set_settings_visible(true);
+        let mut it = v.splitn(2, ':');
+        if let Some(t) = it.next().and_then(|t| t.parse::<i32>().ok()) {
+            win.set_settings_tab(t);
+        }
+        if let Some(sys) = it.next() {
+            win.set_expanded_sys(sys.into());
+        }
     }
-    if std::env::var_os("FREEPORT_DEBUG_SETTINGS").is_some() {
-        win.set_settings_visible(true); // dev aid: land on the settings screen
+    if let Ok(v) = std::env::var("FREEPORT_DEBUG_HOME") {
+        // dev aid: "explore", "games", "buttons", "explore-games", optional
+        // ":<system id>" (after the catalog has loaded)
+        let (v, sys) = match v.split_once(':') {
+            Some((a, b)) => (a.to_string(), b.to_string()),
+            None => (v, String::new()),
+        };
+        let (app2, weak) = (app.clone(), win.as_weak());
+        slint::Timer::single_shot(std::time::Duration::from_millis(1500), move || {
+            let Some(w) = weak.upgrade() else { return };
+            if v.contains("explore") {
+                w.set_library_tab(false);
+            }
+            if !sys.is_empty() {
+                *app2.home_sys_id.borrow_mut() = sys.clone();
+            }
+            ui_refresh();
+            if v.contains("games") || v == "buttons" {
+                home_key(&app2, &w, "a");
+            }
+            if v == "buttons" {
+                home_key(&app2, &w, "down");
+                home_key(&app2, &w, "right");
+            }
+        });
+    }
+    if std::env::var_os("FREEPORT_DEBUG_BULK").is_some() {
+        // dev aid: a fake «Actualizar todo» batch, panel open
+        *app.bulk_items.borrow_mut() = vec![
+            ("a".into(), "Perfect Dark".into(), 2, 1.0),
+            ("b".into(), "Super Mario 64".into(), 1, 0.42),
+            ("c".into(), "The Wind Waker".into(), 0, 0.0),
+        ];
+        win.set_bulk_busy(true);
+        win.set_bulk_progress(0.45);
+        win.set_bulk_open(true);
+        push_bulk(&app, &win);
     }
     if std::env::var_os("FREEPORT_DEBUG_UPDATE").is_some() {
         // dev aid: show the self-update banner with fake data (layout checks)
@@ -3293,25 +3589,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         // their fresh timestamp (7-day NEW window) instead of being unknown.
         *app.seen.borrow_mut() = load_seen(&app.paths);
     }
-
-    // Card size from config.
-    apply_card_size(&win, &store::load_config(&app.paths).map(|c| c.card_size).unwrap_or_default());
-
-    win.on_set_card_size({
-        let app = app.clone();
-        let weak = win.as_weak();
-        move |s| {
-            let s = s.to_string();
-            if let Ok(mut cfg) = store::load_config(&app.paths) {
-                cfg.card_size = s.clone();
-                let _ = store::save_config(&app.paths, &cfg);
-            }
-            if let Some(w) = weak.upgrade() {
-                apply_card_size(&w, &s);
-            }
-            ui_refresh();
-        }
-    });
 
     win.on_add_steam({
         let app = app.clone();
@@ -3496,7 +3773,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // `--tv`: boot straight into the console view, full screen (Sunshine
     // launches it like this for streaming to the TV).
     if std::env::args().any(|a| a == "--tv") {
-        win.set_classic_view(false);
         win.set_fullscreen(true);
         win.window().set_fullscreen(true);
     }

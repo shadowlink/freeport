@@ -994,30 +994,23 @@ export component MainWindow inherits Window {
                 //  bottom       — status and buttons.
                 property <length> gap: 40px * home.k;
                 property <length> bottom-h: 20px * home.k + 14px * home.k + 52px * home.k;
-                property <length> logo-h: min(110px * home.k, self.height * 0.15);
+                property <length> lift: 64px * home.k;     // the logo rises above the frame
                 property <length> over: 30px * home.k;     // the box hangs below the frame
-                property <length> avail-h: self.height - self.logo-h - 20px * home.k - self.over - 28px * home.k - self.bottom-h;
-                property <length> frame-w: min(self.width * 0.58, self.avail-h * 1.6);
+                property <length> avail-h: self.height - self.lift - self.over - 28px * home.k - self.bottom-h;
+                property <length> frame-w: min(self.width * 0.6, self.avail-h * 1.6);
                 property <length> frame-h: self.frame-w / 1.6;
                 // the whole block centred vertically in the panel
-                property <length> top: max(0px, (self.height - (self.logo-h + 20px * home.k + self.frame-h + self.over + 28px * home.k + self.bottom-h)) / 2);
-                property <length> frame-y: self.top + self.logo-h + 20px * home.k;
+                property <length> top: max(0px, (self.height - (self.lift + self.frame-h + self.over + 28px * home.k + self.bottom-h)) / 2);
+                property <length> frame-y: self.top + self.lift;
                 property <float> asp: Math.min(1.45, Math.max(0.56, home.g.aspect));
                 property <length> box-h: self.frame-h * 0.6 * Math.sqrt(0.7 / self.asp);
                 property <length> box-w: self.box-h * self.asp;
                 property <float> la: root.home-info.has-logo ? Math.max(0.4, root.home-info.logo.width / Math.max(1, root.home-info.logo.height)) : 3.2;
-                property <length> lg-h: min(self.logo-h, min(self.frame-w * 0.85, self.logo-h * 0.72 * Math.sqrt(3.2 * self.la)) / self.la);
+                // logo on the frame's top-left corner, mirroring the box: the
+                // area of a 3.2:1 logo 27 % of the frame tall, within limits
+                property <length> lg-h: min(self.frame-h * 0.44, min(self.frame-w * 0.7, self.frame-h * 0.27 * Math.sqrt(3.2 * self.la)) / self.la);
                 property <length> col-x: self.frame-w + self.gap + 20px * home.k;
 
-                if root.home-info.has-logo: Image {
-                    x: 0; y: parent.top + (parent.logo-h - parent.lg-h) / 2; height: parent.lg-h; width: parent.lg-h * parent.la;
-                    source: root.home-info.logo; image-fit: contain;
-                }
-                if !root.home-info.has-logo: Text {
-                    x: 0; y: parent.top; width: parent.frame-w; height: parent.logo-h;
-                    text: home.g.title; color: white; font-size: 36px * home.k; font-weight: 900;
-                    wrap: word-wrap; overflow: elide; vertical-alignment: center;
-                }
                 // Frame: screenshot (or the box art blown up and dimmed when there is none)
                 Rectangle {
                     x: 0; y: parent.frame-y; width: parent.frame-w; height: parent.frame-h;
@@ -1026,6 +1019,8 @@ export component MainWindow inherits Window {
                         border-width: 1px; border-color: #ffffff14;
                         if root.home-info.has-shot: Image { width: 100%; height: 100%; source: root.home-info.shot; image-fit: cover; }
                         if !root.home-info.has-shot: Image { width: 100%; height: 100%; source: home.g.cover; image-fit: cover; opacity: 0.35; }
+                        // darkens the corner under the logo
+                        Rectangle { background: @linear-gradient(155deg, #000000b0 0%, #00000055 28%, #00000000 52%); }
                     }
                 }
                 // Box on the frame's bottom-right corner
@@ -1039,6 +1034,17 @@ export component MainWindow inherits Window {
                         Cover { width: 100%; height: 100%; source: home.g.cover; title: home.g.title; fit-cover: home.g.fit-cover; } }
                     if home.g.busy: Rectangle { x: 0; y: parent.height - 10px; width: parent.width; height: 10px; background: #000000aa;
                         Rectangle { x: 0; width: parent.width * home.g.progress; background: home.cyan; } }
+                }
+                // Logo (or the title) over the frame's top-left corner
+                if root.home-info.has-logo: Image {
+                    x: -16px * home.k; y: parent.frame-y - min(parent.lg-h * 0.45, parent.lift);
+                    height: parent.lg-h; width: parent.lg-h * parent.la;
+                    source: root.home-info.logo; image-fit: contain;
+                }
+                if !root.home-info.has-logo: Text {
+                    x: 24px * home.k; y: parent.frame-y + 18px * home.k; width: parent.frame-w * 0.7; height: parent.frame-h * 0.4;
+                    text: home.g.title; color: white; font-size: 38px * home.k; font-weight: 900;
+                    wrap: word-wrap; overflow: elide; vertical-alignment: TextVerticalAlignment.top;
                 }
                 // Right column: rating, facts, description
                 VerticalLayout {

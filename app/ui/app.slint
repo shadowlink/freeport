@@ -234,12 +234,10 @@ component Cover inherits Rectangle {
     }
     Image {
         source: root.source;
-        width: root.hovered ? parent.width * 1.04 : parent.width;
-        height: root.hovered ? parent.height * 1.04 : parent.height;
-        x: (parent.width - self.width) / 2;
-        y: (parent.height - self.height) / 2;
+        // Always exactly the box: no zoom of its own (it lagged the box and
+        // made the art zoom in/out on every move).
+        width: parent.width; height: parent.height;
         image-fit: root.fit-cover ? cover : contain;
-        animate width, height { duration: 220ms; easing: ease-out; }
     }
 }
 
@@ -856,14 +854,14 @@ export component MainWindow inherits Window {
                     // Keeps the logo readable over the art.
                     Rectangle { background: @linear-gradient(90deg, s.color.mix(#101114, 0.5) 0%, s.color.mix(#101114, 0.42).with-alpha(0.8) 40%, #10111400 70%); }
                     Rectangle { x: 0; y: parent.height - 5px * home.k; width: parent.width; height: 5px * home.k; background: s.color; opacity: sel ? 1.0 : 0.6; }
-                    if s.has-logo: Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.2;
-                                           width: parent.width * 0.48; height: parent.height * 0.34; image-fit: contain;
+                    if s.has-logo: Image { source: s.logo; x: parent.width * 0.08; y: parent.height * 0.27;
+                                           width: parent.width * 0.48; height: parent.height * 0.42; image-fit: contain;
                                            horizontal-alignment: left; }
                     if !s.has-logo: Text { x: parent.width * 0.08; y: parent.height * 0.16; width: parent.width * 0.5; height: parent.height * 0.44;
                                            text: s.is-recent ? "Jugados recientemente" : s.name; color: white; font-size: 25px * home.k * cs; font-weight: 900;
                                            wrap: word-wrap; vertical-alignment: center; }
-                    Text { x: parent.width * 0.08; y: parent.height * 0.66; width: parent.width * 0.5;
-                           text: s.is-recent ? "Vuelve a lo último" : (s.count == 1 ? "1 juego" : "\{s.count} juegos");
+                    if s.is-recent: Text { x: parent.width * 0.08; y: parent.height * 0.66; width: parent.width * 0.5;
+                           text: "Vuelve a lo último";
                            color: #ffffffbb; font-size: 14px * home.k * cs; font-weight: 800; overflow: elide; }
                     if dim > 0.01: Rectangle { background: #15161a; opacity: dim; }
                 }
@@ -938,8 +936,9 @@ export component MainWindow inherits Window {
                 property <bool> sel: i == root.home-game;
                 property <float> d: i - parent.pos;
                 property <float> a: Math.abs(self.d);
-                // Size follows the slide itself (no separate zoom animation).
-                property <float> grow: clamp(1 - self.a, 0, 1);
+                // No zoom at all: the selected box is big at once, the rest
+                // only slide.
+                property <float> grow: self.sel ? 1 : 0;
                 property <float> my-asp: Math.min(1.45, Math.max(0.56, c.aspect));
                 property <length> off: (c.cx - parent.pcx) * parent.small-h + clamp(self.d, -1, 1) * parent.extra;
                 property <length> tx: root.width / 2 + self.off - self.width / 2;

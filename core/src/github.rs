@@ -76,6 +76,21 @@ pub async fn fetch_releases(
     Ok(releases)
 }
 
+/// Lists releases of a self-hosted Gitea/Forgejo repository. Their API
+/// returns the same release shape as GitHub's (tag_name, prerelease, draft,
+/// published_at, body, assets[].browser_download_url).
+pub async fn fetch_releases_gitea(client: &reqwest::Client, base: &str, slug: &str) -> AppResult<Vec<Release>> {
+    let base = base.trim_end_matches('/');
+    let url = format!("{base}/api/v1/repos/{slug}/releases?limit=50");
+    let resp = client.get(&url).header("Accept", "application/json").send().await.map_err(|e| {
+        AppError::msg(format!("no se pudo conectar con {base}: {e}"))
+    })?;
+    if !resp.status().is_success() {
+        return Err(AppError::msg(format!("{base} respondió {} para {slug}", resp.status())));
+    }
+    Ok(resp.json().await?)
+}
+
 /// Lists releases of a gitlab.com project. GitLab's release assets are
 /// "links" (name + URL); `direct_asset_url` is stable across re-uploads, so
 /// it is preferred over the raw upload URL.

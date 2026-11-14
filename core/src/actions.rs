@@ -53,6 +53,15 @@ pub async fn fetch_changelog(
     project: &Project,
 ) -> AppResult<(String, Option<String>, String)> {
     let slug = project.repo.slug();
+    if let ("gitea", Some(base)) = (project.repo.host.as_str(), project.repo.base.as_deref()) {
+        let releases = github::fetch_releases_gitea(client, base, &slug).await?;
+        let cached_tag = project.cached.as_ref().and_then(|c| c.latest_tag.as_deref());
+        let rel = cached_tag
+            .and_then(|t| releases.iter().find(|r| r.tag_name == t).cloned())
+            .or_else(|| github::pick_release(&releases, &project.release_channel, project.rolling_tag.as_deref()))
+            .ok_or_else(|| AppError::msg("sin release"))?;
+        return Ok((rel.tag_name.clone(), rel.published_at.clone(), rel.body.clone().unwrap_or_default()));
+    }
     if project.repo.host != "github" {
         return Err(AppError::msg("sin changelog (proyecto sin releases de GitHub)"));
     }
@@ -207,6 +216,12 @@ async fn resolve_release(
         });
     }
     let slug = project.repo.slug();
+    if project.repo.host == "gitea" {
+        let base = project.repo.base.as_deref().ok_or_else(|| AppError::msg("repositorio sin servidor (base)"))?;
+        let releases = github::fetch_releases_gitea(client, base, &slug).await?;
+        return github::pick_release_for(&releases, &project.release_channel, project.rolling_tag.as_deref(), rule)
+            .ok_or_else(|| AppError::msg("no se encontró una release adecuada"));
+    }
     if project.repo.host == "gitlab" {
         let releases = github::fetch_releases_gitlab(client, &slug).await?;
         return github::pick_release_for(&releases, &project.release_channel, project.rolling_tag.as_deref(), rule)

@@ -182,6 +182,10 @@ pub struct RepoRef {
     pub host: String,
     pub owner: String,
     pub repo: String,
+    /// Server root for self-hosted forges (`host: "gitea"`, which also covers
+    /// Forgejo), e.g. `https://git.example.dev`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub base: Option<String>,
 }
 
 fn default_host() -> String {
@@ -191,6 +195,16 @@ fn default_host() -> String {
 impl RepoRef {
     pub fn slug(&self) -> String {
         format!("{}/{}", self.owner, self.repo)
+    }
+
+    /// Web page of the repository, when it lives on a known forge.
+    pub fn web_url(&self) -> Option<String> {
+        match self.host.as_str() {
+            "github" => Some(format!("https://github.com/{}", self.slug())),
+            "gitlab" => Some(format!("https://gitlab.com/{}", self.slug())),
+            "gitea" => self.base.as_ref().map(|b| format!("{}/{}", b.trim_end_matches('/'), self.slug())),
+            _ => None,
+        }
     }
 }
 

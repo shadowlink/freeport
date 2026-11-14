@@ -117,7 +117,7 @@ mod tests {
             tier: None,
             system: "n64".into(),
             kind: "native-port".into(),
-            repo: RepoRef { host: "github".into(), owner: "o".into(), repo: id.into() },
+            repo: RepoRef { host: "github".into(), owner: "o".into(), repo: id.into(), base: None },
             release_channel: "stable".into(),
             rolling_tag: None,
             cover_url: None,

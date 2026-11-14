@@ -1342,15 +1342,16 @@ fn build_detail(app: &App, win: &MainWindow) {
         install_error: app.install_error.borrow().contains(&p.id),
         stats: stats.into(),
         fit_cover: app.fit_cover(&p),
-        repo_url: match p.repo.host.as_str() {
-            "github" => format!("https://github.com/{}", p.repo.slug()),
-            "gitlab" => format!("https://gitlab.com/{}", p.repo.slug()),
-            _ => p.direct.as_ref().and_then(|d| d.page.clone()).unwrap_or_default(),
-        }
-        .into(),
+        repo_url: p
+            .repo
+            .web_url()
+            .or_else(|| p.direct.as_ref().and_then(|d| d.page.clone()))
+            .unwrap_or_default()
+            .into(),
         repo_label: match p.repo.host.as_str() {
             "github" => "↗ Ver en GitHub",
             "gitlab" => "↗ Ver en GitLab",
+            "gitea" => "↗ Ver repositorio",
             _ => "↗ Web oficial",
         }
         .into(),

@@ -704,6 +704,20 @@ fn run_port_tool(
     Ok(())
 }
 
+/// Maps a drive letter of the port's Wine prefix to a folder (creating
+/// `dosdevices` if the prefix is new). Returns None if the link can't be made.
+fn port_drive(install_dir: &Path, letter: char, target: &Path) -> Option<()> {
+    let dev = install_dir.join(".wineprefix").join("dosdevices");
+    std::fs::create_dir_all(&dev).ok()?;
+    let link = dev.join(format!("{letter}:"));
+    if std::fs::read_link(&link).ok().as_deref() != Some(target) {
+        let _ = std::fs::remove_file(&link);
+        #[cfg(unix)]
+        std::os::unix::fs::symlink(target, &link).ok()?;
+    }
+    Some(())
+}
+
 /// A Linux path as a Windows program running under Wine/Proton sees it:
 /// drive Z: is the Unix root (`/home/x` → `Z:\home\x`).
 fn wine_path(p: &Path) -> PathBuf {
@@ -901,7 +915,37 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
     // A Windows installer under Proton can't open `/home/...`: hand it the
     // same files through Wine's Z: drive.
     let args = if windows {
-        let w = |p: &Path| wine_path(p);
+        // The port folder gets its own drive (P:). Under Wine, Z:\ and mount
+        // points such as Z:\home look like junctions, and careful installers
+        // (SPR, Bananza) refuse to write below one.
+        // The packages' folders get Q:, R:… the same way (the installer checks
+        // its inputs too).
+        let mut drives: Vec<(PathBuf, char)> = Vec::new();
+        if cfg!(unix) {
+            if port_drive(&install_dir, 'p', &install_dir).is_some() {
+                drives.push((install_dir.clone(), 'P'));
+            }
+            let mut letters = ['q', 'r', 't', 'u', 'v', 'w'].into_iter();
+            for f in &files {
+                let Some(dir) = f.parent().map(Path::to_path_buf) else { continue };
+                if drives.iter().any(|(d, _)| *d == dir) {
+                    continue;
+                }
+                if let Some(l) = letters.next() {
+                    if port_drive(&install_dir, l, &dir).is_some() {
+                        drives.push((dir, l.to_ascii_uppercase()));
+                    }
+                }
+            }
+        }
+        let w = |p: &Path| {
+            drives
+                .iter()
+                .find_map(|(d, l)| {
+                    p.strip_prefix(d).ok().map(|rel| PathBuf::from(format!("{l}:\\{}", rel.display().to_string().replace('/', "\\"))))
+                })
+                .unwrap_or_else(|| wine_path(p))
+        };
         let dlc_w: Vec<PathBuf> = dlc.iter().map(|d| w(d)).collect();
         setup_args(&cmd.args, &w(base), update.map(w).as_deref(), &dlc_w, &w(&keys), &w(&dest), &w(&install_dir), &lang)
     } else {

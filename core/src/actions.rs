@@ -840,10 +840,15 @@ fn run_setup_cmd(paths: &Paths, project: &Project, files: &[PathBuf], progress: 
         .ok_or_else(|| AppError::msg(format!("este port no tiene instalación automática para {os}: ejecuta su setup a mano desde la carpeta del port (ver las notas de la ficha)")))?;
     let install_dir = install::game_root(Path::new(&entry.install_path));
     let dest = install_dir.join(cmd.dest.as_deref().unwrap_or("game"));
-    let keys = crate::switch::key_candidates()
-        .into_iter()
-        .find(|p| p.is_file())
-        .ok_or_else(|| AppError::msg("hace falta tu prod.keys (p. ej. ~/.switch/prod.keys o las claves de Eden/Ryujinx) para que el instalador del port abra los paquetes"))?;
+    // Only installers that open NSP/XCI themselves need the keys (Switch 2
+    // .nup builders such as SPR don't take any).
+    let keys = match crate::switch::key_candidates().into_iter().find(|p| p.is_file()) {
+        Some(k) => k,
+        None if cmd.args.iter().any(|a| a == "{keys}") => {
+            return Err(AppError::msg("hace falta tu prod.keys (p. ej. ~/.switch/prod.keys o las claves de Eden/Ryujinx) para que el instalador del port abra los paquetes"))
+        }
+        None => PathBuf::new(),
+    };
     // Compressed dumps: the port's installer reads NSP/XCI only, so .nsz/.xcz
     // are decompressed with the user's own `nsz` into a temp folder next to
     // the install (big, so never in /tmp); removed when the installer is done.

@@ -1277,7 +1277,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         "rom"
     } else if p.system == "ps4" {
         "pkg"
-    } else if (p.system == "switch" && p.rom.required) || (p.system == "switch2" && p.rom.setup_cmd.is_some()) {
+    } else if (p.system == "switch" && p.rom.required) || p.rom.setup_cmd.is_some() {
         "switch"
     } else {
         ""
@@ -1334,7 +1334,7 @@ fn build_detail(app: &App, win: &MainWindow) {
         needs_rom: p.rom.mode == "copy",
         rom_ok: entry.and_then(|e| e.rom_path.as_ref()).is_some(),
         is_ps4: p.system == "ps4",
-        is_switch: p.system == "switch" || (p.system == "switch2" && p.rom.setup_cmd.is_some()),
+        is_switch: p.system == "switch" || p.rom.setup_cmd.is_some(),
         phase: app.phase.borrow().get(&p.id).cloned().unwrap_or_default().into(),
         busy: app.busy.borrow().contains(&p.id),
         progress: app.install_progress.borrow().get(&p.id).copied().unwrap_or(0.0),
@@ -3526,8 +3526,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             let Some(files) = rfd::FileDialog::new()
                 .set_title(format!("Volcado de {} (juego base y actualizaciones)", project.original_game))
                 .add_filter(
-                    if project.system == "switch2" { "Switch 2 (NUP, NSP, XCI)" } else { "Switch (NSP, XCI, NSZ, XCZ)" },
-                    if project.system == "switch2" { &["nup", "nsp", "xci"][..] } else { &["nsp", "xci", "nsz", "xcz"][..] },
+                    match project.system.as_str() {
+                        "switch2" => "Switch 2 (NUP, NSP, XCI)",
+                        "3ds" => "3DS (3DS, CCI)",
+                        "switch" => "Switch (NSP, XCI, NSZ, XCZ)",
+                        _ => "Volcado del juego",
+                    },
+                    match project.system.as_str() {
+                        "switch2" => &["nup", "nsp", "xci"][..],
+                        "3ds" => &["3ds", "cci"][..],
+                        "switch" => &["nsp", "xci", "nsz", "xcz"][..],
+                        _ => &["iso", "bin", "cue", "chd", "z64", "n64", "v64", "3ds", "cci", "nsp", "xci", "nup", "xex", "zip"][..],
+                    },
                 )
                 .pick_files()
             else {

@@ -505,6 +505,8 @@ export component MainWindow inherits Window {
     callback open-game(string);
     callback install(string);
     callback play(string);
+    // The game page plays exactly the version it shows (no remembered default).
+    callback play-exact(string);
     callback uninstall(string);
     callback pick-rom(string);
     callback import-pkg(string);
@@ -591,7 +593,7 @@ export component MainWindow inherits Window {
         if (k == "b") { root.close-detail(); return; }
         if (k == "a") {
             if (root.detail.busy) { return; }
-            if (root.detail.installed) { if (root.detail.play-state != 1) { root.play(root.detail.id); } }
+            if (root.detail.installed) { if (root.detail.play-state != 1) { root.play-exact(root.detail.id); } }
             else { root.install(root.detail.id); }
             return;
         }

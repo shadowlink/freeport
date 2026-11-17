@@ -3275,6 +3275,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     });
 
+    win.on_play_exact({
+        let start_play = start_play.clone();
+        move |id| {
+            start_play(id.to_string());
+        }
+    });
     win.on_play({
         let app = app.clone();
         let weak = win.as_weak();
